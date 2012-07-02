@@ -78,6 +78,8 @@ double tfunctional_1(TraceIterator &iterator)
 			iterator.segment().end
 		)
 	);
+
+	// TODO: directly transform the negative domain as well?
 	/*
 	TraceIterator iterator_negative = iterator.transformDomain(
 		Segment(
@@ -87,6 +89,29 @@ double tfunctional_1(TraceIterator &iterator)
 	);
 	*/
 	return tfunctional_1_kernel(iterator_positive);
+}
+
+// T(f(t)) = Int[0-inf] t^2*f(t)dt
+double tfunctional_2_kernel(TraceIterator &iterator)
+{
+	unsigned long sum = 0;
+	for (unsigned int t = 0; iterator.hasNext(); t++)
+		sum += iterator.next() * t*t;
+	return (double) sum;
+}
+
+// T(f(t)) = Int[0-inf] r^2*f(r)dr
+double tfunctional_2(TraceIterator &iterator)
+{
+	// Transform the domain from t to r, and integrate
+	Point median = iterator_weighedmedian(iterator);
+	TraceIterator iterator_positive = iterator.transformDomain(
+		Segment(
+			median,
+			iterator.segment().end
+		)
+	);
+	return tfunctional_2_kernel(iterator_positive);
 }
 
 
@@ -118,7 +143,7 @@ int main(int argc, char **argv)
 		input,
 		1,	// angle resolution
 		1,	// distance resolution
-		tfunctional_1
+		tfunctional_2
 	);
 
 	// Scale the transform back to the [0,255] intensity range
