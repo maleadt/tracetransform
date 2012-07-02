@@ -85,7 +85,7 @@ struct Segment
 	}
 
 	double length() const {
-		return std::sqrt(dx()*dx() + dy()*dy());
+		return hypot(dx(), dy());
 	}
 
 	double rcx() const {

@@ -5,6 +5,7 @@
 // System includes
 #include <iostream>
 #include <string>
+#include <cmath>
 
 // OpenCV includes
 #include <cv.h>
@@ -20,29 +21,53 @@
 // Iterator helpers
 //
 
-unsigned long iterator_sum(TraceIterator &iterator)
+// Look for the median of the weighed indexes
+//
+// Conceptually this expands the list of indexes to a weighed one (in which each
+// index is repeated as many times as the pixel value it represents), after
+// which the median value of that array is located.
+Point iterator_weighedmedian(TraceIterator &iterator)
 {
 	unsigned long sum = 0;
 	while (iterator.hasNext()) {
 		sum += iterator.value();
 		iterator.next();
 	}
-	return sum;
-}
-
-Point iterator_weighedmedian(TraceIterator &iterator)
-{
-	unsigned long sum = iterator_sum(iterator);
 	iterator.toFront();
 
-	unsigned long cumsum = 0;
+	unsigned long integral = 0;
 	Point median;
 	while (iterator.hasNext()) {
 		median = iterator.point();
-		cumsum += iterator.value();
+		integral += iterator.value();
 		iterator.next();
 
-		if (cumsum > sum/2.0) {
+		if (integral > sum/2.0) {
+			break;
+		}
+	}
+	return median;
+}
+
+// Look for the median of the weighed indexes, but take the square root of the
+// pixel values as weight
+Point iterator_weighedmedian_sqrt(TraceIterator &iterator)
+{
+	double sum = 0;
+	while (iterator.hasNext()) {
+		sum += std::sqrt(iterator.value());
+		iterator.next();
+	}
+	iterator.toFront();
+
+	double integral = 0;
+	Point median;
+	while (iterator.hasNext()) {
+		median = iterator.point();
+		integral += std::sqrt(iterator.value());
+		iterator.next();
+
+		if (integral > sum/2.0) {
 			break;
 		}
 	}
@@ -59,28 +84,33 @@ Point iterator_weighedmedian(TraceIterator &iterator)
 // T(f(t)) = Int[0-inf] f(t)dt
 double tfunctional_radon(TraceIterator &iterator)
 {
-	return (double) iterator_sum(iterator);
+	double integral = 0;
+	while (iterator.hasNext()) {
+		integral += iterator.value();
+		iterator.next();
+	}
+	return integral;
 }
 
 // T(f(t)) = Int[0-inf] t*f(t)dt
 double tfunctional_1_kernel(TraceIterator &iterator)
 {
-	unsigned long sum = 0;
+	double integral = 0;
 	for (unsigned int t = 0; iterator.hasNext(); t++) {
-		sum += iterator.value() * t;
+		integral += iterator.value() * t;
 		iterator.next();
 	}
-	return (double) sum;
+	return integral;
 }
 
 // T(f(t)) = Int[0-inf] r*f(r)dr
 double tfunctional_1(TraceIterator &iterator)
 {
 	// Transform the domain from t to r, and integrate
-	Point median = iterator_weighedmedian(iterator);
+	Point r = iterator_weighedmedian(iterator);
 	TraceIterator iterator_positive = iterator.transformDomain(
 		Segment(
-			median,
+			r,
 			iterator.segment().end
 		)
 	);
@@ -89,7 +119,7 @@ double tfunctional_1(TraceIterator &iterator)
 	/*
 	TraceIterator iterator_negative = iterator.transformDomain(
 		Segment(
-			median,
+			r,
 			iterator.segment().begin
 		)
 	);
@@ -100,26 +130,57 @@ double tfunctional_1(TraceIterator &iterator)
 // T(f(t)) = Int[0-inf] t^2*f(t)dt
 double tfunctional_2_kernel(TraceIterator &iterator)
 {
-	unsigned long sum = 0;
+	double integral = 0;
 	for (unsigned int t = 0; iterator.hasNext(); t++) {
-		sum += iterator.value() * t*t;
+		integral += iterator.value() * t*t;
 		iterator.next();
 	}
-	return (double) sum;
+	return integral;
 }
 
 // T(f(t)) = Int[0-inf] r^2*f(r)dr
 double tfunctional_2(TraceIterator &iterator)
 {
 	// Transform the domain from t to r, and integrate
-	Point median = iterator_weighedmedian(iterator);
+	Point r = iterator_weighedmedian(iterator);
 	TraceIterator iterator_positive = iterator.transformDomain(
 		Segment(
-			median,
+			r,
 			iterator.segment().end
 		)
 	);
 	return tfunctional_2_kernel(iterator_positive);
+}
+
+// T(f(t)) = Int[0-inf] exp(5i*log(t))*t*f(t)dt
+double tfunctional_3_kernel(TraceIterator &iterator)
+{
+	double integral_real = 0, integral_complex;
+	for (unsigned int t = 0; iterator.hasNext(); t++) {
+		// TODO: log plus one?
+		integral_real += std::cos(5*std::log(iterator.value()+1))
+			* t * iterator.value();
+		integral_complex += std::sin(5*std::log(iterator.value()+1))
+			* t * iterator.value();
+		iterator.next();
+	}
+	return hypot(integral_real, integral_complex);
+}
+
+// T(f(t)) = Int[0-inf] exp(5i*log(r1))*r1*f(r1)dr1
+double tfunctional_3(TraceIterator &iterator)
+{
+	// Transform the domain from t to r1, and integrate
+	Point r1 = iterator_weighedmedian_sqrt(iterator);
+	// TODO: is this correct?
+	TraceIterator iterator_positive = iterator.transformDomain(
+		Segment(
+			r1,
+			iterator.segment().end
+		)
+	);
+	return tfunctional_3_kernel(iterator_positive);
+
 }
 
 
@@ -147,11 +208,12 @@ int main(int argc, char **argv)
 	}
 
 	// Get the trace transform
+	// TODO: isn't [0:255] a problem?
 	cv::Mat transform = getTraceTransform(
 		input,
 		1,	// angle resolution
 		1,	// distance resolution
-		tfunctional_2
+		tfunctional_3
 	);
 
 	// Scale the transform back to the [0,255] intensity range

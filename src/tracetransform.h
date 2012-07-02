@@ -28,8 +28,7 @@ Segment bounding_segment(const cv::Size &size,
 {
 	double a_rad = deg2rad(a);
 
-	double diagonal = std::sqrt(size.width*size.width
-		+ size.height*size.height);
+	double diagonal = hypot(size.width, size.height);
 
 	return Segment(
 		Point(
@@ -53,8 +52,7 @@ cv::Mat getTraceTransform(
 	assert(image.type() == CV_8UC1);
 
 	// Calculate and create the transform matrix
-	double diagonal = std::sqrt(image.size().width*image.size().width
-		+ image.size().height*image.size().height);
+	double diagonal = hypot(image.size().width, image.size().height);
 	unsigned int a_steps = (unsigned int) std::ceil(180.0 / a_stepsize);
 	unsigned int p_steps = (unsigned int) std::ceil(diagonal / p_stepsize);
 	cv::Mat transform = cv::Mat::zeros(
