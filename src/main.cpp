@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+#include <complex>
 
 // OpenCV includes
 #include <cv.h>
@@ -155,16 +156,14 @@ double tfunctional_2(TraceIterator &iterator)
 // T(f(t)) = Int[0-inf] exp(5i*log(t))*t*f(t)dt
 double tfunctional_3_kernel(TraceIterator &iterator)
 {
-	double integral_real = 0, integral_complex;
+	std::complex<double> integral(0, 0);
+	std::complex<double> factor(0, 5);
 	for (unsigned int t = 0; iterator.hasNext(); t++) {
-		// TODO: log plus one?
-		integral_real += std::cos(5*std::log(iterator.value()+1))
-			* t * iterator.value();
-		integral_complex += std::sin(5*std::log(iterator.value()+1))
-			* t * iterator.value();
+		integral += exp(factor*std::log(iterator.value()+1))
+			* (double)(t*iterator.value());
 		iterator.next();
 	}
-	return hypot(integral_real, integral_complex);
+	return std::abs(integral);
 }
 
 // T(f(t)) = Int[0-inf] exp(5i*log(r1))*r1*f(r1)dr1
