@@ -25,6 +25,10 @@
 // addressable using integer indexes
 class TraceIterator {
 public:
+	//
+	// Construction and destruction
+	//
+
 	TraceIterator (const cv::Mat &i_image, const Segment &i_segment)
 		: m_image(i_image), m_segment(i_segment)
 	{
@@ -50,16 +54,35 @@ public:
 		toFront();
 	}
 
+
+	//
+	// Basic I/O
+	//
+
 	bool valid() const
 	{
 		return m_valid;
 	}
 
-	void toFront()
+	const Segment &segment() const
 	{
-		m_p = m_clipped.begin;
-		m_step = 0;
+		return m_segment;
 	}
+
+	const Point &point()
+	{
+		return m_p;
+	}
+
+	uchar value() const
+	{
+		return value(m_p);
+	}
+
+
+	//
+	// Iteration methods
+	//
 
 	bool hasNext() const
 	{
@@ -67,15 +90,8 @@ public:
 		return m_step <= m_clipped.length();
 	}
 
-	uchar peekNext() const
+	void next()
 	{
-		return getPixel(m_p);
-	}
-
-	uchar next()
-	{
-		uchar pixel = getPixel(m_p);
-
 		// Advance
 		m_step++;
 		m_p = m_clipped.begin + m_leap*m_step;		
@@ -95,19 +111,18 @@ public:
 			m_p = m_clipped.end;
 			assert(m_step+1 > m_clipped.length());
 		}
-
-		return pixel;
 	}
 
-	const Segment &segment() const
+	void toFront()
 	{
-		return m_segment;
+		m_p = m_clipped.begin;
+		m_step = 0;
 	}
 
-	const Point &point()
-	{
-		return m_p;
-	}
+
+	//
+	// Transformations
+	//
 
 	TraceIterator transformDomain(const Segment &i_segment) const
 	{
@@ -115,7 +130,7 @@ public:
 	}
 
 private:
-	uchar getPixel(const Point &p) const
+	uchar value(const Point &p) const
 	{
 		// Get fractional parts, floors and ceilings
 		double x_fract, x_int;

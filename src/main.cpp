@@ -23,8 +23,10 @@
 unsigned long iterator_sum(TraceIterator &iterator)
 {
 	unsigned long sum = 0;
-	while (iterator.hasNext())
-		sum += iterator.next();
+	while (iterator.hasNext()) {
+		sum += iterator.value();
+		iterator.next();
+	}
 	return sum;
 }
 
@@ -37,7 +39,9 @@ Point iterator_weighedmedian(TraceIterator &iterator)
 	Point median;
 	while (iterator.hasNext()) {
 		median = iterator.point();
-		cumsum += iterator.next();
+		cumsum += iterator.value();
+		iterator.next();
+
 		if (cumsum > sum/2.0) {
 			break;
 		}
@@ -62,8 +66,10 @@ double tfunctional_radon(TraceIterator &iterator)
 double tfunctional_1_kernel(TraceIterator &iterator)
 {
 	unsigned long sum = 0;
-	for (unsigned int t = 0; iterator.hasNext(); t++)
-		sum += iterator.next() * t;
+	for (unsigned int t = 0; iterator.hasNext(); t++) {
+		sum += iterator.value() * t;
+		iterator.next();
+	}
 	return (double) sum;
 }
 
@@ -95,8 +101,10 @@ double tfunctional_1(TraceIterator &iterator)
 double tfunctional_2_kernel(TraceIterator &iterator)
 {
 	unsigned long sum = 0;
-	for (unsigned int t = 0; iterator.hasNext(); t++)
-		sum += iterator.next() * t*t;
+	for (unsigned int t = 0; iterator.hasNext(); t++) {
+		sum += iterator.value() * t*t;
+		iterator.next();
+	}
 	return (double) sum;
 }
 
