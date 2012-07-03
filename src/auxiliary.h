@@ -27,8 +27,6 @@ const int TOP = 8;	// 1000
 // Structs
 //
 
-// TODO: try to make these immutable
-
 struct Point
 {
 	Point operator*(const double factor) const {
