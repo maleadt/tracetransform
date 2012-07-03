@@ -30,15 +30,15 @@ Segment bounding_segment(const cv::Size &size,
 
 	double diagonal = hypot(size.width, size.height);
 
-	return Segment(
-		Point(
+	return Segment{
+		Point{
 			origin.x - std::cos(a_rad) * diagonal/2.0,
 			origin.y - std::sin(a_rad) * diagonal/2.0
-		), Point(
+		}, Point{
 			origin.x + std::cos(a_rad) * diagonal/2.0,
 			origin.y + std::sin(a_rad) * diagonal/2.0
-		)
-	);
+		}
+	};
 }
 
 cv::Mat getTraceTransform(
@@ -68,7 +68,7 @@ cv::Mat getTraceTransform(
 		Segment proj = bounding_segment(
 			image.size(),
 			a,
-			Point(image.size().width / 2.0, image.size().height / 2.0)
+			Point{image.size().width/2.0, image.size().height/2.0}
 		);
 
 		// Partition the projection line in projection bands
@@ -81,7 +81,7 @@ cv::Mat getTraceTransform(
 			Segment band = bounding_segment(
 				image.size(),
 				a + 90,
-				Point(proj_x, proj_y)
+				Point{proj_x, proj_y}
 			);
 
 			// Set-up the trace iterator

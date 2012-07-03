@@ -34,16 +34,16 @@ public:
 	{
 		// Clip the segment against the image
 		if (clip(
-			Rectangle(0, 0, m_image.size().width-1, m_image.size().height-1),
+			Rectangle{
+				Point{0, 0},
+				Size{m_image.size().width, m_image.size().height}
+			},
 			m_segment,
 			m_clipped
 		)){
 			// The segment is valid, calculate the leap distance
 			m_valid = true;
-			m_leap = Point(
-				m_clipped.rcx(),
-				m_clipped.rcy()
-			);
+			m_leap = Point{m_clipped.rcx(),	m_clipped.rcy()};
 		} else {
 			// No part of the image falls within the image, so bail
 			// out as soon as possible

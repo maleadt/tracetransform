@@ -99,19 +99,19 @@ double tfunctional_1(TraceIterator &iterator)
 	// Transform the domain from t to r
 	Point r = iterator_weighedmedian(iterator);
 	TraceIterator iterator_positive = iterator.transformDomain(
-		Segment(
+		Segment{
 			r,
 			iterator.segment().end
-		)
+		}
 	);
 
 	// TODO: directly transform the negative domain as well?
 	/*
 	TraceIterator iterator_negative = iterator.transformDomain(
-		Segment(
+		Segment{
 			r,
 			iterator.segment().begin
-		)
+		}
 	);
 	*/
 
@@ -134,10 +134,10 @@ double tfunctional_2(TraceIterator &iterator)
 	// Transform the domain from t to r
 	Point r = iterator_weighedmedian(iterator);
 	TraceIterator iterator_positive = iterator.transformDomain(
-		Segment(
+		Segment{
 			r,
 			iterator.segment().end
-		)
+		}
 	);
 
 	// Integrate
@@ -159,10 +159,10 @@ double tfunctional_3(TraceIterator &iterator)
 	// Transform the domain from t to r1
 	Point r1 = iterator_weighedmedian_sqrt(iterator);
 	TraceIterator iterator_positive = iterator.transformDomain(
-		Segment(
+		Segment{
 			r1,
 			iterator.segment().end
-		)
+		}
 	);
 
 	// Integrate
@@ -187,10 +187,10 @@ double tfunctional_4(TraceIterator &iterator)
 	// Transform the domain from t to r1
 	Point r1 = iterator_weighedmedian_sqrt(iterator);
 	TraceIterator iterator_positive = iterator.transformDomain(
-		Segment(
+		Segment{
 			r1,
 			iterator.segment().end
-		)
+		}
 	);
 
 	// Integrate
@@ -215,10 +215,10 @@ double tfunctional_5(TraceIterator &iterator)
 	// Transform the domain from t to r1
 	Point r1 = iterator_weighedmedian_sqrt(iterator);
 	TraceIterator iterator_positive = iterator.transformDomain(
-		Segment(
+		Segment{
 			r1,
 			iterator.segment().end
-		)
+		}
 	);
 
 	// Integrate

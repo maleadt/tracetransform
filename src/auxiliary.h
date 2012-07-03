@@ -42,23 +42,20 @@ const int TOP = 8;	// 1000
 // Structs
 //
 
+// TODO: try to make these immutable
+
 struct Point
 {
-	Point() {
-	}
-	Point(double i_x, double i_y) : x(i_x), y(i_y) {
-	}
-
 	Point operator*(const double factor) const {
-		return Point(x*factor, y*factor);
+		return Point{x*factor, y*factor};
 	}
 
 	Point operator+(const Point& term) const {
-		return Point(x+term.x, y+term.y);
+		return Point{x+term.x, y+term.y};
 	}
 
 	Point operator-(const Point& term) const {
-		return Point(x-term.x, y-term.y);
+		return Point{x-term.x, y-term.y};
 	}
 
 	double x;
@@ -72,11 +69,6 @@ std::ostream& operator<<(std::ostream &stream, const Point& point) {
 
 struct Segment
 {
-	Segment() {
-	}
-	Segment(Point i_begin, Point i_end) : begin(i_begin), end(i_end) {
-	}
-
 	double dx() const {
 		return end.x - begin.x;
 	}
@@ -104,16 +96,36 @@ std::ostream& operator<<(std::ostream &stream, const Segment& segment) {
 	return stream;
 }
 
+struct Size
+{
+	int width;
+	int height;
+};
+
 struct Rectangle
 {
-	Rectangle() {
-	}
-	Rectangle(double i_xmin, double i_ymin, double i_xmax, double i_ymax)
-		: xmin(i_xmin), ymin(i_ymin), xmax(i_xmax), ymax(i_ymax) {
+	double xmin() const
+	{
+		return begin.x;
 	}
 
-	double xmin, ymin;
-	double xmax, ymax;
+	double ymin() const
+	{
+		return begin.y;
+	}
+
+	double xmax() const
+	{
+		return begin.x + size.width-1;
+	}
+
+	double ymax() const
+	{
+		return begin.x + size.height-1;
+	}
+
+	Point begin;
+	Size size;
 };
 
 
@@ -219,13 +231,13 @@ ClipCode clip_point(const Rectangle &rectangle, const Point &point)
 	// Initialize as being inside of clip window
 	ClipCode code = INSIDE;
 
-	if (point.x < rectangle.xmin)		// to the left of clip window
+	if (point.x < rectangle.xmin())		// to the left of clip window
 		code |= LEFT;
-	else if (point.x > rectangle.xmax)	// to the right of clip window
+	else if (point.x > rectangle.xmax())	// to the right of clip window
 		code |= RIGHT;
-	if (point.y < rectangle.ymin)		// below the clip window
+	if (point.y < rectangle.ymin())		// below the clip window
 		code |= BOTTOM;
-	else if (point.y > rectangle.ymax)	// above the clip window
+	else if (point.y > rectangle.ymax())	// above the clip window
 		code |= TOP;
 
 	return code;
@@ -259,27 +271,27 @@ bool clip(const Rectangle &rectangle, const Segment &segment, Segment &clipped)
 			if (codeOut & TOP) {			// above the clip rectangle
 				p.x = clipped.begin.x
 					+ (clipped.end.x - clipped.begin.x)
-					* (rectangle.ymax - clipped.begin.y)
+					* (rectangle.ymax() - clipped.begin.y)
 					/ (clipped.end.y - clipped.begin.y);
-				p.y = rectangle.ymax;
+				p.y = rectangle.ymax();
 			} else if (codeOut & BOTTOM) {	// below the clip rectangle
 				p.x = clipped.begin.x
 					+ (clipped.end.x - clipped.begin.x)
-					* (rectangle.ymin - clipped.begin.y)
+					* (rectangle.ymin() - clipped.begin.y)
 					/ (clipped.end.y - clipped.begin.y);
-				p.y = rectangle.ymin;
+				p.y = rectangle.ymin();
 			} else if (codeOut & RIGHT) {	// to the right of clip rectangle
 				p.y = clipped.begin.y
 					+ (clipped.end.y - clipped.begin.y)
-					* (rectangle.xmax - clipped.begin.x)
+					* (rectangle.xmax() - clipped.begin.x)
 					/ (clipped.end.x - clipped.begin.x);
-				p.x = rectangle.xmax;
+				p.x = rectangle.xmax();
 			} else /* if (codeOut & LEFT) */ {	// to the left of clip rectangle
 				p.y = clipped.begin.y
 					+ (clipped.end.y - clipped.begin.y)
-					* (rectangle.xmin - clipped.begin.x)
+					* (rectangle.xmin() - clipped.begin.x)
 					/ (clipped.end.x - clipped.begin.x);
-				p.x = rectangle.xmin;
+				p.x = rectangle.xmin();
 			}
 
 			// NOTE: last check is a plain else, because without it
