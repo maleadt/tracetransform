@@ -6,9 +6,6 @@
 #ifndef AUXILIARY_H
 #define AUXILIARY_H
 
-// System includes
-#include <cmath>
-
 // OpenCV includes
 #include <cv.h>
 
@@ -77,7 +74,7 @@ struct Segment
 	}
 
 	double length() const {
-		return hypot(dx(), dy());
+		return std::hypot(dx(), dy());
 	}
 
 	double rcx() const {
