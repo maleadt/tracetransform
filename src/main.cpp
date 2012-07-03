@@ -43,7 +43,7 @@ Point iterator_weighedmedian(TraceIterator &iterator)
 		integral += iterator.value();
 		iterator.next();
 
-		if (integral > sum/2.0) {
+		if (2*integral > sum) {
 			break;
 		}
 	}

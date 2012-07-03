@@ -29,7 +29,7 @@ public:
 	// Construction and destruction
 	//
 
-	TraceIterator (const cv::Mat &i_image, const Segment &i_segment)
+	TraceIterator(const cv::Mat &i_image, const Segment &i_segment)
 		: m_image(i_image), m_segment(i_segment)
 	{
 		// Clip the segment against the image
