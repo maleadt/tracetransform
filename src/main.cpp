@@ -93,17 +93,6 @@ double tfunctional_radon(TraceIterator &iterator)
 	return integral;
 }
 
-// T(f(t)) = Int[0-inf] t*f(t)dt
-double tfunctional_1_kernel(TraceIterator &iterator)
-{
-	double integral = 0;
-	for (unsigned int t = 0; iterator.hasNext(); t++) {
-		integral += iterator.value() * t;
-		iterator.next();
-	}
-	return integral;
-}
-
 // T(f(t)) = Int[0-inf] r*f(r)dr
 double tfunctional_1(TraceIterator &iterator)
 {
@@ -125,18 +114,17 @@ double tfunctional_1(TraceIterator &iterator)
 		)
 	);
 	*/
-	return tfunctional_1_kernel(iterator_positive);
-}
 
-// T(f(t)) = Int[0-inf] t^2*f(t)dt
-double tfunctional_2_kernel(TraceIterator &iterator)
-{
-	double integral = 0;
-	for (unsigned int t = 0; iterator.hasNext(); t++) {
-		integral += iterator.value() * t*t;
-		iterator.next();
-	}
-	return integral;
+	auto integrator = [] (TraceIterator &iterator) -> double {
+		double integral = 0;
+		for (unsigned int t = 0; iterator.hasNext(); t++) {
+			integral += iterator.value() * t;
+			iterator.next();
+		}
+		return integral;
+	};
+
+	return integrator(iterator_positive);
 }
 
 // T(f(t)) = Int[0-inf] r^2*f(r)dr
@@ -150,50 +138,44 @@ double tfunctional_2(TraceIterator &iterator)
 			iterator.segment().end
 		)
 	);
-	return tfunctional_2_kernel(iterator_positive);
+
+	auto integrator = [] (TraceIterator &iterator) -> double {
+		double integral = 0;
+		for (unsigned int t = 0; iterator.hasNext(); t++) {
+			integral += iterator.value() * t*t;
+			iterator.next();
+		}
+		return integral;
+	};
+
+	return integrator(iterator_positive);
 }
 
-// T(f(t)) = Int[0-inf] exp(5i*log(t))*t*f(t)dt
-double tfunctional_3_kernel(TraceIterator &iterator)
-{
-	std::complex<double> integral(0, 0);
-	const std::complex<double> factor(0, 5);
-	for (unsigned int t = 0; iterator.hasNext(); t++) {
-		if (t > 0)	// since exp(i*log(0)) == 0
-			integral += exp(factor*std::log(t))
-				* (t*(double)iterator.value());
-		iterator.next();
-	}
-	return std::abs(integral);
-}
-
-// T(f(t)) = Int[0-inf] exp(5i*log(r))*r*f(r)dr
-// TODO: f(r) or f(r1)?
+// T(f(t)) = Int[0-inf] exp(5i*log(r1))*r1*f(r1)dr1
 double tfunctional_3(TraceIterator &iterator)
 {
 	// Transform the domain from t to r, and integrate
-	Point r = iterator_weighedmedian(iterator);
+	Point r1 = iterator_weighedmedian_sqrt(iterator);
 	TraceIterator iterator_positive = iterator.transformDomain(
 		Segment(
-			r,
+			r1,
 			iterator.segment().end
 		)
 	);
-	return tfunctional_3_kernel(iterator_positive);
-}
 
-// T(f(t)) = Int[0-inf] exp(3i*log(t))*f(t)dt
-double tfunctional_4_kernel(TraceIterator &iterator)
-{
-	std::complex<double> integral(0, 0);
-	const std::complex<double> factor(0, 3);
-	for (unsigned int t = 0; iterator.hasNext(); t++) {
-		if (t > 0)	// since exp(i*log(0)) == 0
-			integral += exp(factor*std::log(t))
-				* (double)iterator.value();
-		iterator.next();
-	}
-	return std::abs(integral);
+	auto integrator = [] (TraceIterator &iterator) -> double {
+		std::complex<double> integral(0, 0);
+		const std::complex<double> factor(0, 5);
+		for (unsigned int t = 0; iterator.hasNext(); t++) {
+			if (t > 0)	// since exp(i*log(0)) == 0
+				integral += exp(factor*std::log(t))
+					* (t*(double)iterator.value());
+			iterator.next();
+		}
+		return std::abs(integral);
+	};
+
+	return integrator(iterator_positive);
 }
 
 // T(f(t)) = Int[0-inf] exp(3i*log(r1))*f(r1)dr1
@@ -207,21 +189,20 @@ double tfunctional_4(TraceIterator &iterator)
 			iterator.segment().end
 		)
 	);
-	return tfunctional_4_kernel(iterator_positive);
-}
 
-// T(f(t)) = Int[0-inf] exp(4i*log(t))*sqrt(t)*f(t)dt
-double tfunctional_5_kernel(TraceIterator &iterator)
-{
-	std::complex<double> integral(0, 0);
-	const std::complex<double> factor(0, 4);
-	for (unsigned int t = 0; iterator.hasNext(); t++) {
-		if (t > 0)	// since exp(i*log(0)) == 0
-			integral += exp(factor*std::log(t))
-				* (std::sqrt(t)*(double)iterator.value());
-		iterator.next();
-	}
-	return std::abs(integral);
+	auto integrator = [] (TraceIterator &iterator) -> double {
+		std::complex<double> integral(0, 0);
+		const std::complex<double> factor(0, 3);
+		for (unsigned int t = 0; iterator.hasNext(); t++) {
+			if (t > 0)	// since exp(i*log(0)) == 0
+				integral += exp(factor*std::log(t))
+					* (double)iterator.value();
+			iterator.next();
+		}
+		return std::abs(integral);
+	};
+
+	return integrator(iterator_positive);
 }
 
 // T(f(t)) = Int[0-inf] exp(4i*log(r1))*sqrt(r1)*f(r1)dr1
@@ -235,7 +216,20 @@ double tfunctional_5(TraceIterator &iterator)
 			iterator.segment().end
 		)
 	);
-	return tfunctional_5_kernel(iterator_positive);
+
+	auto integrator = [] (TraceIterator &iterator) -> double {
+		std::complex<double> integral(0, 0);
+		const std::complex<double> factor(0, 4);
+		for (unsigned int t = 0; iterator.hasNext(); t++) {
+			if (t > 0)	// since exp(i*log(0)) == 0
+				integral += exp(factor*std::log(t))
+					* (std::sqrt(t)*(double)iterator.value());
+			iterator.next();
+		}
+		return std::abs(integral);
+	};
+
+	return integrator(iterator_positive);
 }
 
 
