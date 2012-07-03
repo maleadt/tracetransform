@@ -96,7 +96,7 @@ double tfunctional_radon(TraceIterator &iterator)
 // T(f(t)) = Int[0-inf] r*f(r)dr
 double tfunctional_1(TraceIterator &iterator)
 {
-	// Transform the domain from t to r, and integrate
+	// Transform the domain from t to r
 	Point r = iterator_weighedmedian(iterator);
 	TraceIterator iterator_positive = iterator.transformDomain(
 		Segment(
@@ -115,6 +115,7 @@ double tfunctional_1(TraceIterator &iterator)
 	);
 	*/
 
+	// Integrate
 	auto integrator = [] (TraceIterator &iterator) -> double {
 		double integral = 0;
 		for (unsigned int t = 0; iterator.hasNext(); t++) {
@@ -130,7 +131,7 @@ double tfunctional_1(TraceIterator &iterator)
 // T(f(t)) = Int[0-inf] r^2*f(r)dr
 double tfunctional_2(TraceIterator &iterator)
 {
-	// Transform the domain from t to r, and integrate
+	// Transform the domain from t to r
 	Point r = iterator_weighedmedian(iterator);
 	TraceIterator iterator_positive = iterator.transformDomain(
 		Segment(
@@ -139,6 +140,7 @@ double tfunctional_2(TraceIterator &iterator)
 		)
 	);
 
+	// Integrate
 	auto integrator = [] (TraceIterator &iterator) -> double {
 		double integral = 0;
 		for (unsigned int t = 0; iterator.hasNext(); t++) {
@@ -154,7 +156,7 @@ double tfunctional_2(TraceIterator &iterator)
 // T(f(t)) = Int[0-inf] exp(5i*log(r1))*r1*f(r1)dr1
 double tfunctional_3(TraceIterator &iterator)
 {
-	// Transform the domain from t to r, and integrate
+	// Transform the domain from t to r1
 	Point r1 = iterator_weighedmedian_sqrt(iterator);
 	TraceIterator iterator_positive = iterator.transformDomain(
 		Segment(
@@ -163,6 +165,7 @@ double tfunctional_3(TraceIterator &iterator)
 		)
 	);
 
+	// Integrate
 	auto integrator = [] (TraceIterator &iterator) -> double {
 		std::complex<double> integral(0, 0);
 		const std::complex<double> factor(0, 5);
@@ -181,7 +184,7 @@ double tfunctional_3(TraceIterator &iterator)
 // T(f(t)) = Int[0-inf] exp(3i*log(r1))*f(r1)dr1
 double tfunctional_4(TraceIterator &iterator)
 {
-	// Transform the domain from t to r, and integrate
+	// Transform the domain from t to r1
 	Point r1 = iterator_weighedmedian_sqrt(iterator);
 	TraceIterator iterator_positive = iterator.transformDomain(
 		Segment(
@@ -190,6 +193,7 @@ double tfunctional_4(TraceIterator &iterator)
 		)
 	);
 
+	// Integrate
 	auto integrator = [] (TraceIterator &iterator) -> double {
 		std::complex<double> integral(0, 0);
 		const std::complex<double> factor(0, 3);
@@ -208,7 +212,7 @@ double tfunctional_4(TraceIterator &iterator)
 // T(f(t)) = Int[0-inf] exp(4i*log(r1))*sqrt(r1)*f(r1)dr1
 double tfunctional_5(TraceIterator &iterator)
 {
-	// Transform the domain from t to r, and integrate
+	// Transform the domain from t to r1
 	Point r1 = iterator_weighedmedian_sqrt(iterator);
 	TraceIterator iterator_positive = iterator.transformDomain(
 		Segment(
@@ -217,6 +221,7 @@ double tfunctional_5(TraceIterator &iterator)
 		)
 	);
 
+	// Integrate
 	auto integrator = [] (TraceIterator &iterator) -> double {
 		std::complex<double> integral(0, 0);
 		const std::complex<double> factor(0, 4);
