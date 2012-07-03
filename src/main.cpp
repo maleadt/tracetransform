@@ -157,24 +157,25 @@ double tfunctional_2(TraceIterator &iterator)
 double tfunctional_3_kernel(TraceIterator &iterator)
 {
 	std::complex<double> integral(0, 0);
-	std::complex<double> factor(0, 5);
+	const std::complex<double> factor(0, 5);
 	for (unsigned int t = 0; iterator.hasNext(); t++) {
-		integral += exp(factor*std::log(iterator.value()+1))
-			* (double)(t*iterator.value());
+		if (t > 0)	// since exp(i*log(0)) == 0
+			integral += exp(factor*std::log(t))
+				* (double)(t*iterator.value());
 		iterator.next();
 	}
 	return std::abs(integral);
 }
 
-// T(f(t)) = Int[0-inf] exp(5i*log(r1))*r1*f(r1)dr1
+// T(f(t)) = Int[0-inf] exp(5i*log(r))*r*f(r)dr
+// TODO: f(r) or f(r1)?
 double tfunctional_3(TraceIterator &iterator)
 {
-	// Transform the domain from t to r1, and integrate
-	Point r1 = iterator_weighedmedian_sqrt(iterator);
-	// TODO: is this correct?
+	// Transform the domain from t to r, and integrate
+	Point r = iterator_weighedmedian_sqrt(iterator);
 	TraceIterator iterator_positive = iterator.transformDomain(
 		Segment(
-			r1,
+			r,
 			iterator.segment().end
 		)
 	);
