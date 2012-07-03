@@ -242,14 +242,34 @@ double tfunctional_5(TraceIterator &iterator)
 // Main
 //
 
+
+// Available T-functionals
+const std::vector<TFunctional> TFUNCTIONALS{
+	tfunctional_radon,
+	tfunctional_1,
+	tfunctional_2,
+	tfunctional_3,
+	tfunctional_4,
+	tfunctional_5
+};
+
 int main(int argc, char **argv)
 {
 	// Check and read the parameters
-	if (argc < 2) {
-		std::cerr << "Invalid usage: " << argv[0] << " INPUT [OUTPUT]" << std::endl;
+	if (argc < 3) {
+		std::cerr << "Invalid usage: " << argv[0] << " INPUT T-FUNCTIONAL [OUTPUT]" << std::endl;
 		return 1;
 	}
 	std::string fn_input = argv[1];
+
+	// Get the chosen functional
+	std::stringstream ss(argv[2]);
+	unsigned short tfunctional;
+	ss >> tfunctional;
+	if (ss.fail() || tfunctional > TFUNCTIONALS.size()) {
+		std::cerr << "Error: invalid T-functional provided" << std::endl;
+		return 1;
+	}
 
 	// Read the image
 	cv::Mat input = cv::imread(
@@ -262,12 +282,11 @@ int main(int argc, char **argv)
 	}
 
 	// Get the trace transform
-	// TODO: isn't [0:255] a problem?
 	cv::Mat transform = getTraceTransform(
 		input,
 		1,	// angle resolution
 		1,	// distance resolution
-		tfunctional_5
+		TFUNCTIONALS[tfunctional]
 	);
 
 	// Scale the transform back to the [0,255] intensity range
@@ -283,11 +302,11 @@ int main(int argc, char **argv)
 	transform.convertTo(transform_scaled, CV_8UC1, 255.0/maximum, 0);
 
 	// Display or write the image
-	if (argc < 3) {
+	if (argc < 4) {
 		cv::imshow("Trace transform", (transform_scaled));
 		cv::waitKey();
 	} else {
-		std::string fn_output = argv[2];
+		std::string fn_output = argv[3];
 		cv::imwrite(
 			fn_output,
 			transform_scaled

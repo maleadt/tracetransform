@@ -16,6 +16,9 @@
 #include "auxiliary.h"
 #include "traceiterator.h"
 
+// Functional signatures
+typedef double (*TFunctional)(TraceIterator&);
+
 
 //
 // Routines
@@ -45,7 +48,7 @@ cv::Mat getTraceTransform(
 	const cv::Mat &image,
 	const double a_stepsize,
 	const double p_stepsize,
-	double (*functional)(TraceIterator&))
+	TFunctional functional)
 {
 	assert(a_stepsize > 0);
 	assert(p_stepsize > 0);
