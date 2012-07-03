@@ -266,7 +266,7 @@ int main(int argc, char **argv)
 	std::stringstream ss(argv[2]);
 	unsigned short tfunctional;
 	ss >> tfunctional;
-	if (ss.fail() || tfunctional > TFUNCTIONALS.size()) {
+	if (ss.fail() || tfunctional >= TFUNCTIONALS.size()) {
 		std::cerr << "Error: invalid T-functional provided" << std::endl;
 		return 1;
 	}
