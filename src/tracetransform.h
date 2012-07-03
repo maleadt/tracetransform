@@ -17,7 +17,7 @@
 #include "traceiterator.h"
 
 // Functional signatures
-typedef double (*TFunctional)(TraceIterator&);
+typedef std::function<double(TraceIterator&)> TFunctional;
 
 
 //
