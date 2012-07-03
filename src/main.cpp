@@ -172,7 +172,7 @@ double tfunctional_3_kernel(TraceIterator &iterator)
 double tfunctional_3(TraceIterator &iterator)
 {
 	// Transform the domain from t to r, and integrate
-	Point r = iterator_weighedmedian_sqrt(iterator);
+	Point r = iterator_weighedmedian(iterator);
 	TraceIterator iterator_positive = iterator.transformDomain(
 		Segment(
 			r,
@@ -180,6 +180,35 @@ double tfunctional_3(TraceIterator &iterator)
 		)
 	);
 	return tfunctional_3_kernel(iterator_positive);
+
+}
+
+// T(f(t)) = Int[0-inf] exp(3i*log(t))*f(t)dt
+double tfunctional_4_kernel(TraceIterator &iterator)
+{
+	std::complex<double> integral(0, 0);
+	const std::complex<double> factor(0, 3);
+	for (unsigned int t = 0; iterator.hasNext(); t++) {
+		if (t > 0)	// since exp(i*log(0)) == 0
+			integral += exp(factor*std::log(t))
+				* (double)iterator.value();
+		iterator.next();
+	}
+	return std::abs(integral);
+}
+
+// T(f(t)) = Int[0-inf] exp(3i*log(r1))*f(r1)dr1
+double tfunctional_4(TraceIterator &iterator)
+{
+	// Transform the domain from t to r, and integrate
+	Point r1 = iterator_weighedmedian_sqrt(iterator);
+	TraceIterator iterator_positive = iterator.transformDomain(
+		Segment(
+			r1,
+			iterator.segment().end
+		)
+	);
+	return tfunctional_4_kernel(iterator_positive);
 
 }
 
@@ -213,7 +242,7 @@ int main(int argc, char **argv)
 		input,
 		1,	// angle resolution
 		1,	// distance resolution
-		tfunctional_3
+		tfunctional_4
 	);
 
 	// Scale the transform back to the [0,255] intensity range
