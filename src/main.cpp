@@ -43,9 +43,8 @@ Point iterator_weighedmedian(TraceIterator &iterator)
 		integral += iterator.value();
 		iterator.next();
 
-		if (2*integral > sum) {
+		if (2*integral >= sum)
 			break;
-		}
 	}
 	return median;
 }
@@ -68,9 +67,8 @@ Point iterator_weighedmedian_sqrt(TraceIterator &iterator)
 		integral += std::sqrt(iterator.value());
 		iterator.next();
 
-		if (integral > sum/2.0) {
+		if (2*integral >= sum)
 			break;
-		}
 	}
 	return median;
 }
