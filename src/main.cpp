@@ -208,9 +208,31 @@ double tfunctional_5(TraceIterator &iterator)
 
 
 //
-// Main
+// Laguerre P-functionals
 //
 
+// P(g(p)) = Sum(k) abs(g(p+1) -g(p))
+double pfunctional_1(TraceIterator &iterator)
+{
+	unsigned long sum = 0;
+	double previous;
+	if (iterator.hasNext()) {
+		previous = iterator.value();
+		iterator.next();
+	}
+	while (iterator.hasNext()) {
+		double current = iterator.value();
+		sum += std::abs(previous -current);
+		previous = current;
+		iterator.next();
+	}
+	return (double)sum;
+}
+
+
+//
+// Main
+//
 
 // Available T-functionals
 const std::vector<Functional> TFUNCTIONALS{
@@ -222,21 +244,38 @@ const std::vector<Functional> TFUNCTIONALS{
 	tfunctional_5
 };
 
+// Available P-functionals
+const std::vector<Functional> PFUNCTIONALS{
+	pfunctional_1
+};
+
 int main(int argc, char **argv)
 {
 	// Check and read the parameters
-	if (argc < 3) {
-		std::cerr << "Invalid usage: " << argv[0] << " INPUT T-FUNCTIONAL [OUTPUT]" << std::endl;
+	if (argc < 4) {
+		std::cerr << "Invalid usage: " << argv[0] << " INPUT T-FUNCTIONAL P-FUNCTIONAL" << std::endl;
 		return 1;
 	}
 	std::string fn_input = argv[1];
 
-	// Get the chosen functional
-	std::stringstream ss(argv[2]);
+	// Get the chosen T-functional
+	std::stringstream ss;
+	ss << argv[2];
 	unsigned short tfunctional;
 	ss >> tfunctional;
 	if (ss.fail() || tfunctional >= TFUNCTIONALS.size()) {
 		std::cerr << "Error: invalid T-functional provided" << std::endl;
+		return 1;
+	}
+
+	// Get the chosen P-functional
+	ss.clear();
+	ss << argv[3];
+	unsigned short pfunctional;
+	ss >> pfunctional;
+	pfunctional--;
+	if (ss.fail() || pfunctional >= PFUNCTIONALS.size()) {
+		std::cerr << "Error: invalid P-functional provided" << std::endl;
 		return 1;
 	}
 
@@ -250,36 +289,23 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	// Get the trace transform
-	cv::Mat transform = getTraceTransform(
+	// Calculate the trace transform sinogram
+	cv::Mat sinogram = getTraceTransform(
 		input,
 		1,	// angle resolution
 		1,	// distance resolution
 		TFUNCTIONALS[tfunctional]
 	);
 
-	// Scale the transform back to the [0,255] intensity range
-	double maximum = 0;
-	for (int i = 0; i < transform.rows; i++) {
-		for (int j = 0; j < transform.cols; j++) {
-			double pixel = transform.at<double>(i, j);
-			if (pixel > maximum)
-				maximum = pixel;
-		}
-	}
-	cv::Mat transform_scaled(transform.size(), CV_8UC1);
-	transform.convertTo(transform_scaled, CV_8UC1, 255.0/maximum, 0);
+	// Calculate the circus function
+	cv::Mat circus = getOrthonormalCircusFunction(
+		sinogram,
+		PFUNCTIONALS[pfunctional]
+	);
 
-	// Display or write the image
-	if (argc < 4) {
-		cv::imshow("Trace transform", (transform_scaled));
-		cv::waitKey();
-	} else {
-		std::string fn_output = argv[3];
-		cv::imwrite(
-			fn_output,
-			transform_scaled
-		);
+	// Return the output of the circus function
+	for (int p = 0; p < circus.cols; p++) {
+		std::cout << circus.at<double>(0, p) << std::endl;
 	}
 
 	return 0;

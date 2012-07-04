@@ -31,7 +31,7 @@ cv::Mat getOrthonormalCircusFunction(
 	cv::Mat transformed = sinogram;
 
 	// Obtain the nearest orthonormal sinogram
-	cv::SVD svd(transformed);
+	cv::SVD svd(transformed, cv::SVD::FULL_UV);
 	cv::Mat Sk = cv::Mat::eye(
 		transformed.size(),
 		transformed.type()
@@ -57,8 +57,8 @@ cv::Mat getOrthonormalCircusFunction(
 		// Apply the functional
 		double pixel = functional(iterator);
 		circus.at<double>(
-			p,	// row
-			0	// column
+			0,	// row
+			p	// column
 		) = pixel;
 	}
 
