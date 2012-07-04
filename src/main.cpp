@@ -253,30 +253,39 @@ int main(int argc, char **argv)
 {
 	// Check and read the parameters
 	if (argc < 4) {
-		std::cerr << "Invalid usage: " << argv[0] << " INPUT T-FUNCTIONAL P-FUNCTIONAL" << std::endl;
+		std::cerr << "Invalid usage: " << argv[0] << " INPUT T-FUNCTIONALS P-FUNCTIONALS" << std::endl;
 		return 1;
 	}
 	std::string fn_input = argv[1];
 
-	// Get the chosen T-functional
+	// Get the chosen T-functionals
 	std::stringstream ss;
 	ss << argv[2];
-	unsigned short tfunctional;
-	ss >> tfunctional;
-	if (ss.fail() || tfunctional >= TFUNCTIONALS.size()) {
-		std::cerr << "Error: invalid T-functional provided" << std::endl;
-		return 1;
+	unsigned short i;
+	std::vector<Functional> chosen_tfunctionals;
+	while (ss >> i) {
+		if (ss.fail() || i >= TFUNCTIONALS.size()) {
+			std::cerr << "Error: invalid T-functional provided" << std::endl;
+			return 1;
+		}
+		chosen_tfunctionals.push_back(TFUNCTIONALS[i]);
+		if (ss.peek() == ',')
+			ss.ignore();
 	}
 
 	// Get the chosen P-functional
 	ss.clear();
 	ss << argv[3];
-	unsigned short pfunctional;
-	ss >> pfunctional;
-	pfunctional--;
-	if (ss.fail() || pfunctional >= PFUNCTIONALS.size()) {
-		std::cerr << "Error: invalid P-functional provided" << std::endl;
-		return 1;
+	std::vector<Functional> chosen_pfunctionals;
+	while (ss >> i) {
+		i--;
+		if (ss.fail() || i >= PFUNCTIONALS.size()) {
+			std::cerr << "Error: invalid P-functional provided" << std::endl;
+			return 1;
+		}
+		chosen_pfunctionals.push_back(PFUNCTIONALS[i]);
+		if (ss.peek() == ',')
+			ss.ignore();
 	}
 
 	// Read the image
@@ -289,24 +298,59 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	// Calculate the trace transform sinogram
-	cv::Mat sinogram = getTraceTransform(
-		input,
-		1,	// angle resolution
-		1,	// distance resolution
-		TFUNCTIONALS[tfunctional]
-	);
+	// Process all T-functionals
+	cv::Mat data;
+	for (size_t t = 0; t < chosen_tfunctionals.size(); t++) {
+		// Calculate the trace transform sinogram
+		cv::Mat sinogram = getTraceTransform(
+			input,
+			1,	// angle resolution
+			1,	// distance resolution
+			chosen_tfunctionals[t]
+		);
 
-	// Calculate the circus function
-	cv::Mat circus = getOrthonormalCircusFunction(
-		sinogram,
-		PFUNCTIONALS[pfunctional]
-	);
+		// Process all P-functionals
+		for (size_t p = 0; p < chosen_pfunctionals.size(); p++) {
+			// Calculate the circus function
+			cv::Mat circus = getOrthonormalCircusFunction(
+				sinogram,
+				chosen_pfunctionals[p]
+			);
 
-	// Return the output of the circus function
-	for (int p = 0; p < circus.cols; p++) {
-		std::cout << circus.at<double>(0, p) << std::endl;
+			// Allocate the data
+			if (data.empty()) {
+				data = cv::Mat(
+					cv::Size(
+						 circus.cols,
+						 chosen_tfunctionals.size()*chosen_pfunctionals.size()
+					),
+					CV_64FC1
+				);
+			} else {
+				assert(data.cols == circus.cols);
+			}
+
+			// Copy the data
+			std::cout << "T" << t << "-P" << p << std::endl;
+			for (int i = 0; i < circus.cols; i++) {
+				data.at<double>(
+					t*chosen_tfunctionals.size()+p,	// row
+					i				// column
+				) = circus.at<double>(0, i);
+			}
+		}
+
 	}
+
+	// Output the data
+	std::cout << "\n";
+	for (int i = 0; i < data.cols; i++) {
+		for (int tp = 0; tp < data.rows; tp++) {
+			std::cout << data.at<double>(tp, i) << "\t";
+		}
+		std::cout << "\n";
+	}
+	std::cout << std::flush;
 
 	return 0;
 }
