@@ -14,8 +14,9 @@
 
 // Local includes
 #include "auxiliary.h"
-#include "tracetransform.h"
 #include "traceiterator.h"
+#include "tracetransform.h"
+#include "orthocircusfunction.h"
 
 
 //
@@ -212,7 +213,7 @@ double tfunctional_5(TraceIterator &iterator)
 
 
 // Available T-functionals
-const std::vector<TFunctional> TFUNCTIONALS{
+const std::vector<Functional> TFUNCTIONALS{
 	tfunctional_radon,
 	tfunctional_1,
 	tfunctional_2,

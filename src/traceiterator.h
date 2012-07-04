@@ -186,4 +186,7 @@ private:
 	unsigned int m_step;
 };
 
+// Functional signatures
+typedef std::function<double(TraceIterator&)> Functional;
+
 #endif

@@ -16,9 +16,6 @@
 #include "auxiliary.h"
 #include "traceiterator.h"
 
-// Functional signatures
-typedef std::function<double(TraceIterator&)> TFunctional;
-
 
 //
 // Routines
@@ -48,7 +45,7 @@ cv::Mat getTraceTransform(
 	const cv::Mat &image,
 	const double a_stepsize,
 	const double p_stepsize,
-	TFunctional functional)
+	Functional functional)
 {
 	assert(a_stepsize > 0);
 	assert(p_stepsize > 0);
@@ -80,22 +77,22 @@ cv::Mat getTraceTransform(
 			double proj_x = proj.begin.x + p*proj.rcx();
 			double proj_y = proj.begin.y + p*proj.rcy();
 
-			// Calculate projection band (and the part encompassed by the image)
-			Segment band = bounding_segment(
+			// Determine the trace segment
+			Segment trace = bounding_segment(
 				image.size(),
 				a + 90,
 				Point{proj_x, proj_y}
 			);
 
 			// Set-up the trace iterator
-			TraceIterator iterator(image, band);
+			TraceIterator iterator(image, trace);
 
-			// Trace and save
+			// Apply the functional
 			if (iterator.valid()) {
 				double pixel = functional(iterator);
 				transform.at<double>(
-					(int) p_step,   // row
-					(int) a_step    // column
+					(int) p_step,	// row
+					(int) a_step	// column
 				) = pixel;
 			}
 		}
