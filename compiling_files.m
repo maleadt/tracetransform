@@ -1,6 +1,7 @@
 delete('*.mexa64')
 delete('*.mexw64')
 mex TraceSignatures.c
+mex TraceTransform.c
 mex FunctionalT1.c
 mex FunctionalT2.c
 mex FunctionalT3.c
