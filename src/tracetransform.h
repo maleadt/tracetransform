@@ -56,7 +56,7 @@ cv::Mat getTraceTransform(
 
 	// Calculate and create the transform matrix
 	double diagonal = std::hypot(image.size().width, image.size().height);
-	unsigned int a_steps = (unsigned int) std::ceil(180.0 / a_stepsize);
+	unsigned int a_steps = (unsigned int) std::ceil(360.0 / a_stepsize);
 	unsigned int p_steps = (unsigned int) std::ceil(diagonal / p_stepsize);
 	cv::Mat transform = cv::Mat::zeros(
 		(int) p_steps,	// rows
