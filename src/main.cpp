@@ -20,6 +20,9 @@
 #include "tracetransform.h"
 #include "orthocircusfunction.h"
 
+// Debug flags
+#define DEBUG_IMAGES
+
 
 //
 // Iterator helpers
@@ -342,6 +345,13 @@ int main(int argc, char **argv)
 		);
 		truntimes[t] = tprofiler.elapsed();
 
+		// Show the trace transform sinogram
+		std::stringstream sinogram_title;
+		sinogram_title << "sinogram after functional T" << chosen_tfunctionals[t];
+		#ifdef DEBUG_IMAGES
+		cv::imshow(sinogram_title.str(), mat2gray(sinogram));
+		#endif
+
 		// Process all P-functionals
 		for (size_t p = 0; p < chosen_pfunctionals.size(); p++) {
 			// Calculate the circus function
@@ -420,6 +430,11 @@ int main(int argc, char **argv)
 			<< " ms\n";
 	}
 	std::cerr << std::flush;
+
+	// Give the user time to look at the images
+	#ifdef DEBUG_IMAGES
+	cv::waitKey();
+	#endif
 
 	return 0;
 }

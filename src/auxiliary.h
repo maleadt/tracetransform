@@ -214,4 +214,19 @@ bool clip(const Rectangle &rectangle, const Segment &segment, Segment &clipped)
 	return accept;
 }
 
+cv::Mat mat2gray(const cv::Mat &image)
+{
+	double maximum = 0;
+	for (int i = 0; i < image.rows; i++) {
+		for (int j = 0; j < image.cols; j++) {
+		double pixel = image.at<double>(i, j);
+		if (pixel > maximum)
+			maximum = pixel;
+		}
+	}
+	cv::Mat grayscale(image.size(), CV_8UC1);
+	image.convertTo(grayscale, CV_8UC1, 255.0/maximum, 0);
+	return grayscale;
+}
+
 #endif
