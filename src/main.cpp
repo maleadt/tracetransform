@@ -7,6 +7,8 @@
 #include <string>
 #include <cmath>
 #include <complex>
+#include <iomanip>
+#include <ctime>
 
 // OpenCV includes
 #include <cv.h>
@@ -230,6 +232,7 @@ double pfunctional_1(TraceIterator &iterator)
 }
 
 
+
 //
 // Main
 //
@@ -300,8 +303,11 @@ int main(int argc, char **argv)
 
 	// Process all T-functionals
 	cv::Mat data;
+	unsigned int decimals = 7;	// size of the column header
+	std::cerr << "Calculating ";
 	for (size_t t = 0; t < chosen_tfunctionals.size(); t++) {
 		// Calculate the trace transform sinogram
+		std::cerr << " T" << chosen_tfunctionals[t] << "..." << std::flush;
 		cv::Mat sinogram = getTraceTransform(
 			input,
 			1,	// angle resolution
@@ -312,6 +318,7 @@ int main(int argc, char **argv)
 		// Process all P-functionals
 		for (size_t p = 0; p < chosen_pfunctionals.size(); p++) {
 			// Calculate the circus function
+			std::cerr << " P" << chosen_pfunctionals[p] << "..." << std::flush;
 			cv::Mat circus = getOrthonormalCircusFunction(
 				sinogram,
 				PFUNCTIONALS[chosen_pfunctionals[p]]
@@ -331,23 +338,36 @@ int main(int argc, char **argv)
 			}
 
 			// Copy the data
-			std::cout << "T" << chosen_tfunctionals[t]
-				<< "-P" << chosen_pfunctionals[p] << "\t" << std::flush;
 			for (int i = 0; i < circus.cols; i++) {
+				double pixel = circus.at<double>(0, i);
 				data.at<double>(
 					t+p*chosen_pfunctionals.size(),	// row
 					i				// column
-				) = circus.at<double>(0, i);
+				) = pixel;
+				decimals = std::max(decimals, (unsigned int)std::log10(pixel)+3);
 			}
 		}
-
 	}
+	std::cerr << std::endl;
 
 	// Output the data
+	decimals += 2;
+	std::cout << std::setiosflags(std::ios::fixed)
+		<< std::setprecision(2)
+		<< std::left;
+	std::cout << "#  ";
+	for (int tp = 0; tp < data.rows; tp++) {
+		size_t p = tp % chosen_pfunctionals.size();
+		size_t t = tp / chosen_pfunctionals.size();
+		std::stringstream header;
+		header << "T" << chosen_tfunctionals[t] << "-P" << chosen_pfunctionals[p];
+		std::cout << std::setw(decimals) << header.str();
+	}
 	std::cout << "\n";
 	for (int i = 0; i < data.cols; i++) {
+		std::cout << "   ";
 		for (int tp = 0; tp < data.rows; tp++) {
-			std::cout << data.at<double>(tp, i) << "\t";
+			std::cout << std::setw(decimals) << data.at<double>(tp, i);
 		}
 		std::cout << "\n";
 	}
