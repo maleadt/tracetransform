@@ -232,6 +232,27 @@ double pfunctional_1(TraceIterator &iterator)
 }
 
 
+//
+// Auxiliary
+//
+
+struct Profiler
+{
+	Profiler()
+	{
+		t1 = clock();
+	}
+
+	double elapsed()
+	{
+		t2 = clock();
+		return (double)(t2-t1)/CLOCKS_PER_SEC;
+	}
+
+	time_t t1, t2;
+};
+
+
 
 //
 // Main
@@ -301,28 +322,36 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	// Save profiling data
+	std::vector<double> truntimes(chosen_tfunctionals.size());
+	std::vector<double> pruntimes(chosen_tfunctionals.size());
+
 	// Process all T-functionals
 	cv::Mat data;
-	unsigned int decimals = 7;	// size of the column header
+	int decimals = 7;	// size of the column header
 	std::cerr << "Calculating ";
 	for (size_t t = 0; t < chosen_tfunctionals.size(); t++) {
 		// Calculate the trace transform sinogram
 		std::cerr << " T" << chosen_tfunctionals[t] << "..." << std::flush;
+		Profiler tprofiler;
 		cv::Mat sinogram = getTraceTransform(
 			input,
 			1,	// angle resolution
 			1,	// distance resolution
 			TFUNCTIONALS[chosen_tfunctionals[t]]
 		);
+		truntimes[t] = tprofiler.elapsed();
 
 		// Process all P-functionals
 		for (size_t p = 0; p < chosen_pfunctionals.size(); p++) {
 			// Calculate the circus function
 			std::cerr << " P" << chosen_pfunctionals[p] << "..." << std::flush;
+			Profiler pprofiler;
 			cv::Mat circus = getOrthonormalCircusFunction(
 				sinogram,
 				PFUNCTIONALS[chosen_pfunctionals[p]]
 			);
+			pruntimes[p] = pprofiler.elapsed();
 
 			// Allocate the data
 			if (data.empty()) {
@@ -344,34 +373,53 @@ int main(int argc, char **argv)
 					t+p*chosen_pfunctionals.size(),	// row
 					i				// column
 				) = pixel;
-				decimals = std::max(decimals, (unsigned int)std::log10(pixel)+3);
+				decimals = std::max(decimals, (int)std::log10(pixel)+3);
 			}
 		}
 	}
 	std::cerr << std::endl;
 
-	// Output the data
+	// Output the headers
 	decimals += 2;
 	std::cout << std::setiosflags(std::ios::fixed)
 		<< std::setprecision(2)
 		<< std::left;
 	std::cout << "#  ";
-	for (int tp = 0; tp < data.rows; tp++) {
+	for (size_t tp = 0; tp < (unsigned)data.rows; tp++) {
 		size_t p = tp % chosen_pfunctionals.size();
 		size_t t = tp / chosen_pfunctionals.size();
 		std::stringstream header;
-		header << "T" << chosen_tfunctionals[t] << "-P" << chosen_pfunctionals[p];
+		header << "T" << chosen_tfunctionals[t]
+			<< "-P" << chosen_pfunctionals[p];
 		std::cout << std::setw(decimals) << header.str();
 	}
 	std::cout << "\n";
+
+	// Output the data
 	for (int i = 0; i < data.cols; i++) {
 		std::cout << "   ";
 		for (int tp = 0; tp < data.rows; tp++) {
-			std::cout << std::setw(decimals) << data.at<double>(tp, i);
+			std::cout << std::setw(decimals)
+				<< data.at<double>(tp, i);
 		}
 		std::cout << "\n";
 	}
 	std::cout << std::flush;
+
+	// Output the runtimes
+	std::cerr << std::setiosflags(std::ios::fixed) << std::setprecision(0);
+	std::cerr << "Runtime of T-functionals:\n";
+	for (size_t t = 0; t < chosen_tfunctionals.size(); t++) {
+		std::cerr << "   T" << chosen_tfunctionals[t]<< ": "
+			<< 1000*truntimes[t] << " ms\n";
+	}
+	std::cerr << "Runtime of P-functionals:\n";
+	for (size_t t = 0; t < chosen_pfunctionals.size(); t++) {
+		std::cerr << "   P" << chosen_pfunctionals[t] << ": "
+			<< 1000*pruntimes[t]/(double)chosen_tfunctionals.size()
+			<< " ms\n";
+	}
+	std::cerr << std::flush;
 
 	return 0;
 }
