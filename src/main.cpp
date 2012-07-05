@@ -246,6 +246,7 @@ const std::vector<Functional> TFUNCTIONALS{
 
 // Available P-functionals
 const std::vector<Functional> PFUNCTIONALS{
+	nullptr,
 	pfunctional_1
 };
 
@@ -262,13 +263,13 @@ int main(int argc, char **argv)
 	std::stringstream ss;
 	ss << argv[2];
 	unsigned short i;
-	std::vector<Functional> chosen_tfunctionals;
+	std::vector<unsigned short> chosen_tfunctionals;
 	while (ss >> i) {
-		if (ss.fail() || i >= TFUNCTIONALS.size()) {
+		if (ss.fail() || i >= TFUNCTIONALS.size() || TFUNCTIONALS[i] == nullptr) {
 			std::cerr << "Error: invalid T-functional provided" << std::endl;
 			return 1;
 		}
-		chosen_tfunctionals.push_back(TFUNCTIONALS[i]);
+		chosen_tfunctionals.push_back(i);
 		if (ss.peek() == ',')
 			ss.ignore();
 	}
@@ -276,14 +277,13 @@ int main(int argc, char **argv)
 	// Get the chosen P-functional
 	ss.clear();
 	ss << argv[3];
-	std::vector<Functional> chosen_pfunctionals;
+	std::vector<unsigned short> chosen_pfunctionals;
 	while (ss >> i) {
-		i--;
-		if (ss.fail() || i >= PFUNCTIONALS.size()) {
+		if (ss.fail() || i >= PFUNCTIONALS.size() || PFUNCTIONALS[i] == nullptr) {
 			std::cerr << "Error: invalid P-functional provided" << std::endl;
 			return 1;
 		}
-		chosen_pfunctionals.push_back(PFUNCTIONALS[i]);
+		chosen_pfunctionals.push_back(i);
 		if (ss.peek() == ',')
 			ss.ignore();
 	}
@@ -306,7 +306,7 @@ int main(int argc, char **argv)
 			input,
 			1,	// angle resolution
 			1,	// distance resolution
-			chosen_tfunctionals[t]
+			TFUNCTIONALS[chosen_tfunctionals[t]]
 		);
 
 		// Process all P-functionals
@@ -314,7 +314,7 @@ int main(int argc, char **argv)
 			// Calculate the circus function
 			cv::Mat circus = getOrthonormalCircusFunction(
 				sinogram,
-				chosen_pfunctionals[p]
+				PFUNCTIONALS[chosen_pfunctionals[p]]
 			);
 
 			// Allocate the data
@@ -331,10 +331,11 @@ int main(int argc, char **argv)
 			}
 
 			// Copy the data
-			std::cout << "T" << t << "-P" << p << std::endl;
+			std::cout << "T" << chosen_tfunctionals[t]
+				<< "-P" << chosen_pfunctionals[p] << "\t" << std::flush;
 			for (int i = 0; i < circus.cols; i++) {
 				data.at<double>(
-					t*chosen_tfunctionals.size()+p,	// row
+					t+p*chosen_pfunctionals.size(),	// row
 					i				// column
 				) = circus.at<double>(0, i);
 			}
