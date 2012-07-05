@@ -246,9 +246,13 @@ struct Profiler
 		t1 = clock();
 	}
 
+	void stop()
+	{
+		t2 = clock();		
+	}
+
 	double elapsed()
 	{
-		t2 = clock();
 		return (double)(t2-t1)/CLOCKS_PER_SEC;
 	}
 
@@ -326,8 +330,7 @@ int main(int argc, char **argv)
 	}
 
 	// Save profiling data
-	std::vector<double> truntimes(chosen_tfunctionals.size());
-	std::vector<double> pruntimes(chosen_tfunctionals.size());
+	std::vector<double> runtimes(chosen_tfunctionals.size()*chosen_pfunctionals.size());
 
 	// Process all T-functionals
 	cv::Mat data;
@@ -343,7 +346,7 @@ int main(int argc, char **argv)
 			1,	// distance resolution
 			TFUNCTIONALS[chosen_tfunctionals[t]]
 		);
-		truntimes[t] = tprofiler.elapsed();
+		tprofiler.stop();
 
 		// Show the trace transform sinogram
 		std::stringstream sinogram_title;
@@ -361,7 +364,9 @@ int main(int argc, char **argv)
 				sinogram,
 				PFUNCTIONALS[chosen_pfunctionals[p]]
 			);
-			pruntimes[p] = pprofiler.elapsed();
+			pprofiler.stop();
+			runtimes[t*chosen_pfunctionals.size()+p]
+				= tprofiler.elapsed() + pprofiler.elapsed();
 
 			// Allocate the data
 			if (data.empty()) {
@@ -380,7 +385,7 @@ int main(int argc, char **argv)
 			for (int i = 0; i < circus.cols; i++) {
 				double pixel = circus.at<double>(0, i);
 				data.at<double>(
-					t+p*chosen_pfunctionals.size(),	// row
+					t*chosen_pfunctionals.size()+p,	// row
 					i				// column
 				) = pixel;
 				decimals = std::max(decimals, (int)std::log10(pixel)+3);
@@ -391,13 +396,11 @@ int main(int argc, char **argv)
 
 	// Output the headers
 	decimals += 2;
-	std::cout << std::setiosflags(std::ios::fixed)
-		<< std::setprecision(2)
-		<< std::left;
 	std::cout << "#  ";
+	std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(0);
 	for (size_t tp = 0; tp < (unsigned)data.rows; tp++) {
-		size_t p = tp % chosen_pfunctionals.size();
 		size_t t = tp / chosen_pfunctionals.size();
+		size_t p = tp % chosen_pfunctionals.size();
 		std::stringstream header;
 		header << "T" << chosen_tfunctionals[t]
 			<< "-P" << chosen_pfunctionals[p];
@@ -406,6 +409,7 @@ int main(int argc, char **argv)
 	std::cout << "\n";
 
 	// Output the data
+	std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(2);
 	for (int i = 0; i < data.cols; i++) {
 		std::cout << "   ";
 		for (int tp = 0; tp < data.rows; tp++) {
@@ -414,22 +418,16 @@ int main(int argc, char **argv)
 		}
 		std::cout << "\n";
 	}
-	std::cout << std::flush;
 
-	// Output the runtimes
-	std::cerr << std::setiosflags(std::ios::fixed) << std::setprecision(0);
-	std::cerr << "Runtime of T-functionals:\n";
-	for (size_t t = 0; t < chosen_tfunctionals.size(); t++) {
-		std::cerr << "   T" << chosen_tfunctionals[t]<< ": "
-			<< 1000*truntimes[t] << " ms\n";
+	// Output the footer
+	std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(0);
+	std::cout << "#  ";
+	for (size_t tp = 0; tp < (unsigned)data.rows; tp++) {
+		std::stringstream runtime;
+		runtime << 1000.0*runtimes[tp] << "ms";
+		std::cout << std::setw(decimals) << runtime.str();
 	}
-	std::cerr << "Runtime of P-functionals:\n";
-	for (size_t t = 0; t < chosen_pfunctionals.size(); t++) {
-		std::cerr << "   P" << chosen_pfunctionals[t] << ": "
-			<< 1000*pruntimes[t]/(double)chosen_tfunctionals.size()
-			<< " ms\n";
-	}
-	std::cerr << std::flush;
+	std::cout << std::endl;
 
 	// Give the user time to look at the images
 	#ifdef DEBUG_IMAGES
