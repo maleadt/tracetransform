@@ -24,64 +24,6 @@
 
 
 //
-// Iterator helpers
-//
-
-// Look for the median of the weighed indexes
-//
-// Conceptually this expands the list of indexes to a weighed one (in which each
-// index is repeated as many times as the pixel value it represents), after
-// which the median value of that array is located.
-template <typename T>
-Point iterator_weighedmedian(TraceIterator<T> &iterator)
-{
-	unsigned long sum = 0;
-	while (iterator.hasNext()) {
-		sum += iterator.value();
-		iterator.next();
-	}
-	iterator.toFront();
-
-	unsigned long integral = 0;
-	Point median;
-	while (iterator.hasNext()) {
-		median = iterator.point();
-		integral += iterator.value();
-		iterator.next();
-
-		if (2*integral >= sum)
-			break;
-	}
-	return median;
-}
-
-// Look for the median of the weighed indexes, but take the square root of the
-// pixel values as weight
-template <typename T>
-Point iterator_weighedmedian_sqrt(TraceIterator<T> &iterator)
-{
-	double sum = 0;
-	while (iterator.hasNext()) {
-		sum += std::sqrt(iterator.value());
-		iterator.next();
-	}
-	iterator.toFront();
-
-	double integral = 0;
-	Point median;
-	while (iterator.hasNext()) {
-		median = iterator.point();
-		integral += std::sqrt(iterator.value());
-		iterator.next();
-
-		if (2*integral >= sum)
-			break;
-	}
-	return median;
-}
-
-
-//
 // T functionals
 //
 
