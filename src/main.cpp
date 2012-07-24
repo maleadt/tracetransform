@@ -5,7 +5,6 @@
 // System includes
 #include <iostream>
 #include <string>
-#include <cmath>
 #include <complex>
 #include <iomanip>
 #include <ctime>
@@ -21,7 +20,7 @@
 #include "orthocircusfunction.h"
 
 // Debug flags
-#define DEBUG_IMAGES
+//#define DEBUG_IMAGES
 
 
 //
@@ -213,7 +212,7 @@ double tfunctional_5(TraceIterator &iterator)
 
 
 //
-// Laguerre P-functionals
+// P-functionals
 //
 
 // P(g(p)) = Sum(k) abs(g(p+1) -g(p))
@@ -233,6 +232,58 @@ double pfunctional_1(TraceIterator &iterator)
 	}
 	return (double)sum;
 }
+
+// P(g(p)) = median(g(p))
+double pfunctional_2(TraceIterator &iterator)
+{
+	Point median = iterator_weighedmedian(iterator);
+	return iterator.value(median);	// TODO: paper doesn't say g(median)?
+}
+
+// P(g(p)) = Int |Fourier(g(p))|^4
+double pfunctional_3(TraceIterator &iterator)
+{
+	// Dump the trace in a vector
+	// TODO: don't do this explicitly?
+	std::vector<std::complex<double>> trace;
+	while (iterator.hasNext()) {
+		trace.push_back(iterator.value());
+		iterator.next();
+	}
+
+	// Calculate and post-process the Fourier transform
+	std::vector<std::complex<double>> fourier = dft(trace);
+	std::vector<double> trace_processed(fourier.size());
+	for (size_t i = 0; i < fourier.size(); i++)
+		trace_processed[i] = std::pow(std::abs(fourier[i]), 4);
+
+	// Integrate
+	// FIXME: these values are huge (read: overflow) since we use [0,255]
+	double sum = 0;
+	for (size_t i = 0; i < trace_processed.size(); i++)
+		sum += trace_processed[i];
+	return sum;
+
+}
+
+double pfunctional_4(TraceIterator &iterator)
+{
+	return tfunctional_4(iterator);
+}
+
+/*
+double pfunctional_5(TraceIterator &iterator)
+{
+	return tfunctional_6(iterator);
+}
+*/
+
+/*
+double pfunctional_6(TraceIterator &iterator)
+{
+	return tfunctional_7(iterator);
+}
+*/
 
 
 //
@@ -278,14 +329,17 @@ const std::vector<Functional> TFUNCTIONALS{
 // Available P-functionals
 const std::vector<Functional> PFUNCTIONALS{
 	nullptr,
-	pfunctional_1
+	pfunctional_1,
+	pfunctional_2,
+	pfunctional_3
 };
 
 int main(int argc, char **argv)
 {
 	// Check and read the parameters
 	if (argc < 4) {
-		std::cerr << "Invalid usage: " << argv[0] << " INPUT T-FUNCTIONALS P-FUNCTIONALS" << std::endl;
+		std::cerr << "Invalid usage: " << argv[0]
+			<< " INPUT T-FUNCTIONALS P-FUNCTIONALS" << std::endl;
 		return 1;
 	}
 	std::string fn_input = argv[1];

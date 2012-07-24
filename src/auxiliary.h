@@ -6,6 +6,9 @@
 #ifndef AUXILIARY_H
 #define AUXILIARY_H
 
+// System includes
+#include <complex>
+
 // OpenCV includes
 #include <cv.h>
 
@@ -227,6 +230,27 @@ cv::Mat mat2gray(const cv::Mat &image)
 	cv::Mat grayscale(image.size(), CV_8UC1);
 	image.convertTo(grayscale, CV_8UC1, 255.0/maximum, 0);
 	return grayscale;
+}
+
+template <typename T>
+std::vector<std::complex<double>> dft(const std::vector<std::complex<T>> &sample)
+{
+	std::vector<std::complex<double>> output(sample.size());
+	for(size_t i = 0; i < sample.size(); i++) 
+	{
+		output[i] = std::complex<double>(0, 0);
+		double arg = -1.0 * 2.0 * M_PI * (double)i / (double)sample.size();
+		for(size_t j = 0; j < sample.size(); j++) 
+		{
+			double cosarg = std::cos(j * arg);
+			double sinarg = std::sin(j * arg);
+			output[i] += std::complex<double>(
+				((double)sample[j].real() * cosarg - (double)sample[j].imag() * sinarg),
+				((double)sample[j].real() * sinarg + (double)sample[j].imag() * cosarg)
+			);
+		}
+	}
+	return output;
 }
 
 #endif
