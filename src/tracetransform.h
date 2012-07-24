@@ -45,7 +45,7 @@ cv::Mat getTraceTransform(
 	const cv::Mat &image,
 	const double a_stepsize,
 	const double p_stepsize,
-	Functional functional)
+	Functional<uchar, double> functional)
 {
 	assert(a_stepsize > 0);
 	assert(p_stepsize > 0);
@@ -85,7 +85,7 @@ cv::Mat getTraceTransform(
 			);
 
 			// Set-up the trace iterator
-			TraceIterator iterator(image, trace);
+			TraceIterator<uchar> iterator(image, trace);
 
 			// Apply the functional
 			if (iterator.valid()) {

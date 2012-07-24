@@ -32,7 +32,8 @@
 // Conceptually this expands the list of indexes to a weighed one (in which each
 // index is repeated as many times as the pixel value it represents), after
 // which the median value of that array is located.
-Point iterator_weighedmedian(TraceIterator &iterator)
+template <typename T>
+Point iterator_weighedmedian(TraceIterator<T> &iterator)
 {
 	unsigned long sum = 0;
 	while (iterator.hasNext()) {
@@ -56,7 +57,8 @@ Point iterator_weighedmedian(TraceIterator &iterator)
 
 // Look for the median of the weighed indexes, but take the square root of the
 // pixel values as weight
-Point iterator_weighedmedian_sqrt(TraceIterator &iterator)
+template <typename T>
+Point iterator_weighedmedian_sqrt(TraceIterator<T> &iterator)
 {
 	double sum = 0;
 	while (iterator.hasNext()) {
@@ -86,7 +88,8 @@ Point iterator_weighedmedian_sqrt(TraceIterator &iterator)
 // T-functional for the Radon transform.
 //
 // T(f(t)) = Int[0-inf] f(t)dt
-double tfunctional_radon(TraceIterator &iterator)
+template <typename T>
+double tfunctional_radon(TraceIterator<T> &iterator)
 {
 	double integral = 0;
 	while (iterator.hasNext()) {
@@ -97,11 +100,12 @@ double tfunctional_radon(TraceIterator &iterator)
 }
 
 // T(f(t)) = Int[0-inf] r*f(r)dr
-double tfunctional_1(TraceIterator &iterator)
+template <typename T>
+double tfunctional_1(TraceIterator<T> &iterator)
 {
 	// Transform the domain from t to r
 	Point r = iterator_weighedmedian(iterator);
-	TraceIterator transformed = iterator.transformDomain(
+	TraceIterator<T> transformed = iterator.transformDomain(
 		Segment{
 			r,
 			iterator.segment().end
@@ -118,11 +122,12 @@ double tfunctional_1(TraceIterator &iterator)
 }
 
 // T(f(t)) = Int[0-inf] r^2*f(r)dr
-double tfunctional_2(TraceIterator &iterator)
+template <typename T>
+double tfunctional_2(TraceIterator<T> &iterator)
 {
 	// Transform the domain from t to r
 	Point r = iterator_weighedmedian(iterator);
-	TraceIterator transformed = iterator.transformDomain(
+	TraceIterator<T> transformed = iterator.transformDomain(
 		Segment{
 			r,
 			iterator.segment().end
@@ -139,11 +144,12 @@ double tfunctional_2(TraceIterator &iterator)
 }
 
 // T(f(t)) = Int[0-inf] exp(5i*log(r1))*r1*f(r1)dr1
-double tfunctional_3(TraceIterator &iterator)
+template <typename T>
+double tfunctional_3(TraceIterator<T> &iterator)
 {
 	// Transform the domain from t to r1
 	Point r1 = iterator_weighedmedian_sqrt(iterator);
-	TraceIterator transformed = iterator.transformDomain(
+	TraceIterator<T> transformed = iterator.transformDomain(
 		Segment{
 			r1,
 			iterator.segment().end
@@ -163,11 +169,12 @@ double tfunctional_3(TraceIterator &iterator)
 }
 
 // T(f(t)) = Int[0-inf] exp(3i*log(r1))*f(r1)dr1
-double tfunctional_4(TraceIterator &iterator)
+template <typename T>
+double tfunctional_4(TraceIterator<T> &iterator)
 {
 	// Transform the domain from t to r1
 	Point r1 = iterator_weighedmedian_sqrt(iterator);
-	TraceIterator transformed = iterator.transformDomain(
+	TraceIterator<T> transformed = iterator.transformDomain(
 		Segment{
 			r1,
 			iterator.segment().end
@@ -187,11 +194,12 @@ double tfunctional_4(TraceIterator &iterator)
 }
 
 // T(f(t)) = Int[0-inf] exp(4i*log(r1))*sqrt(r1)*f(r1)dr1
-double tfunctional_5(TraceIterator &iterator)
+template <typename T>
+double tfunctional_5(TraceIterator<T> &iterator)
 {
 	// Transform the domain from t to r1
 	Point r1 = iterator_weighedmedian_sqrt(iterator);
-	TraceIterator transformed = iterator.transformDomain(
+	TraceIterator<T> transformed = iterator.transformDomain(
 		Segment{
 			r1,
 			iterator.segment().end
@@ -216,7 +224,8 @@ double tfunctional_5(TraceIterator &iterator)
 //
 
 // P(g(p)) = Sum(k) abs(g(p+1) -g(p))
-double pfunctional_1(TraceIterator &iterator)
+template <typename T>
+double pfunctional_1(TraceIterator<T> &iterator)
 {
 	unsigned long sum = 0;
 	double previous;
@@ -234,14 +243,16 @@ double pfunctional_1(TraceIterator &iterator)
 }
 
 // P(g(p)) = median(g(p))
-double pfunctional_2(TraceIterator &iterator)
+template <typename T>
+double pfunctional_2(TraceIterator<T> &iterator)
 {
 	Point median = iterator_weighedmedian(iterator);
 	return iterator.value(median);	// TODO: paper doesn't say g(median)?
 }
 
 // P(g(p)) = Int |Fourier(g(p))|^4
-double pfunctional_3(TraceIterator &iterator)
+template <typename T>
+double pfunctional_3(TraceIterator<T> &iterator)
 {
 	// Dump the trace in a vector
 	// TODO: don't do this explicitly?
@@ -266,12 +277,14 @@ double pfunctional_3(TraceIterator &iterator)
 
 }
 
-double pfunctional_4(TraceIterator &iterator)
+template <typename T>
+double pfunctional_4(TraceIterator<T> &iterator)
 {
 	return tfunctional_4(iterator);
 }
 
 /*
+template <typename T>
 double pfunctional_5(TraceIterator &iterator)
 {
 	return tfunctional_6(iterator);
@@ -279,6 +292,7 @@ double pfunctional_5(TraceIterator &iterator)
 */
 
 /*
+template <typename T>
 double pfunctional_6(TraceIterator &iterator)
 {
 	return tfunctional_7(iterator);
@@ -317,21 +331,21 @@ struct Profiler
 //
 
 // Available T-functionals
-const std::vector<Functional> TFUNCTIONALS{
-	tfunctional_radon,
-	tfunctional_1,
-	tfunctional_2,
-	tfunctional_3,
-	tfunctional_4,
-	tfunctional_5
+const std::vector<Functional<uchar,double>> TFUNCTIONALS{
+	tfunctional_radon<uchar>,
+	tfunctional_1<uchar>,
+	tfunctional_2<uchar>,
+	tfunctional_3<uchar>,
+	tfunctional_4<uchar>,
+	tfunctional_5<uchar>
 };
 
 // Available P-functionals
-const std::vector<Functional> PFUNCTIONALS{
+const std::vector<Functional<double,double>> PFUNCTIONALS{
 	nullptr,
-	pfunctional_1,
-	pfunctional_2,
-	pfunctional_3
+	pfunctional_1<double>,
+	pfunctional_2<double>,
+	pfunctional_3<double>
 };
 
 int main(int argc, char **argv)

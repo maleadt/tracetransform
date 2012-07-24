@@ -23,6 +23,7 @@
 // This class allows to trace a line within a matrix, without having to rotate
 // it completely. It uses bilinear interpolation to get values of pixels not
 // addressable using integer indexes
+template <typename T>
 class TraceIterator {
 public:
 	//
@@ -74,12 +75,12 @@ public:
 		return m_p;
 	}
 
-	uchar value() const
+	T value() const
 	{
 		return value(m_p);
 	}
 	
-	uchar value(const Point &p) const
+	T value(const Point &p) const
 	{
 		// Get fractional parts, floors and ceilings
 		double x_fract, x_int;
@@ -88,11 +89,11 @@ public:
 		y_fract = std::modf(p.y, &y_int);
 
 		// Get the pixel value
-		uchar pixel;
+		T pixel;
 		assert(p.x >= 0 && p.y >= 0);	// 'cause *_fract end up with same sign
 		if (x_fract < std::numeric_limits<double>::epsilon()
 			&& y_fract < std::numeric_limits<double>::epsilon()) {
-			pixel = m_image.at<uchar>((int)y_int, (int)x_int);
+			pixel = m_image.at<T>((int)y_int, (int)x_int);
 		} else {	// bilinear interpolation
 			double upper_left, upper_right, bottom_left, bottom_right;
 			double upper, bottom;
@@ -101,24 +102,24 @@ public:
 			bool y_pureint = y_fract < std::numeric_limits<double>::epsilon();
 
 			// Calculate fractional coordinates
-			upper_left = m_image.at<uchar>((int)y_int, (int)x_int);
+			upper_left = m_image.at<T>((int)y_int, (int)x_int);
 			if (!x_pureint)
-				upper_right = m_image.at<uchar>((int)y_int, (int)x_int+1);
+				upper_right = m_image.at<T>((int)y_int, (int)x_int+1);
 			if (!y_pureint)
-				bottom_left = m_image.at<uchar>((int)y_int+1, (int)x_int);
+				bottom_left = m_image.at<T>((int)y_int+1, (int)x_int);
 			if (!x_pureint && !y_pureint)
-				bottom_right = m_image.at<uchar>((int)y_int+1, (int)x_int+1);
+				bottom_right = m_image.at<T>((int)y_int+1, (int)x_int+1);
 
 			// Calculate pixel value
 			if (x_pureint) {
-				pixel = (uchar) (upper_left*(1-y_fract) + bottom_left*y_fract);
+				pixel = (T) (upper_left*(1-y_fract) + bottom_left*y_fract);
 			} else if (y_pureint) {
-				pixel = (uchar) (upper_left*(1-x_fract) + upper_right*x_fract);
+				pixel = (T) (upper_left*(1-x_fract) + upper_right*x_fract);
 			} else {
 				upper = upper_left*(1-x_fract) + upper_right*x_fract;
 				bottom = bottom_left*(1-x_fract) + bottom_right*x_fract;
 				
-				pixel = (uchar) (upper*(1-y_fract) + bottom*y_fract);
+				pixel = (T) (upper*(1-y_fract) + bottom*y_fract);
 			}
 		}
 
@@ -186,6 +187,8 @@ private:
 };
 
 // Functional signatures
-typedef std::function<double(TraceIterator&)> Functional;
+template <typename IN, typename OUT>
+using Functional = std::function<OUT(TraceIterator<IN>&)>;
+
 
 #endif

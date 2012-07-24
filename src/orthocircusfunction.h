@@ -20,9 +20,7 @@
 // Routines
 //
 
-cv::Mat getOrthonormalCircusFunction(
-	const cv::Mat &sinogram,
-	Functional functional)
+cv::Mat getOrthonormalCircusFunction(const cv::Mat &sinogram)
 {
 	assert(sinogram.type() == CV_64FC1);
 
@@ -51,11 +49,11 @@ cv::Mat getOrthonormalCircusFunction(
 		};
 
 		// Set-up the trace iterator
-		TraceIterator iterator(transformed, trace);
+		TraceIterator<double> iterator(transformed, trace);
 		assert(iterator.valid());
 
 		// Apply the functional
-		double pixel = functional(iterator);
+		double pixel = /*functional(iterator)*/ 0;
 		circus.at<double>(
 			0,	// row
 			p	// column
