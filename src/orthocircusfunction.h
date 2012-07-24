@@ -20,40 +20,30 @@
 // Routines
 //
 
-cv::Mat getOrthonormalCircusFunction(const cv::Mat &sinogram)
+cv::Mat getCircusFunction(
+	const cv::Mat &sinogram,
+	Functional<double, double> functional)
 {
 	assert(sinogram.type() == CV_64FC1);
 
-	// Change the domain of the sinogram from p to z
-	// TODO
-	cv::Mat transformed = sinogram;
-
-	// Obtain the nearest orthonormal sinogram
-	cv::SVD svd(transformed, cv::SVD::FULL_UV);
-	cv::Mat Sk = cv::Mat::eye(
-		transformed.size(),
-		transformed.type()
-	);
-	cv::Mat nos = svd.u * Sk * svd.vt;
-
-	// Apply the Laguerre P-functional
+	// Apply the P-functional
 	cv::Mat circus(
-		cv::Size(transformed.cols, 1),
-		transformed.type()
+		cv::Size(sinogram.cols, 1),
+		sinogram.type()
 	);
-	for (int p = 0; p < transformed.cols; p++) {
+	for (int p = 0; p < sinogram.cols; p++) {
 		// Determine the trace segment
 		Segment trace = Segment{
 			Point{(double)p, 0},
-			Point{(double)p, (double)transformed.rows-1}
+			Point{(double)p, (double)sinogram.rows-1}
 		};
 
 		// Set-up the trace iterator
-		TraceIterator<double> iterator(transformed, trace);
+		TraceIterator<double> iterator(sinogram, trace);
 		assert(iterator.valid());
 
 		// Apply the functional
-		double pixel = /*functional(iterator)*/ 0;
+		double pixel = functional(iterator);
 		circus.at<double>(
 			0,	// row
 			p	// column
@@ -61,6 +51,55 @@ cv::Mat getOrthonormalCircusFunction(const cv::Mat &sinogram)
 	}
 
 	return circus;
+}
+
+cv::Mat getNearestOrthonormalizedSinogram(const cv::Mat &sinogram)
+{
+	// Detect the offset of each column to the sinogram center
+	assert(sinogram.rows > 0);
+	unsigned int sinogram_center = (unsigned int) std::floor((sinogram.rows - 1) / 2.0);
+	std::vector<int> offset(sinogram.rows);
+	for (int p = 0; p < sinogram.cols; p++) {
+		// Determine the trace segment
+		Segment trace = Segment{
+			Point{(double)p, 0},
+			Point{(double)p, (double)sinogram.rows-1}
+		};
+
+		// Set-up the trace iterator
+		TraceIterator<double> iterator(sinogram, trace);
+		assert(iterator.valid());
+
+		// Get and compare the median
+		Point median = iterator_weighedmedian(iterator);
+		offset[p] = (median.y - sinogram_center);
+	}
+
+	// Align each column to the sinogram center
+	int min = *(std::min_element(offset.begin(), offset.end()));
+	int max = *(std::max_element(offset.begin(), offset.end()));
+	unsigned int padding = max + std::abs(min);
+	cv::Mat aligned = cv::Mat::zeros(
+		sinogram.rows + padding,
+		sinogram.cols,
+		sinogram.type()
+	);
+	for (int j = 0; j < sinogram.cols; j++) {
+		for (int i = 0; i < sinogram.rows; i++) {
+			aligned.at<double>(sinogram_center+i-offset[j], j) = 
+				sinogram.at<double>(i, j);
+		}
+	}
+
+	// Compute the nearest orthonormal sinogram
+	cv::SVD svd(aligned, cv::SVD::FULL_UV);
+	cv::Mat diagonal = cv::Mat::eye(
+		aligned.size(),	// (often) rectangular!
+		aligned.type()
+	);
+	cv::Mat nos = svd.u * diagonal * svd.vt;
+
+	return nos;
 }
 
 #endif

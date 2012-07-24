@@ -428,7 +428,7 @@ int main(int argc, char **argv)
 			// Calculate the circus function
 			std::cerr << " P" << chosen_pfunctionals[p] << "..." << std::flush;
 			Profiler pprofiler;
-			cv::Mat circus = getOrthonormalCircusFunction(
+			cv::Mat circus = getCircusFunction(
 				sinogram,
 				PFUNCTIONALS[chosen_pfunctionals[p]]
 			);
