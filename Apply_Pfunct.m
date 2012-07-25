@@ -29,7 +29,7 @@ for i=1:Numb_T
         if Code_Pfunct(j) > 3           % Othornormal functionals
             NOS = Sc;%Sc(cf:end,:);    %Obtaining the positive domain
         else
-            NOS = S;
+            NOS = S;                    % use aligned (which contains the same, just with some additional zeros)
         end
         CircusF(:,Numb_P*(i-1)+j)=functP(NOS,Code_Pfunct(j),cf); %Applying the P functionals
     end

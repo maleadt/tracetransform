@@ -15,11 +15,11 @@ angle_intrvl = 3;                       %3 degrees of angle interval between rot
 flag = 1;                               %Flag 0 (no sinogram orthonormalization) or 1 (sinogram orthonormalization) 
 
 % Main function that extracts the orthonormal signatures.
-%CircusF_a = OrthTraceSign(A_smth,Code_Tfunct,Code_Pfunct, angle_intrvl,flag); 
+CircusF_a = OrthTraceSign(A_smth,Code_Tfunct,Code_Pfunct, angle_intrvl,flag); 
 %
-%corr(CircusF_a)                         % Testing that the features extracted are actually orthonormal 
-%figure
-%imshow(A)                               % Showing the original image    
-%figure
-%plot(CircusF_a)                         % Plotting the features extracted
+corr(CircusF_a)                         % Testing that the features extracted are actually orthonormal 
+figure
+imshow(A)                               % Showing the original image    
+figure
+plot(CircusF_a)                         % Plotting the features extracted
 sinograms = OrthTraceTransform(A_smth,Code_Tfunct,Code_Pfunct, angle_intrvl,flag); 
