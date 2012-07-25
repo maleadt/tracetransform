@@ -165,6 +165,10 @@ double tfunctional_5(TraceIterator<T> &iterator)
 // P-functionals
 //
 
+// TODO: P-functionals are column iterators, hence they should not contain all
+//       the complex logic to billinearly interpolate points. Maybe use 
+//       class inheritance to avoid this?
+
 // P(g(p)) = Sum(k) abs(g(p+1) -g(p))
 template <typename T>
 double pfunctional_1(TraceIterator<T> &iterator)
@@ -287,7 +291,14 @@ const std::vector<Functional<double,double>> PFUNCTIONALS{
 	nullptr,
 	pfunctional_1<double>,
 	pfunctional_2<double>,
-	pfunctional_3<double>
+	pfunctional_3<double>,
+	pfunctional_4<double>
+	// SIZE = Hermite functional
+};
+const unsigned short PFUNCTIONAL_HERMITE = PFUNCTIONALS.size();
+enum PFunctionalType {
+	REGULAR,
+	HERMITE
 };
 
 int main(int argc, char **argv)
@@ -310,7 +321,9 @@ int main(int argc, char **argv)
 			std::cerr << "Error: invalid T-functional provided" << std::endl;
 			return 1;
 		}
+
 		chosen_tfunctionals.push_back(i);
+
 		if (ss.peek() == ',')
 			ss.ignore();
 	}
@@ -319,12 +332,33 @@ int main(int argc, char **argv)
 	ss.clear();
 	ss << argv[3];
 	std::vector<unsigned short> chosen_pfunctionals;
-	while (ss >> i) {
+	std::vector<unsigned short> chosen_pfunctionals_parameter;
+	while (!ss.eof()) {
+		PFunctionalType type = REGULAR;
+		if (ss.peek() == 'H') {
+			type = HERMITE;
+			ss.ignore();
+			ss >> i;
+		} else {
+			ss >> i;
+		}
+
 		if (ss.fail() || i >= PFUNCTIONALS.size() || PFUNCTIONALS[i] == nullptr) {
 			std::cerr << "Error: invalid P-functional provided" << std::endl;
 			return 1;
 		}
-		chosen_pfunctionals.push_back(i);
+
+		switch (type) {
+			case REGULAR:
+				chosen_pfunctionals.push_back(i);
+				chosen_pfunctionals_parameter.push_back(0);
+				break;
+			case HERMITE:
+				chosen_pfunctionals.push_back(PFUNCTIONAL_HERMITE);
+				chosen_pfunctionals_parameter.push_back(i);
+				break;
+		}
+
 		if (ss.peek() == ',')
 			ss.ignore();
 	}
@@ -368,12 +402,21 @@ int main(int argc, char **argv)
 		// Process all P-functionals
 		for (size_t p = 0; p < chosen_pfunctionals.size(); p++) {
 			// Calculate the circus function
-			std::cerr << " P" << chosen_pfunctionals[p] << "..." << std::flush;
 			Profiler pprofiler;
-			cv::Mat circus = getCircusFunction(
-				sinogram,
-				PFUNCTIONALS[chosen_pfunctionals[p]]
-			);
+			cv::Mat circus;
+			if (chosen_pfunctionals[p] == PFUNCTIONAL_HERMITE) {
+				std::cerr << " H" << chosen_pfunctionals_parameter[p] << "..." << std::flush;
+				circus = getHermiteCircusFunction(
+					sinogram,
+					chosen_pfunctionals_parameter[p]
+				);
+			} else {
+				std::cerr << " P" << chosen_pfunctionals[p] << "..." << std::flush;
+				circus = getCircusFunction(
+					sinogram,
+					PFUNCTIONALS[chosen_pfunctionals[p]]
+				);
+			}
 			pprofiler.stop();
 			runtimes[t*chosen_pfunctionals.size()+p]
 				= tprofiler.elapsed() + pprofiler.elapsed();
@@ -412,8 +455,11 @@ int main(int argc, char **argv)
 		size_t t = tp / chosen_pfunctionals.size();
 		size_t p = tp % chosen_pfunctionals.size();
 		std::stringstream header;
-		header << "T" << chosen_tfunctionals[t]
-			<< "-P" << chosen_pfunctionals[p];
+		header << "T" << chosen_tfunctionals[t];
+		if (chosen_pfunctionals[p] == PFUNCTIONAL_HERMITE)
+			header << "-H" << chosen_pfunctionals_parameter[p];
+		else
+			header << "-P" << chosen_pfunctionals[p];
 		std::cout << std::setw(decimals) << header.str();
 	}
 	std::cout << "\n";

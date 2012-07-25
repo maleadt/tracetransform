@@ -160,6 +160,11 @@ public:
 		}
 	}
 
+	unsigned int samples()
+	{
+		return 1 + std::floor(m_clipped.length());
+	}
+
 	void toFront()
 	{
 		m_p = m_clipped.begin;
