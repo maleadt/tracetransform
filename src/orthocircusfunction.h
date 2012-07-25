@@ -22,7 +22,7 @@
 
 cv::Mat getCircusFunction(
 	const cv::Mat &sinogram,
-	Functional<double, double> functional)
+	Functional<double, double> *functional)
 {
 	assert(sinogram.type() == CV_64FC1);
 
@@ -43,7 +43,7 @@ cv::Mat getCircusFunction(
 		assert(iterator.valid());
 
 		// Apply the functional
-		double pixel = functional(iterator);
+		double pixel = (*functional)(iterator);
 		circus.at<double>(
 			0,	// row
 			p	// column
@@ -122,7 +122,7 @@ double pfunctional_hermite(TraceIterator<T> &iterator, unsigned int degree)
 	return integral;
 }
 
-cv::Mat getHermiteCircusFunction(
+cv::Mat getOrthonormalCircusFunction(
 	const cv::Mat &sinogram,
 	unsigned int degree)
 {

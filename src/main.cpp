@@ -16,234 +16,12 @@
 // Local includes
 #include "auxiliary.h"
 #include "traceiterator.h"
+#include "functionals.h"
 #include "tracetransform.h"
 #include "orthocircusfunction.h"
 
 // Debug flags
 //#define DEBUG_IMAGES
-
-
-//
-// T functionals
-//
-
-// T-functional for the Radon transform.
-//
-// T(f(t)) = Int[0-inf] f(t)dt
-template <typename T>
-double tfunctional_radon(TraceIterator<T> &iterator)
-{
-	double integral = 0;
-	while (iterator.hasNext()) {
-		integral += iterator.value();
-		iterator.next();
-	}
-	return integral;
-}
-
-// T(f(t)) = Int[0-inf] r*f(r)dr
-template <typename T>
-double tfunctional_1(TraceIterator<T> &iterator)
-{
-	// Transform the domain from t to r
-	Point r = iterator_weighedmedian(iterator);
-	TraceIterator<T> transformed = iterator.transformDomain(
-		Segment{
-			r,
-			iterator.segment().end
-		}
-	);
-
-	// Integrate
-	double integral = 0;
-	for (unsigned int t = 0; transformed.hasNext(); t++) {
-		integral += transformed.value() * t;
-		transformed.next();
-	}
-	return integral;
-}
-
-// T(f(t)) = Int[0-inf] r^2*f(r)dr
-template <typename T>
-double tfunctional_2(TraceIterator<T> &iterator)
-{
-	// Transform the domain from t to r
-	Point r = iterator_weighedmedian(iterator);
-	TraceIterator<T> transformed = iterator.transformDomain(
-		Segment{
-			r,
-			iterator.segment().end
-		}
-	);
-
-	// Integrate
-	double integral = 0;
-	for (unsigned int t = 0; transformed.hasNext(); t++) {
-		integral += transformed.value() * t*t;
-		transformed.next();
-	}
-	return integral;
-}
-
-// T(f(t)) = Int[0-inf] exp(5i*log(r1))*r1*f(r1)dr1
-template <typename T>
-double tfunctional_3(TraceIterator<T> &iterator)
-{
-	// Transform the domain from t to r1
-	Point r1 = iterator_weighedmedian_sqrt(iterator);
-	TraceIterator<T> transformed = iterator.transformDomain(
-		Segment{
-			r1,
-			iterator.segment().end
-		}
-	);
-
-	// Integrate
-	std::complex<double> integral(0, 0);
-	const std::complex<double> factor(0, 5);
-	for (unsigned int t = 0; transformed.hasNext(); t++) {
-		if (t > 0)	// since exp(i*log(0)) == 0
-			integral += exp(factor*std::log(t))
-				* (t*(double)transformed.value());
-		transformed.next();
-	}
-	return std::abs(integral);
-}
-
-// T(f(t)) = Int[0-inf] exp(3i*log(r1))*f(r1)dr1
-template <typename T>
-double tfunctional_4(TraceIterator<T> &iterator)
-{
-	// Transform the domain from t to r1
-	Point r1 = iterator_weighedmedian_sqrt(iterator);
-	TraceIterator<T> transformed = iterator.transformDomain(
-		Segment{
-			r1,
-			iterator.segment().end
-		}
-	);
-
-	// Integrate
-	std::complex<double> integral(0, 0);
-	const std::complex<double> factor(0, 3);
-	for (unsigned int t = 0; transformed.hasNext(); t++) {
-		if (t > 0)	// since exp(i*log(0)) == 0
-			integral += exp(factor*std::log(t))
-				* (double)transformed.value();
-		transformed.next();
-	}
-	return std::abs(integral);
-}
-
-// T(f(t)) = Int[0-inf] exp(4i*log(r1))*sqrt(r1)*f(r1)dr1
-template <typename T>
-double tfunctional_5(TraceIterator<T> &iterator)
-{
-	// Transform the domain from t to r1
-	Point r1 = iterator_weighedmedian_sqrt(iterator);
-	TraceIterator<T> transformed = iterator.transformDomain(
-		Segment{
-			r1,
-			iterator.segment().end
-		}
-	);
-
-	// Integrate
-	std::complex<double> integral(0, 0);
-	const std::complex<double> factor(0, 4);
-	for (unsigned int t = 0; transformed.hasNext(); t++) {
-		if (t > 0)	// since exp(i*log(0)) == 0
-			integral += exp(factor*std::log(t))
-				* (std::sqrt(t)*(double)transformed.value());
-		transformed.next();
-	}
-	return std::abs(integral);
-}
-
-
-//
-// P-functionals
-//
-
-// TODO: P-functionals are column iterators, hence they should not contain all
-//       the complex logic to billinearly interpolate points. Maybe use 
-//       class inheritance to avoid this?
-
-// P(g(p)) = Sum(k) abs(g(p+1) -g(p))
-template <typename T>
-double pfunctional_1(TraceIterator<T> &iterator)
-{
-	unsigned long sum = 0;
-	double previous;
-	if (iterator.hasNext()) {
-		previous = iterator.value();
-		iterator.next();
-	}
-	while (iterator.hasNext()) {
-		double current = iterator.value();
-		sum += std::abs(previous -current);
-		previous = current;
-		iterator.next();
-	}
-	return (double)sum;
-}
-
-// P(g(p)) = median(g(p))
-template <typename T>
-double pfunctional_2(TraceIterator<T> &iterator)
-{
-	Point median = iterator_weighedmedian(iterator);
-	return iterator.value(median);	// TODO: paper doesn't say g(median)?
-}
-
-// P(g(p)) = Int |Fourier(g(p))|^4
-template <typename T>
-double pfunctional_3(TraceIterator<T> &iterator)
-{
-	// Dump the trace in a vector
-	// TODO: don't do this explicitly?
-	std::vector<std::complex<double>> trace;
-	while (iterator.hasNext()) {
-		trace.push_back(iterator.value());
-		iterator.next();
-	}
-
-	// Calculate and post-process the Fourier transform
-	std::vector<std::complex<double>> fourier = dft(trace);
-	std::vector<double> trace_processed(fourier.size());
-	for (size_t i = 0; i < fourier.size(); i++)
-		trace_processed[i] = std::pow(std::abs(fourier[i]), 4);
-
-	// Integrate
-	// FIXME: these values are huge (read: overflow) since we use [0,255]
-	double sum = 0;
-	for (size_t i = 0; i < trace_processed.size(); i++)
-		sum += trace_processed[i];
-	return sum;
-
-}
-
-template <typename T>
-double pfunctional_4(TraceIterator<T> &iterator)
-{
-	return tfunctional_4(iterator);
-}
-
-/*
-template <typename T>
-double pfunctional_5(TraceIterator &iterator)
-{
-	return tfunctional_6(iterator);
-}
-*/
-
-/*
-template <typename T>
-double pfunctional_6(TraceIterator &iterator)
-{
-	return tfunctional_7(iterator);
-}
-*/
 
 
 //
@@ -277,22 +55,21 @@ struct Profiler
 //
 
 // Available T-functionals
-const std::vector<Functional<uchar,double>> TFUNCTIONALS{
-	tfunctional_radon<uchar>,
-	tfunctional_1<uchar>,
-	tfunctional_2<uchar>,
-	tfunctional_3<uchar>,
-	tfunctional_4<uchar>,
-	tfunctional_5<uchar>
+const std::vector<TFunctional<uchar,double>*> TFUNCTIONALS{
+	new TFunctionalRadon<uchar>(),
+	new TFunctional1<uchar>(),
+	new TFunctional2<uchar>(),
+	new TFunctional3<uchar>(),
+	new TFunctional4<uchar>(),
+	new TFunctional5<uchar>()
 };
 
 // Available P-functionals
-const std::vector<Functional<double,double>> PFUNCTIONALS{
+const std::vector<PFunctional<double,double>*> PFUNCTIONALS{
 	nullptr,
-	pfunctional_1<double>,
-	pfunctional_2<double>,
-	pfunctional_3<double>,
-	pfunctional_4<double>
+	new PFunctional1<double>(),
+	new PFunctional2<double>(),
+	new PFunctional3<double>()
 	// SIZE = Hermite functional
 };
 const unsigned short PFUNCTIONAL_HERMITE = PFUNCTIONALS.size();
@@ -406,7 +183,7 @@ int main(int argc, char **argv)
 			cv::Mat circus;
 			if (chosen_pfunctionals[p] == PFUNCTIONAL_HERMITE) {
 				std::cerr << " H" << chosen_pfunctionals_parameter[p] << "..." << std::flush;
-				circus = getHermiteCircusFunction(
+				circus = getOrthonormalCircusFunction(
 					sinogram,
 					chosen_pfunctionals_parameter[p]
 				);

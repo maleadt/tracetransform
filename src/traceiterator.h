@@ -20,6 +20,8 @@
 // Class definition
 //
 
+// TODO: ColumnIterator
+
 // This class allows to trace a line within a matrix, without having to rotate
 // it completely. It uses bilinear interpolation to get values of pixels not
 // addressable using integer indexes
@@ -191,10 +193,6 @@ private:
 	unsigned int m_step;
 };
 
-// Functional signatures
-template <typename IN, typename OUT>
-using Functional = std::function<OUT(TraceIterator<IN>&)>;
-
 
 //
 // Iterator helpers
@@ -252,6 +250,5 @@ Point iterator_weighedmedian_sqrt(TraceIterator<T> &iterator)
 	}
 	return median;
 }
-
 
 #endif
