@@ -6,6 +6,9 @@
 #ifndef FUNCTIONALS_H
 #define FUNCTIONALS_H
 
+// Local includes
+#include "auxiliary.h"
+
 
 //
 // Class definition
@@ -197,7 +200,11 @@ public:
 template <typename IN, typename OUT>
 class PFunctional : public Functional<IN, OUT>
 {
-
+public:
+	virtual bool orthonormal() const
+	{
+		return false;
+	}
 };
 
 template <typename IN>
@@ -263,6 +270,41 @@ public:
 			sum += trace_processed[i];
 		return sum;
 	}
+};
+
+template <typename IN>
+class PFunctionalHermite : public PFunctional<IN, double>
+{
+public:
+	PFunctionalHermite(unsigned int degree)
+		: m_degree(degree)
+	{
+	}
+
+	// Hn(g(p)) = Int psi(z)
+	double operator()(TraceIterator<IN>& iterator)
+	{
+		// Discretize the [-10, 10] domain to fit the column iterator
+		double z = -10;
+		double stepsize = 20.0 / (iterator.samples() - 1);
+
+		// Calculate the integral
+		double integral = 0;
+		while (iterator.hasNext()) {
+			integral += iterator.value() * hermite_function(m_degree, z);
+			iterator.next();
+			z += stepsize;
+		}
+		return integral;
+	}
+
+	virtual bool orthonormal() const
+	{
+		return true;
+	}
+
+private:
+	const unsigned int m_degree;
 };
 
 #endif

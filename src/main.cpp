@@ -4,9 +4,10 @@
 
 // System includes
 #include <iostream>
-#include <string>
-#include <complex>
 #include <iomanip>
+#include <string>
+#include <sstream>
+#include <vector>
 #include <ctime>
 
 // OpenCV includes
@@ -48,34 +49,34 @@ struct Profiler
 	time_t t1, t2;
 };
 
+std::string ordinalSuffix(unsigned int n) {
+	// Numbers from 11 to 13 don't have st, nd, rd
+	if (10 < (n%100) && (n%100) < 14)
+		return "th";
+
+	switch(n % 10) {
+	case 1:
+		return "st";
+
+	case 2:
+		return "nd";
+
+	case 3:
+		return "rd";
+
+	default:
+		return "th";
+	}
+} 
 
 
 //
 // Main
 //
 
-// Available T-functionals
-const std::vector<TFunctional<uchar,double>*> TFUNCTIONALS{
-	new TFunctionalRadon<uchar>(),
-	new TFunctional1<uchar>(),
-	new TFunctional2<uchar>(),
-	new TFunctional3<uchar>(),
-	new TFunctional4<uchar>(),
-	new TFunctional5<uchar>()
-};
-
-// Available P-functionals
-const std::vector<PFunctional<double,double>*> PFUNCTIONALS{
-	nullptr,
-	new PFunctional1<double>(),
-	new PFunctional2<double>(),
-	new PFunctional3<double>()
-	// SIZE = Hermite functional
-};
-const unsigned short PFUNCTIONAL_HERMITE = PFUNCTIONALS.size();
 enum PFunctionalType {
-	REGULAR,
-	HERMITE
+       REGULAR,
+       HERMITE
 };
 
 int main(int argc, char **argv)
@@ -92,14 +93,37 @@ int main(int argc, char **argv)
 	std::stringstream ss;
 	ss << argv[2];
 	unsigned short i;
-	std::vector<unsigned short> chosen_tfunctionals;
-	while (ss >> i) {
-		if (ss.fail() || i >= TFUNCTIONALS.size() || TFUNCTIONALS[i] == nullptr) {
-			std::cerr << "Error: invalid T-functional provided" << std::endl;
+	std::vector<TFunctional<uchar,double>*> tfunctionals;
+	while (!ss.eof()) {
+		ss >> i;
+		if (ss.fail()) {
+			std::cerr << "Error: unparseable T-functional identifier" << std::endl;
 			return 1;
 		}
 
-		chosen_tfunctionals.push_back(i);
+		switch (i) {
+		case 0:
+			tfunctionals.push_back(new TFunctionalRadon<uchar>());
+			break;
+		case 1:
+			tfunctionals.push_back(new TFunctional1<uchar>());
+			break;
+		case 2:
+			tfunctionals.push_back(new TFunctional2<uchar>());
+			break;
+		case 3:
+			tfunctionals.push_back(new TFunctional3<uchar>());
+			break;
+		case 4:
+			tfunctionals.push_back(new TFunctional4<uchar>());
+			break;
+		case 5:
+			tfunctionals.push_back(new TFunctional5<uchar>());
+			break;
+		default:
+			std::cerr << "Error: invalid T-functional provided" << std::endl;
+			return 1;
+		}
 
 		if (ss.peek() == ',')
 			ss.ignore();
@@ -108,32 +132,42 @@ int main(int argc, char **argv)
 	// Get the chosen P-functional
 	ss.clear();
 	ss << argv[3];
-	std::vector<unsigned short> chosen_pfunctionals;
-	std::vector<unsigned short> chosen_pfunctionals_parameter;
+	std::vector<PFunctional<double,double>*> pfunctionals;
 	while (!ss.eof()) {
 		PFunctionalType type = REGULAR;
 		if (ss.peek() == 'H') {
 			type = HERMITE;
 			ss.ignore();
-			ss >> i;
-		} else {
-			ss >> i;
 		}
 
-		if (ss.fail() || i >= PFUNCTIONALS.size() || PFUNCTIONALS[i] == nullptr) {
-			std::cerr << "Error: invalid P-functional provided" << std::endl;
+		ss >> i;
+		if (ss.fail()) {
+			std::cerr << "Error: unparseable P-functional identifier" << std::endl;
 			return 1;
 		}
 
 		switch (type) {
-			case REGULAR:
-				chosen_pfunctionals.push_back(i);
-				chosen_pfunctionals_parameter.push_back(0);
+		case REGULAR:
+		{
+			switch (i) {
+			case 1:
+				pfunctionals.push_back(new PFunctional1<double>());
 				break;
-			case HERMITE:
-				chosen_pfunctionals.push_back(PFUNCTIONAL_HERMITE);
-				chosen_pfunctionals_parameter.push_back(i);
+			case 2:
+				pfunctionals.push_back(new PFunctional2<double>());
 				break;
+			case 3:
+				pfunctionals.push_back(new PFunctional3<double>());
+				break;
+			default:
+				std::cerr << "Error: invalid P-functional provided" << std::endl;
+				return 1;
+			}
+			break;
+		}
+		case HERMITE:
+			pfunctionals.push_back(new PFunctionalHermite<double>(i));
+			break;	
 		}
 
 		if (ss.peek() == ',')
@@ -151,51 +185,44 @@ int main(int argc, char **argv)
 	}
 
 	// Save profiling data
-	std::vector<double> runtimes(chosen_tfunctionals.size()*chosen_pfunctionals.size());
+	std::vector<double> runtimes(tfunctionals.size()*pfunctionals.size());
 
 	// Process all T-functionals
 	cv::Mat data;
 	int decimals = 7;	// size of the column header
 	std::cerr << "Calculating ";
-	for (size_t t = 0; t < chosen_tfunctionals.size(); t++) {
+	for (size_t t = 0; t < tfunctionals.size(); t++) {
 		// Calculate the trace transform sinogram
-		std::cerr << " T" << chosen_tfunctionals[t] << "..." << std::flush;
+		std::cerr << t << ordinalSuffix(t) << " T" << "..." << std::flush;
 		Profiler tprofiler;
 		cv::Mat sinogram = getTraceTransform(
 			input,
 			1,	// angle resolution
 			1,	// distance resolution
-			TFUNCTIONALS[chosen_tfunctionals[t]]
+			tfunctionals[t]
 		);
 		tprofiler.stop();
 
 		// Show the trace transform sinogram
-		std::stringstream sinogram_title;
-		sinogram_title << "sinogram after functional T" << chosen_tfunctionals[t];
 		#ifdef DEBUG_IMAGES
+		std::stringstream sinogram_title;
+		sinogram_title << "sinogram after " << t << ordinalSuffix(t)
+			<< " T-functional";
 		cv::imshow(sinogram_title.str(), mat2gray(sinogram));
 		#endif
 
 		// Process all P-functionals
-		for (size_t p = 0; p < chosen_pfunctionals.size(); p++) {
+		for (size_t p = 0; p < pfunctionals.size(); p++) {
 			// Calculate the circus function
-			Profiler pprofiler;
+			std::cerr << p << ordinalSuffix(p) << " P" << "..." << std::flush;
 			cv::Mat circus;
-			if (chosen_pfunctionals[p] == PFUNCTIONAL_HERMITE) {
-				std::cerr << " H" << chosen_pfunctionals_parameter[p] << "..." << std::flush;
-				circus = getOrthonormalCircusFunction(
-					sinogram,
-					chosen_pfunctionals_parameter[p]
-				);
-			} else {
-				std::cerr << " P" << chosen_pfunctionals[p] << "..." << std::flush;
-				circus = getCircusFunction(
-					sinogram,
-					PFUNCTIONALS[chosen_pfunctionals[p]]
-				);
-			}
+			Profiler pprofiler;
+			circus = getCircusFunction(
+				sinogram,
+				pfunctionals[p]
+			);
 			pprofiler.stop();
-			runtimes[t*chosen_pfunctionals.size()+p]
+			runtimes[t*pfunctionals.size()+p]
 				= tprofiler.elapsed() + pprofiler.elapsed();
 
 			// Allocate the data
@@ -203,7 +230,7 @@ int main(int argc, char **argv)
 				data = cv::Mat(
 					cv::Size(
 						 circus.cols,
-						 chosen_tfunctionals.size()*chosen_pfunctionals.size()
+						 tfunctionals.size()*pfunctionals.size()
 					),
 					CV_64FC1
 				);
@@ -215,7 +242,7 @@ int main(int argc, char **argv)
 			for (int i = 0; i < circus.cols; i++) {
 				double pixel = circus.at<double>(0, i);
 				data.at<double>(
-					t*chosen_pfunctionals.size()+p,	// row
+					t*pfunctionals.size()+p,	// row
 					i				// column
 				) = pixel;
 				decimals = std::max(decimals, (int)std::log10(pixel)+3);
@@ -229,14 +256,11 @@ int main(int argc, char **argv)
 	std::cout << "#  ";
 	std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(0);
 	for (size_t tp = 0; tp < (unsigned)data.rows; tp++) {
-		size_t t = tp / chosen_pfunctionals.size();
-		size_t p = tp % chosen_pfunctionals.size();
+		size_t t = tp / pfunctionals.size();
+		size_t p = tp % pfunctionals.size();
 		std::stringstream header;
-		header << "T" << chosen_tfunctionals[t];
-		if (chosen_pfunctionals[p] == PFUNCTIONAL_HERMITE)
-			header << "-H" << chosen_pfunctionals_parameter[p];
-		else
-			header << "-P" << chosen_pfunctionals[p];
+		header << t << ordinalSuffix(t) << " T, "
+			<< p << ordinalSuffix(p) << " P";
 		std::cout << std::setw(decimals) << header.str();
 	}
 	std::cout << "\n";

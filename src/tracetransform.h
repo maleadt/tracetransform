@@ -45,7 +45,7 @@ cv::Mat getTraceTransform(
 	const cv::Mat &image,
 	const double a_stepsize,
 	const double p_stepsize,
-	Functional<uchar, double> *functional)
+	TFunctional<uchar, double> *functional)
 {
 	assert(a_stepsize > 0);
 	assert(p_stepsize > 0);

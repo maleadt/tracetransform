@@ -20,39 +20,6 @@
 // Routines
 //
 
-cv::Mat getCircusFunction(
-	const cv::Mat &sinogram,
-	Functional<double, double> *functional)
-{
-	assert(sinogram.type() == CV_64FC1);
-
-	// Apply the P-functional
-	cv::Mat circus(
-		cv::Size(sinogram.cols, 1),
-		sinogram.type()
-	);
-	for (int p = 0; p < sinogram.cols; p++) {
-		// Determine the trace segment
-		Segment trace = Segment{
-			Point{(double)p, 0},
-			Point{(double)p, (double)sinogram.rows-1}
-		};
-
-		// Set-up the trace iterator
-		TraceIterator<double> iterator(sinogram, trace);
-		assert(iterator.valid());
-
-		// Apply the functional
-		double pixel = (*functional)(iterator);
-		circus.at<double>(
-			0,	// row
-			p	// column
-		) = pixel;
-	}
-
-	return circus;
-}
-
 cv::Mat getNearestOrthonormalizedSinogram(const cv::Mat &sinogram)
 {
 	// Detect the offset of each column to the sinogram center
@@ -102,57 +69,59 @@ cv::Mat getNearestOrthonormalizedSinogram(const cv::Mat &sinogram)
 	return aligned;
 }
 
-// Hn(g(p)) = Int psi(z)
-// TODO: this shouldn't be a special-case functional, but should fit the generic
-//       calling semantics. Again, class inheritance to pass arbitrary data?
-template <typename T>
-double pfunctional_hermite(TraceIterator<T> &iterator, unsigned int degree)
-{
-	// Discretize the [-10, 10] domain to fit the column iterator
-	double z = -10;
-	double stepsize = 20.0 / (iterator.samples() - 1);
-
-	// Calculate the integral
-	double integral = 0;
-	while (iterator.hasNext()) {
-		integral += iterator.value() * hermite_function(degree, z);
-		iterator.next();
-		z += stepsize;
-	}
-	return integral;
-}
-
-cv::Mat getOrthonormalCircusFunction(
+cv::Mat getCircusFunction(
 	const cv::Mat &sinogram,
-	unsigned int degree)
+	PFunctional<double, double> *functional)
 {
 	assert(sinogram.type() == CV_64FC1);
 
-	// Get the nearest orthonormal sinogram
-	cv::Mat nos = getNearestOrthonormalizedSinogram(sinogram);
-
-	// Apply the P-functional
+	// Create the matrix for the circus functions
 	cv::Mat circus(
 		cv::Size(sinogram.cols, 1),
 		sinogram.type()
 	);
-	for (int p = 0; p < sinogram.cols; p++) {
-		// Determine the trace segment
-		Segment trace = Segment{
-			Point{(double)p, 0},
-			Point{(double)p, (double)sinogram.rows-1}
-		};
 
-		// Set-up the trace iterator
-		TraceIterator<double> iterator(nos, trace);
-		assert(iterator.valid());
+	// Apply the P-functional, but check whether we need to process the
+	// sinogram directly, or its nearest orthonormalized version
+	if (functional->orthonormal()) {
+		cv::Mat nos = getNearestOrthonormalizedSinogram(sinogram);
+		for (int p = 0; p < nos.cols; p++) {
+			// Determine the trace segment
+			Segment trace = Segment{
+				Point{(double)p, 0},
+				Point{(double)p, (double)nos.rows-1}
+			};
 
-		// Apply the functional
-		double pixel = pfunctional_hermite(iterator, degree);
-		circus.at<double>(
-			0,	// row
-			p	// column
-		) = pixel;
+			// Set-up the trace iterator
+			TraceIterator<double> iterator(nos, trace);
+			assert(iterator.valid());
+
+			// Apply the functional
+			double pixel = (*functional)(iterator);
+			circus.at<double>(
+				0,	// row
+				p	// column
+			) = pixel;
+		}
+	} else {
+		for (int p = 0; p < sinogram.cols; p++) {
+			// Determine the trace segment
+			Segment trace = Segment{
+				Point{(double)p, 0},
+				Point{(double)p, (double)sinogram.rows-1}
+			};
+
+			// Set-up the trace iterator
+			TraceIterator<double> iterator(sinogram, trace);
+			assert(iterator.valid());
+
+			// Apply the functional
+			double pixel = (*functional)(iterator);
+			circus.at<double>(
+				0,	// row
+				p	// column
+			) = pixel;
+		}
 	}
 
 	return circus;
