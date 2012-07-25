@@ -3,8 +3,8 @@
 //
 
 // Include guard
-#ifndef ORTHOCIRCUSFUNCTION_H
-#define ORTHOCIRCUSFUNCTION_H
+#ifndef CIRCUSFUNCTION_H
+#define CIRCUSFUNCTION_H
 
 // System includes
 #include <limits>

@@ -19,7 +19,7 @@
 #include "traceiterator.h"
 #include "functionals.h"
 #include "tracetransform.h"
-#include "orthocircusfunction.h"
+#include "circusfunction.h"
 
 // Debug flags
 #define DEBUG_IMAGES
