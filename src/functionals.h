@@ -8,6 +8,7 @@
 
 // Local includes
 #include "auxiliary.h"
+#include "traceiterator.h"
 
 
 //

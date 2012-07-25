@@ -16,7 +16,6 @@
 
 // Local includes
 #include "auxiliary.h"
-#include "traceiterator.h"
 #include "functionals.h"
 #include "tracetransform.h"
 #include "circusfunction.h"
