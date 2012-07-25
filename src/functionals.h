@@ -214,7 +214,7 @@ public:
 	// P(g(p)) = Sum(k) abs(g(p+1) -g(p))
 	double operator()(TraceIterator<IN>& iterator)
 	{
-		unsigned long sum = 0;
+		double sum = 0;
 		double previous;
 		if (iterator.hasNext()) {
 			previous = iterator.value();

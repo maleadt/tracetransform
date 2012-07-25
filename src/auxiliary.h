@@ -217,18 +217,28 @@ bool clip(const Rectangle &rectangle, const Segment &segment, Segment &clipped)
 	return accept;
 }
 
-cv::Mat mat2gray(const cv::Mat &image)
+// Convert a grayscale image (range [0, 255]) to a matrix (range [0, 1]).
+cv::Mat gray2mat(const cv::Mat &grayscale)
+{
+	cv::Mat matrix(grayscale.size(), CV_64FC1);
+	grayscale.convertTo(matrix, CV_64FC1, 1/255., 0);
+	return matrix;
+}
+
+// Convert a matrix (arbitrary values) to a grayscale image (range [0, 255]). This
+// involves detecting the maximum value, and clamping that to 255.
+cv::Mat mat2gray(const cv::Mat &matrix)
 {
 	double maximum = 0;
-	for (int i = 0; i < image.rows; i++) {
-		for (int j = 0; j < image.cols; j++) {
-		double pixel = image.at<double>(i, j);
-		if (pixel > maximum)
-			maximum = pixel;
+	for (int i = 0; i < matrix.rows; i++) {
+		for (int j = 0; j < matrix.cols; j++) {
+			double pixel = matrix.at<double>(i, j);
+			if (pixel > maximum)
+				maximum = pixel;
 		}
 	}
-	cv::Mat grayscale(image.size(), CV_8UC1);
-	image.convertTo(grayscale, CV_8UC1, 255.0/maximum, 0);
+	cv::Mat grayscale(matrix.size(), CV_8UC1);
+	matrix.convertTo(grayscale, CV_8UC1, 255.0/maximum, 0);
 	return grayscale;
 }
 

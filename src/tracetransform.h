@@ -45,11 +45,11 @@ cv::Mat getTraceTransform(
 	const cv::Mat &image,
 	const double a_stepsize,
 	const double p_stepsize,
-	TFunctional<uchar, double> *functional)
+	TFunctional<double, double> *functional)
 {
 	assert(a_stepsize > 0);
 	assert(p_stepsize > 0);
-	assert(image.type() == CV_8UC1);
+	assert(image.type() == CV_64FC1);
 
 	// Calculate and create the transform matrix
 	double diagonal = std::hypot(image.size().width, image.size().height);
@@ -85,7 +85,7 @@ cv::Mat getTraceTransform(
 			);
 
 			// Set-up the trace iterator
-			TraceIterator<uchar> iterator(image, trace);
+			TraceIterator<double> iterator(image, trace);
 
 			// Apply the functional
 			if (iterator.valid()) {

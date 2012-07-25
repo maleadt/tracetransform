@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 	std::stringstream ss;
 	ss << argv[2];
 	unsigned short i;
-	std::vector<TFunctional<uchar,double>*> tfunctionals;
+	std::vector<TFunctional<double,double>*> tfunctionals;
 	while (!ss.eof()) {
 		ss >> i;
 		if (ss.fail()) {
@@ -103,22 +103,22 @@ int main(int argc, char **argv)
 
 		switch (i) {
 		case 0:
-			tfunctionals.push_back(new TFunctionalRadon<uchar>());
+			tfunctionals.push_back(new TFunctionalRadon<double>());
 			break;
 		case 1:
-			tfunctionals.push_back(new TFunctional1<uchar>());
+			tfunctionals.push_back(new TFunctional1<double>());
 			break;
 		case 2:
-			tfunctionals.push_back(new TFunctional2<uchar>());
+			tfunctionals.push_back(new TFunctional2<double>());
 			break;
 		case 3:
-			tfunctionals.push_back(new TFunctional3<uchar>());
+			tfunctionals.push_back(new TFunctional3<double>());
 			break;
 		case 4:
-			tfunctionals.push_back(new TFunctional4<uchar>());
+			tfunctionals.push_back(new TFunctional4<double>());
 			break;
 		case 5:
-			tfunctionals.push_back(new TFunctional5<uchar>());
+			tfunctionals.push_back(new TFunctional5<double>());
 			break;
 		default:
 			std::cerr << "Error: invalid T-functional provided" << std::endl;
@@ -183,6 +183,7 @@ int main(int argc, char **argv)
 		std::cerr << "Error: could not load image" << std::endl;
 		return 1;
 	}
+	input = gray2mat(input);
 
 	// Save profiling data
 	std::vector<double> runtimes(tfunctionals.size()*pfunctionals.size());
