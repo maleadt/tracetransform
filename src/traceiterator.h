@@ -206,14 +206,14 @@ private:
 template <typename T>
 Point iterator_weighedmedian(TraceIterator<T> &iterator)
 {
-	unsigned long sum = 0;
+	double sum = 0;
 	while (iterator.hasNext()) {
 		sum += iterator.value();
 		iterator.next();
 	}
 	iterator.toFront();
 
-	unsigned long integral = 0;
+	double integral = 0;
 	Point median;
 	while (iterator.hasNext()) {
 		median = iterator.point();

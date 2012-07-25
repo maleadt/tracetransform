@@ -22,7 +22,7 @@
 #include "orthocircusfunction.h"
 
 // Debug flags
-#define DEBUG_IMAGES
+//#define DEBUG_IMAGES
 
 
 //
