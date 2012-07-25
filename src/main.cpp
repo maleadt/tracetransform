@@ -21,7 +21,7 @@
 #include "circusfunction.h"
 
 // Debug flags
-#define DEBUG_IMAGES
+//#define DEBUG_IMAGES
 
 
 //
@@ -48,7 +48,7 @@ struct Profiler
 	time_t t1, t2;
 };
 
-std::string ordinalSuffix(unsigned int n) {
+std::string ordinalSuffix(unsigned long n) {
 	// Numbers from 11 to 13 don't have st, nd, rd
 	if (10 < (n%100) && (n%100) < 14)
 		return "th";
@@ -92,8 +92,8 @@ int main(int argc, char **argv)
 	std::vector<TFunctional<double,double>*> tfunctionals;
 	std::stringstream ss;
 	ss << argv[2];
-	unsigned short i;
 	while (!ss.eof()) {
+		unsigned short i;
 		ss >> i;
 		if (ss.fail()) {
 			std::cerr << "Error: unparseable T-functional identifier" << std::endl;
@@ -140,6 +140,7 @@ int main(int argc, char **argv)
 				ss.ignore();
 			}
 
+			unsigned short i;
 			ss >> i;
 			if (ss.fail()) {
 				std::cerr << "Error: unparseable P-functional identifier" << std::endl;
@@ -193,9 +194,9 @@ int main(int argc, char **argv)
 	cv::Mat data;
 	int decimals = 7;	// size of the column header
 	std::cerr << "Calculating ";
-	for (size_t t = 0; t < tfunctionals.size(); t++) {
+	for (unsigned int t = 0; t < tfunctionals.size(); t++) {
 		// Calculate the trace transform sinogram
-		std::cerr << t << ordinalSuffix(t) << " T" << "..." << std::flush;
+		std::cerr << t+1 << ordinalSuffix(t+1) << " T" << "..." << std::flush;
 		Profiler tprofiler;
 		cv::Mat sinogram = getTraceTransform(
 			input,
@@ -208,15 +209,15 @@ int main(int argc, char **argv)
 		// Show the trace transform sinogram
 		#ifdef DEBUG_IMAGES
 		std::stringstream sinogram_title;
-		sinogram_title << "sinogram after " << t << ordinalSuffix(t)
+		sinogram_title << "sinogram after " << t+1 << ordinalSuffix(t+1)
 			<< " T-functional";
 		cv::imshow(sinogram_title.str(), mat2gray(sinogram));
 		#endif
 
 		// Process all P-functionals
-		for (size_t p = 0; p < pfunctionals.size(); p++) {
+		for (unsigned int p = 0; p < pfunctionals.size(); p++) {
 			// Calculate the circus function
-			std::cerr << p << ordinalSuffix(p) << " P" << "..." << std::flush;
+			std::cerr << p+1 << ordinalSuffix(p+1) << " P" << "..." << std::flush;
 			cv::Mat circus;
 			Profiler pprofiler;
 			circus = getCircusFunction(
@@ -263,8 +264,8 @@ int main(int argc, char **argv)
 			size_t t = tp / pfunctionals.size();
 			size_t p = tp % pfunctionals.size();
 			std::stringstream header;
-			header << t << ordinalSuffix(t) << " T, "
-				<< p << ordinalSuffix(p) << " P";
+			header << t+1 << ordinalSuffix(t+1) << " T, "
+				<< p+1 << ordinalSuffix(p+1) << " P";
 			std::cout << std::setw(decimals) << header.str();
 		}
 		std::cout << "\n";

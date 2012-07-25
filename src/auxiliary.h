@@ -277,7 +277,7 @@ double hermite_polynomial(unsigned int n, double x) {
 	}
 }
 
-int factorial(int n)
+unsigned int factorial(unsigned int n)
 {
 	return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
 }

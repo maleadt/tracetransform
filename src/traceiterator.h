@@ -164,7 +164,7 @@ public:
 
 	unsigned int samples()
 	{
-		return 1 + std::floor(m_clipped.length());
+		return 1 + (unsigned int) std::floor(m_clipped.length());
 	}
 
 	void toFront()

@@ -24,6 +24,7 @@ cv::Mat getNearestOrthonormalizedSinogram(const cv::Mat &sinogram)
 {
 	// Detect the offset of each column to the sinogram center
 	assert(sinogram.rows > 0);
+	assert(sinogram.cols >= 0);
 	unsigned int sinogram_center = (unsigned int) std::floor((sinogram.rows - 1) / 2.0);
 	std::vector<int> offset(sinogram.cols);
 	for (int p = 0; p < sinogram.cols; p++) {
