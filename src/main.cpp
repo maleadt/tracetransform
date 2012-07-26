@@ -218,9 +218,8 @@ int main(int argc, char **argv)
 		for (unsigned int p = 0; p < pfunctionals.size(); p++) {
 			// Calculate the circus function
 			std::cerr << p+1 << ordinalSuffix(p+1) << " P" << "..." << std::flush;
-			cv::Mat circus;
 			Profiler pprofiler;
-			circus = getCircusFunction(
+			cv::Mat circus = getCircusFunction(
 				sinogram,
 				pfunctionals[p]
 			);

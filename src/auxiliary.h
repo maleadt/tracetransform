@@ -263,8 +263,8 @@ std::vector<std::complex<double>> dft(const std::vector<std::complex<T>> &sample
 	return output;
 }
 
-double hermite_polynomial(unsigned int n, double x) {
-	switch (n) {
+double hermite_polynomial(unsigned int order, double x) {
+	switch (order) {
 		case 0:
 			return 1.0;
 
@@ -272,8 +272,8 @@ double hermite_polynomial(unsigned int n, double x) {
 			return 2.0*x;
 
 		default:
-			return 2.0*x*hermite_polynomial(n-1, x)
-				-2.0*(n-1)*hermite_polynomial(n-2, x);
+			return 2.0*x*hermite_polynomial(order-1, x)
+				-2.0*(order-1)*hermite_polynomial(order-2, x);
 	}
 }
 
@@ -282,9 +282,9 @@ unsigned int factorial(unsigned int n)
 	return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
 }
 
-double hermite_function(unsigned int n, double x) {
-	return hermite_polynomial(n, x) / (
-			std::sqrt(std::pow(2, n) * factorial(n) * std::sqrt(M_PI))
+double hermite_function(unsigned int order, double x) {
+	return hermite_polynomial(order, x) / (
+			std::sqrt(std::pow(2, order) * factorial(order) * std::sqrt(M_PI))
 			* std::exp(x*x/2)
 		);
 }

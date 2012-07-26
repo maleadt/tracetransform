@@ -20,7 +20,7 @@
 // Routines
 //
 
-cv::Mat getNearestOrthonormalizedSinogram(const cv::Mat &sinogram)
+cv::Mat getNearestOrthonormalizedSinogram(const cv::Mat &sinogram, unsigned int& new_center)
 {
 	// Detect the offset of each column to the sinogram center
 	assert(sinogram.rows > 0);
@@ -47,6 +47,7 @@ cv::Mat getNearestOrthonormalizedSinogram(const cv::Mat &sinogram)
 	int min = *(std::min_element(offset.begin(), offset.end()));
 	int max = *(std::max_element(offset.begin(), offset.end()));
 	unsigned int padding = max + std::abs(min);
+	new_center = sinogram_center + max;
 	cv::Mat aligned = cv::Mat::zeros(
 		sinogram.rows + padding,
 		sinogram.cols,
@@ -84,8 +85,13 @@ cv::Mat getCircusFunction(
 
 	// Apply the P-functional, but check whether we need to process the
 	// sinogram directly, or its nearest orthonormalized version
-	if (functional->orthonormal()) {
-		cv::Mat nos = getNearestOrthonormalizedSinogram(sinogram);
+	if (dynamic_cast<PFunctionalOrthonormal<double, double>*>(functional)) {
+		unsigned int new_center;
+		cv::Mat nos = getNearestOrthonormalizedSinogram(sinogram, new_center);
+		// FIXME: ugly RTTI. orthogonal()?
+		PFunctionalOrthonormal<double, double> *orthofunctional =
+			dynamic_cast<PFunctionalOrthonormal<double, double>*>(functional);
+		orthofunctional->setCenter(new_center);
 		for (int p = 0; p < nos.cols; p++) {
 			// Determine the trace segment
 			Segment trace = Segment{
@@ -98,7 +104,7 @@ cv::Mat getCircusFunction(
 			assert(iterator.valid());
 
 			// Apply the functional
-			double pixel = (*functional)(iterator);
+			double pixel = (*orthofunctional)(iterator);
 			circus.at<double>(
 				0,	// row
 				p	// column

@@ -201,11 +201,19 @@ public:
 template <typename IN, typename OUT>
 class PFunctional : public Functional<IN, OUT>
 {
+};
+
+template <typename IN, typename OUT>
+class PFunctionalOrthonormal : public PFunctional<IN, OUT>
+{
 public:
-	virtual bool orthonormal() const
+	void setCenter(unsigned int center)
 	{
-		return false;
+		m_center = center;
 	}
+
+protected:
+	unsigned int m_center;
 };
 
 template <typename IN>
@@ -274,11 +282,11 @@ public:
 };
 
 template <typename IN>
-class PFunctionalHermite : public PFunctional<IN, double>
+class PFunctionalHermite : public PFunctionalOrthonormal<IN, double>
 {
 public:
-	PFunctionalHermite(unsigned int degree)
-		: m_degree(degree)
+	PFunctionalHermite(unsigned int order)
+		: m_order(order)
 	{
 	}
 
@@ -287,25 +295,30 @@ public:
 	{
 		// Discretize the [-10, 10] domain to fit the column iterator
 		double z = -10;
-		double stepsize = 20.0 / (iterator.samples() - 1);
+		double stepsize_lower = 10.0 / this->m_center;
+		double stepsize_upper = 10.0 / (iterator.samples() - 1 - this->m_center);
+		// In case of 9 samples, and the center on the fifth (i=4), this results in
+		// {-10, -7.5, -5.0, -2.5, 0 2.5, 5.0, 7.5, 10} (as per tutorial)
+		// but matlab gives:
+		//  -10.0000   -7.7778   -5.5556   -3.3333   -1.1111    1.1111    3.3333    5.5556    7.7778
 
 		// Calculate the integral
 		double integral = 0;
 		while (iterator.hasNext()) {
-			integral += iterator.value() * hermite_function(m_degree, z);
+			std::cout << hermite_function(m_order, z) << "\t";
+			integral += iterator.value() * hermite_function(m_order, z);
 			iterator.next();
-			z += stepsize;
+			if (z < 0)
+				z += stepsize_lower;
+			else
+				z += stepsize_upper;
 		}
+		std::cout << std::endl;
 		return integral;
 	}
 
-	virtual bool orthonormal() const
-	{
-		return true;
-	}
-
 private:
-	const unsigned int m_degree;
+	const unsigned int m_order;
 };
 
 #endif
