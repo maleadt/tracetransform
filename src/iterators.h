@@ -78,6 +78,76 @@ private:
 	Point m_p;
 };
 
+template <typename T>
+class ColumnIterator : public ImageIterator<T> {
+public:
+	//
+	// Construction and destruction
+	//
+
+	ColumnIterator(const cv::Mat &i_image, unsigned int i_column)
+		: ImageIterator<T>(i_image), m_column(i_column)
+	{
+		// Check validity
+		m_valid = true;
+		if (i_column >= this->image().cols)
+			m_valid = false;
+
+		// Initialize trace
+		toFront();
+	}
+
+
+	//
+	// Basic I/O
+	//
+
+	bool valid() const
+	{
+		return m_valid;
+	}
+	
+	using ImageIterator<T>::value;
+	T value(const Point &p) const
+	{
+		return this->pixel(p.y, p.x);
+	}
+
+
+	//
+	// Iteration methods
+	//
+
+	bool hasNext() const
+	{
+		assert(m_valid);
+		return m_row < this->image().rows;
+	}
+
+	void next()
+	{
+		// Advance
+		m_row++;
+		this->setPoint(Point{(double)m_column, (double)m_row});
+		// FIXME: ColumnIterator shouldn't know anything about points?
+		//        Or should it?
+	}
+
+	unsigned int samples()
+	{
+		return this->image().rows;
+	}
+
+	void toFront()
+	{
+		m_row = 0;
+	}
+
+private:
+	unsigned int m_column, m_row;
+	bool m_valid;
+};
+
 // This class allows to iterate a line within an image, without having to rotate
 // it completely. It uses bilinear interpolation to get values of pixels not
 // addressable using integer indexes

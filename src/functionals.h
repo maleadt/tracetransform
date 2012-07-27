@@ -42,14 +42,8 @@ cv::Mat nearest_orthonormal_sinogram(
 	unsigned int sinogram_center = (unsigned int) std::floor((sinogram.rows - 1) / 2.0);
 	std::vector<int> offset(sinogram.cols);
 	for (int p = 0; p < sinogram.cols; p++) {
-		// Determine the trace segment
-		Segment trace = Segment{
-			Point{(double)p, 0},
-			Point{(double)p, (double)sinogram.rows-1}
-		};
-
 		// Set-up the trace iterator
-		LineIterator<double> iterator(sinogram, trace);
+		ColumnIterator<double> iterator(sinogram, p);
 		assert(iterator.valid());
 
 		// Get and compare the median
@@ -390,7 +384,7 @@ public:
 		// Calculate the integral
 		double integral = 0;
 		while (iterator->hasNext()) {
-			std::cout << hermite_function(m_order, z) << "\t";
+			//std::cout << hermite_function(m_order, z) << "\t";
 			integral += iterator->value() * hermite_function(m_order, z);
 			iterator->next();
 			if (z < 0)
@@ -398,7 +392,7 @@ public:
 			else
 				z += stepsize_upper;
 		}
-		std::cout << std::endl;
+		//std::cout << std::endl;
 		return integral;
 	}
 

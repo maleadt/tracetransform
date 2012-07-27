@@ -42,14 +42,8 @@ cv::Mat getCircusFunction(
 
 	// Trace all columns
 	for (int p = 0; p < actual_sinogram->cols; p++) {
-		// Determine the trace segment
-		Segment trace = Segment{
-			Point{(double)p, 0},
-			Point{(double)p, (double)actual_sinogram->rows-1}
-		};
-
 		// Set-up the trace iterator
-		LineIterator<double> iterator(*actual_sinogram, trace);
+		ColumnIterator<double> iterator(*actual_sinogram, p);
 		assert(iterator.valid());
 
 		// Apply the functional
