@@ -3,8 +3,8 @@
 //
 
 // Include guard
-#ifndef TRACEITERATOR_H
-#define TRACEITERATOR_H
+#ifndef ITERATORS_H
+#define ITERATORS_H
 
 // System includes
 #include <limits>
@@ -19,27 +19,86 @@
 //
 // Class definition
 //
-
-// TODO: ColumnIterator
-
-// This class allows to trace a line within a matrix, without having to rotate
-// it completely. It uses bilinear interpolation to get values of pixels not
-// addressable using integer indexes
 template <typename T>
-class TraceIterator {
+class ImageIterator {
 public:
 	//
 	// Construction and destruction
 	//
 
-	TraceIterator(const cv::Mat &i_image, const Segment &i_segment)
-		: m_image(i_image), m_segment(i_segment)
+	ImageIterator(const cv::Mat &i_image)
+		: m_image(i_image)
+	{
+	}
+
+
+	//
+	// Basic I/O
+	//
+
+	virtual bool valid() const = 0;
+	virtual const Point &point()
+	{
+		return m_p;
+	}
+
+	T value() const
+	{
+		return value(m_p);
+	}
+	
+	virtual T value(const Point &p) const = 0;
+
+
+	//
+	// Iteration interface
+	//
+
+	virtual bool hasNext() const = 0;
+	virtual void next() = 0;
+	virtual unsigned int samples() = 0;
+	virtual void toFront() = 0;
+
+protected:
+	void setPoint(const Point& i_p)
+	{
+		m_p = i_p;
+	}
+	const cv::Mat &image() const
+	{
+		return m_image;
+	}
+	T pixel(int y, int x) const
+	{
+		return m_image.at<T>(y, x);
+	}
+
+private:
+	const cv::Mat &m_image;
+	Point m_p;
+};
+
+// This class allows to iterate a line within an image, without having to rotate
+// it completely. It uses bilinear interpolation to get values of pixels not
+// addressable using integer indexes
+template <typename T>
+class LineIterator : public ImageIterator<T> {
+public:
+	//
+	// Construction and destruction
+	//
+
+	LineIterator(const cv::Mat &i_image, const Segment &i_segment)
+		: ImageIterator<T>(i_image), m_segment(i_segment)
 	{
 		// Clip the segment against the image
 		if (clip(
 			Rectangle{
 				Point{0, 0},
-				Size{m_image.size().width, m_image.size().height}
+				Size{
+					this->image().size().width,
+					this->image().size().height
+				}
 			},
 			m_segment,
 			m_clipped
@@ -71,17 +130,8 @@ public:
 	{
 		return m_segment;
 	}
-
-	const Point &point()
-	{
-		return m_p;
-	}
-
-	T value() const
-	{
-		return value(m_p);
-	}
 	
+	using ImageIterator<T>::value;
 	T value(const Point &p) const
 	{
 		// Get fractional parts, floors and ceilings
@@ -95,7 +145,7 @@ public:
 		assert(p.x >= 0 && p.y >= 0);	// 'cause *_fract end up with same sign
 		if (x_fract < std::numeric_limits<double>::epsilon()
 			&& y_fract < std::numeric_limits<double>::epsilon()) {
-			pixel = m_image.at<T>((int)y_int, (int)x_int);
+			pixel = this->pixel(y_int, x_int);
 		} else {	// bilinear interpolation
 			double upper_left, upper_right, bottom_left, bottom_right;
 			double upper, bottom;
@@ -104,13 +154,13 @@ public:
 			bool y_pureint = y_fract < std::numeric_limits<double>::epsilon();
 
 			// Calculate fractional coordinates
-			upper_left = m_image.at<T>((int)y_int, (int)x_int);
+			upper_left = this->pixel(y_int, x_int);
 			if (!x_pureint)
-				upper_right = m_image.at<T>((int)y_int, (int)x_int+1);
+				upper_right = this->pixel(y_int, x_int+1);
 			if (!y_pureint)
-				bottom_left = m_image.at<T>((int)y_int+1, (int)x_int);
+				bottom_left = this->pixel(y_int+1, x_int);
 			if (!x_pureint && !y_pureint)
-				bottom_right = m_image.at<T>((int)y_int+1, (int)x_int+1);
+				bottom_right = this->pixel(y_int+1, x_int+1);
 
 			// Calculate pixel value
 			if (x_pureint) {
@@ -143,7 +193,7 @@ public:
 	{
 		// Advance
 		m_step++;
-		m_p = m_clipped.begin + m_leap*m_step;		
+		this->setPoint(m_clipped.begin + m_leap*m_step);
 
 		// Clamp any invalid pixels. This can happen due to rounding
 		// errors: given a long enough trace, the multiplication of
@@ -155,9 +205,9 @@ public:
 		double x_high = std::max(m_clipped.begin.x, m_clipped.end.x);
 		double y_low = std::min(m_clipped.begin.y, m_clipped.end.y);
 		double y_high = std::max(m_clipped.begin.y, m_clipped.end.y);
-		if (m_p.x < x_low || m_p.x > x_high
-			|| m_p.y < y_low || m_p.y > y_high) {
-			m_p = m_clipped.end;
+		if (this->point().x < x_low || this->point().x > x_high
+			|| this->point().y < y_low || this->point().y > y_high) {
+			this->setPoint(m_clipped.end);
 			assert(m_step+1 > m_clipped.length());
 		}
 	}
@@ -169,7 +219,7 @@ public:
 
 	void toFront()
 	{
-		m_p = m_clipped.begin;
+		this->setPoint(m_clipped.begin);
 		m_step = 0;
 	}
 
@@ -178,18 +228,17 @@ public:
 	// Transformations
 	//
 
-	TraceIterator transformDomain(const Segment &i_segment) const
+	LineIterator transformDomain(const Segment &i_segment) const
 	{
-		return TraceIterator(m_image, i_segment);
+		return LineIterator(this->image(), i_segment);
 	}
 
 private:
-	const cv::Mat &m_image;
 	const Segment m_segment;
 	Segment m_clipped;
 	bool m_valid;
 
-	Point m_p, m_leap;
+	Point m_leap;
 	unsigned int m_step;
 };
 
@@ -204,21 +253,21 @@ private:
 // index is repeated as many times as the pixel value it represents), after
 // which the median value of that array is located.
 template <typename T>
-Point iterator_weighedmedian(TraceIterator<T> &iterator)
+Point iterator_weighedmedian(ImageIterator<T> *iterator)
 {
 	double sum = 0;
-	while (iterator.hasNext()) {
-		sum += iterator.value();
-		iterator.next();
+	while (iterator->hasNext()) {
+		sum += iterator->value();
+		iterator->next();
 	}
-	iterator.toFront();
+	iterator->toFront();
 
 	double integral = 0;
 	Point median;
-	while (iterator.hasNext()) {
-		median = iterator.point();
-		integral += iterator.value();
-		iterator.next();
+	while (iterator->hasNext()) {
+		median = iterator->point();
+		integral += iterator->value();
+		iterator->next();
 
 		if (2*integral >= sum)
 			break;
@@ -229,21 +278,21 @@ Point iterator_weighedmedian(TraceIterator<T> &iterator)
 // Look for the median of the weighed indexes, but take the square root of the
 // pixel values as weight
 template <typename T>
-Point iterator_weighedmedian_sqrt(TraceIterator<T> &iterator)
+Point iterator_weighedmedian_sqrt(ImageIterator<T> *iterator)
 {
 	double sum = 0;
-	while (iterator.hasNext()) {
-		sum += std::sqrt(iterator.value());
-		iterator.next();
+	while (iterator->hasNext()) {
+		sum += std::sqrt(iterator->value());
+		iterator->next();
 	}
-	iterator.toFront();
+	iterator->toFront();
 
 	double integral = 0;
 	Point median;
-	while (iterator.hasNext()) {
-		median = iterator.point();
-		integral += std::sqrt(iterator.value());
-		iterator.next();
+	while (iterator->hasNext()) {
+		median = iterator->point();
+		integral += std::sqrt(iterator->value());
+		iterator->next();
 
 		if (2*integral >= sum)
 			break;

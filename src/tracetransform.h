@@ -14,7 +14,7 @@
 
 // Local includes
 #include "auxiliary.h"
-#include "traceiterator.h"
+#include "iterators.h"
 
 
 //
@@ -85,11 +85,11 @@ cv::Mat getTraceTransform(
 			);
 
 			// Set-up the trace iterator
-			TraceIterator<double> iterator(image, trace);
+			LineIterator<double> iterator(image, trace);
 
 			// Apply the functional
 			if (iterator.valid()) {
-				double pixel = (*functional)(iterator);
+				double pixel = (*functional)(&iterator);
 				transform.at<double>(
 					(int) p_step,	// row
 					(int) a_step	// column

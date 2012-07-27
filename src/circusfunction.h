@@ -49,11 +49,11 @@ cv::Mat getCircusFunction(
 		};
 
 		// Set-up the trace iterator
-		TraceIterator<double> iterator(*actual_sinogram, trace);
+		LineIterator<double> iterator(*actual_sinogram, trace);
 		assert(iterator.valid());
 
 		// Apply the functional
-		double pixel = (*functional)(iterator);
+		double pixel = (*functional)(&iterator);
 		circus.at<double>(
 			0,	// row
 			p	// column
