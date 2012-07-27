@@ -257,10 +257,6 @@ public:
 // P-functionals
 //
 
-// TODO: P-functionals are column iterators, hence they should not contain all
-//       the complex logic to billinearly interpolate points. Maybe use 
-//       class inheritance to avoid this?
-
 template <typename IN, typename OUT>
 class PFunctional : public Functional<IN, OUT>
 {
@@ -319,7 +315,7 @@ public:
 	double operator()(ColumnIterator<IN> *iterator)
 	{
 		iterator->findWeighedMedian();
-		return iterator->value();	// TODO: paper doesn't say g(median)?
+		return iterator->value();
 	}
 };
 
@@ -369,15 +365,10 @@ public:
 		double z = -10;
 		double stepsize_lower = 10.0 / this->m_center;
 		double stepsize_upper = 10.0 / (iterator->samples() - 1 - this->m_center);
-		// In case of 9 samples, and the center on the fifth (i=4), this results in
-		// {-10, -7.5, -5.0, -2.5, 0 2.5, 5.0, 7.5, 10} (as per tutorial)
-		// but matlab gives:
-		//  -10.0000   -7.7778   -5.5556   -3.3333   -1.1111    1.1111    3.3333    5.5556    7.7778
 
 		// Calculate the integral
 		double integral = 0;
 		while (iterator->hasNext()) {
-			//std::cout << hermite_function(m_order, z) << "\t";
 			integral += iterator->value() * hermite_function(m_order, z);
 			iterator->next();
 			if (z < 0)
@@ -385,7 +376,6 @@ public:
 			else
 				z += stepsize_upper;
 		}
-		//std::cout << std::endl;
 		return integral;
 	}
 
