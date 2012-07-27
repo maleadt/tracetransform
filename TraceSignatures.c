@@ -1,7 +1,6 @@
 #include "mex.h" /* Always include this */
 #include "matrix.h"
 #include <stdio.h>
-#include <stdlib.h>
 
 void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
                  int nrhs, const mxArray *prhs[]) /* Input variables */

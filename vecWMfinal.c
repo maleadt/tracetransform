@@ -96,16 +96,19 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
     for(i = 0; i < N; i++){
         ptrZ0 = mxGetPr(Z[0]);
         normalization((ptrD+i*M), (ptrW+i*M), ptrZ0, M);
-        /*mexCallMATLAB(1, Asrt, 1, Z, "sortrows");
-        mexCallMATLAB(1, Asrt, 1, Z, "srtLst");*/
+        /*
+        mexCallMATLAB(1, Asrt, 1, Z, "sortrows");
+        mexCallMATLAB(1, Asrt, 1, Z, "srtLst");
+         */
         
         ptrAsrt = mxGetPr(Asrt[0]);
         ptrWMed = mxGetPr(plhs[0]);
-        
-        /*vecsort(ptrZ0,ptrAsrt,M);
+        /*
+        vecsort(ptrZ0,ptrAsrt,M);
         for(j = 0; j < 2*M; j++){
-             printf("%f \n",*(ptrAsrt+j));}
-        finding(ptrAsrt, ptrWMed, M, i);*/
+            printf("%f \n",*(ptrAsrt+j));}
+        finding(ptrAsrt, ptrWMed, M, i);
+         */
         finding(ptrZ0, ptrWMed, M, i);
     }
   
