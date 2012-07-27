@@ -76,7 +76,7 @@ cv::Mat nearest_orthonormal_sinogram(
 	);
 	cv::Mat nos = svd.u * diagonal * svd.vt;
 
-	return aligned;
+	return nos;
 }
 
 
