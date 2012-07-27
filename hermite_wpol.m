@@ -14,6 +14,7 @@ if idx == 2
 else
     xc = [x(1:Nf) x(Nf+1:Nf+Ndown)];
 end
+xc = [-10 -7.5 -5.0 -2.5 0 2.5 5.0 7.5 10]
 
 psi0 = (1/(pi)^.25)*exp(-xc.^2/2);
 psi1 = 2*((2*sqrt(pi))^-.5)*xc.*exp(-xc.^2/2);

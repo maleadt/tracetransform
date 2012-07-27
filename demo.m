@@ -7,14 +7,15 @@ A_smth = mat2gray(adapthisteq(A));      % Image pre-processing, illumination nor
 Code_Tfunct = [2];                      %Code of T functionals to be used, numbers comprised 
                                         %between (1 to 7), which correspond to the files "FunctionalT1.c" 
                                         
-Code_Pfunct = [4 5 6 7];                %Code of P functionals to be used, numbers between 1 and 3 
+Code_Pfunct = [5];                %Code of P functionals to be used, numbers between 1 and 3 
                                         %use the classical P-functionals defined in "Apply_Pfunct",
                                         % from 4 onwards the Hermite functionals are employed.
                                         
-angle_intrvl = 3;                       %3 degrees of angle interval between rotations
+angle_intrvl = 1;                       %3 degrees of angle interval between rotations
 flag = 1;                               %Flag 0 (no sinogram orthonormalization) or 1 (sinogram orthonormalization) 
 
 % Main function that extracts the orthonormal signatures.
+sinograms = OrthTraceTransform(A_smth,Code_Tfunct,Code_Pfunct, angle_intrvl,flag); 
 CircusF_a = OrthTraceSign(A_smth,Code_Tfunct,Code_Pfunct, angle_intrvl,flag); 
 %
 corr(CircusF_a)                         % Testing that the features extracted are actually orthonormal 
@@ -22,4 +23,3 @@ figure
 imshow(A)                               % Showing the original image    
 figure
 plot(CircusF_a)                         % Plotting the features extracted
-sinograms = OrthTraceTransform(A_smth,Code_Tfunct,Code_Pfunct, angle_intrvl,flag); 

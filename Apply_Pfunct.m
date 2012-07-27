@@ -14,7 +14,7 @@ for i=1:Numb_T
     %Alignment of the sinograms, that is changing from x domain to r
     % domain transform: pixels reordered (somewhat similar)
     S = Stack_sinogram(:,:,i);  % S = sinogram matrix
-    [Sc cf] = Sinogram_center(S);   % Sc = matrix, cf = scalar
+    [Sc cf] = Sinogram_center(S);   % Sc = aligned sinogram, cf = scalar???
 
     if flag == 1
         %% Apply SVD to find NOS
