@@ -19,8 +19,71 @@ template <typename IN, typename OUT>
 class Functional
 {
 public:
+	virtual cv::Mat *preprocess(const cv::Mat &sinogram)
+	{
+		return nullptr;
+	}
+
 	virtual OUT operator()(TraceIterator<IN>& iterator) = 0;
 };
+
+
+//
+// Auxiliary
+//
+
+cv::Mat nearest_orthonormal_sinogram(
+	const cv::Mat &sinogram,
+	unsigned int& new_center)
+{
+	// Detect the offset of each column to the sinogram center
+	assert(sinogram.rows > 0);
+	assert(sinogram.cols >= 0);
+	unsigned int sinogram_center = (unsigned int) std::floor((sinogram.rows - 1) / 2.0);
+	std::vector<int> offset(sinogram.cols);
+	for (int p = 0; p < sinogram.cols; p++) {
+		// Determine the trace segment
+		Segment trace = Segment{
+			Point{(double)p, 0},
+			Point{(double)p, (double)sinogram.rows-1}
+		};
+
+		// Set-up the trace iterator
+		TraceIterator<double> iterator(sinogram, trace);
+		assert(iterator.valid());
+
+		// Get and compare the median
+		Point median = iterator_weighedmedian(iterator);
+		offset[p] = (median.y - sinogram_center);
+	}
+
+	// Align each column to the sinogram center
+	int min = *(std::min_element(offset.begin(), offset.end()));
+	int max = *(std::max_element(offset.begin(), offset.end()));
+	unsigned int padding = max + std::abs(min);
+	new_center = sinogram_center + max;
+	cv::Mat aligned = cv::Mat::zeros(
+		sinogram.rows + padding,
+		sinogram.cols,
+		sinogram.type()
+	);
+	for (int j = 0; j < sinogram.cols; j++) {
+		for (int i = 0; i < sinogram.rows; i++) {
+			aligned.at<double>(max+i-offset[j], j) = 
+				sinogram.at<double>(i, j);
+		}
+	}
+
+	// Compute the nearest orthonormal sinogram
+	cv::SVD svd(aligned, cv::SVD::FULL_UV);
+	cv::Mat diagonal = cv::Mat::eye(
+		aligned.size(),	// (often) rectangular!
+		aligned.type()
+	);
+	cv::Mat nos = svd.u * diagonal * svd.vt;
+
+	return aligned;
+}
 
 
 //
@@ -207,9 +270,11 @@ template <typename IN, typename OUT>
 class PFunctionalOrthonormal : public PFunctional<IN, OUT>
 {
 public:
-	void setCenter(unsigned int center)
+	cv::Mat *preprocess(const cv::Mat &sinogram)
 	{
-		m_center = center;
+		cv::Mat *nos = new cv::Mat();
+		*nos = nearest_orthonormal_sinogram(sinogram, m_center);
+		return nos;
 	}
 
 protected:
