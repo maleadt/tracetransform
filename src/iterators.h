@@ -37,17 +37,7 @@ public:
 	//
 
 	virtual bool valid() const = 0;
-	virtual const Point &point()
-	{
-		return m_p;
-	}
-
-	T value() const
-	{
-		return value(m_p);
-	}
-	
-	virtual T value(const Point &p) const = 0;
+	virtual T value() const = 0;
 
 
 	//
@@ -60,10 +50,6 @@ public:
 	virtual void toFront() = 0;
 
 protected:
-	void setPoint(const Point& i_p)
-	{
-		m_p = i_p;
-	}
 	const cv::Mat &image() const
 	{
 		return m_image;
@@ -75,7 +61,6 @@ protected:
 
 private:
 	const cv::Mat &m_image;
-	Point m_p;
 };
 
 template <typename T>
@@ -106,11 +91,20 @@ public:
 	{
 		return m_valid;
 	}
-	
-	using ImageIterator<T>::value;
-	T value(const Point &p) const
+
+	unsigned int row() const
 	{
-		return this->pixel(p.y, p.x);
+		return m_row;
+	}
+	
+	T value() const
+	{
+		return value(m_row);
+	}
+
+	T value(unsigned int i_row) const
+	{
+		return this->pixel(i_row, m_column);
 	}
 
 
@@ -128,9 +122,6 @@ public:
 	{
 		// Advance
 		m_row++;
-		this->setPoint(Point{(double)m_column, (double)m_row});
-		// FIXME: ColumnIterator shouldn't know anything about points?
-		//        Or should it?
 	}
 
 	unsigned int samples()
@@ -200,8 +191,17 @@ public:
 	{
 		return m_segment;
 	}
+
+	Point point() const
+	{
+		return m_p;
+	}
 	
-	using ImageIterator<T>::value;
+	T value() const
+	{
+		return value(m_p);
+	}
+
 	T value(const Point &p) const
 	{
 		// Get fractional parts, floors and ceilings
@@ -263,7 +263,7 @@ public:
 	{
 		// Advance
 		m_step++;
-		this->setPoint(m_clipped.begin + m_leap*m_step);
+		m_p = m_clipped.begin + m_leap*m_step;
 
 		// Clamp any invalid pixels. This can happen due to rounding
 		// errors: given a long enough trace, the multiplication of
@@ -275,9 +275,9 @@ public:
 		double x_high = std::max(m_clipped.begin.x, m_clipped.end.x);
 		double y_low = std::min(m_clipped.begin.y, m_clipped.end.y);
 		double y_high = std::max(m_clipped.begin.y, m_clipped.end.y);
-		if (this->point().x < x_low || this->point().x > x_high
-			|| this->point().y < y_low || this->point().y > y_high) {
-			this->setPoint(m_clipped.end);
+		if (m_p.x < x_low || m_p.x > x_high
+			|| m_p.y < y_low || m_p.y > y_high) {
+			m_p = m_clipped.end;
 			assert(m_step+1 > m_clipped.length());
 		}
 	}
@@ -289,7 +289,7 @@ public:
 
 	void toFront()
 	{
-		this->setPoint(m_clipped.begin);
+		m_p = m_clipped.begin;
 		m_step = 0;
 	}
 
@@ -308,7 +308,7 @@ private:
 	Segment m_clipped;
 	bool m_valid;
 
-	Point m_leap;
+	Point m_p, m_leap;
 	unsigned int m_step;
 };
 
@@ -323,7 +323,7 @@ private:
 // index is repeated as many times as the pixel value it represents), after
 // which the median value of that array is located.
 template <typename T>
-Point iterator_weighedmedian(ImageIterator<T> *iterator)
+void iterator_weighedmedian(ImageIterator<T> *iterator)
 {
 	double sum = 0;
 	while (iterator->hasNext()) {
@@ -333,22 +333,18 @@ Point iterator_weighedmedian(ImageIterator<T> *iterator)
 	iterator->toFront();
 
 	double integral = 0;
-	Point median;
 	while (iterator->hasNext()) {
-		median = iterator->point();
 		integral += iterator->value();
-		iterator->next();
-
 		if (2*integral >= sum)
 			break;
+		iterator->next();
 	}
-	return median;
 }
 
 // Look for the median of the weighed indexes, but take the square root of the
 // pixel values as weight
 template <typename T>
-Point iterator_weighedmedian_sqrt(ImageIterator<T> *iterator)
+void iterator_weighedmedian_sqrt(ImageIterator<T> *iterator)
 {
 	double sum = 0;
 	while (iterator->hasNext()) {
@@ -358,16 +354,12 @@ Point iterator_weighedmedian_sqrt(ImageIterator<T> *iterator)
 	iterator->toFront();
 
 	double integral = 0;
-	Point median;
 	while (iterator->hasNext()) {
-		median = iterator->point();
 		integral += std::sqrt(iterator->value());
-		iterator->next();
-
 		if (2*integral >= sum)
 			break;
+		iterator->next();
 	}
-	return median;
 }
 
 #endif

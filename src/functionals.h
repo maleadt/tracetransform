@@ -47,8 +47,8 @@ cv::Mat nearest_orthonormal_sinogram(
 		assert(iterator.valid());
 
 		// Get and compare the median
-		Point median = iterator_weighedmedian(&iterator);
-		offset[p] = (median.y - sinogram_center);
+		iterator_weighedmedian(&iterator);
+		offset[p] = (iterator.row() - sinogram_center);
 	}
 
 	// Align each column to the sinogram center
@@ -87,7 +87,13 @@ cv::Mat nearest_orthonormal_sinogram(
 template <typename IN, typename OUT>
 class TFunctional : public Functional<IN, OUT>
 {
+public:
+	OUT operator()(ImageIterator<IN> *iterator)
+	{
+		assert(false);
+	}
 
+	virtual OUT operator()(LineIterator<IN> *iterator) = 0;
 };
 
 // T-functional for the Radon transform.
@@ -96,7 +102,7 @@ class TFunctionalRadon : public TFunctional<IN, double>
 {
 public:
 	// T(f(t)) = Int[0-inf] f(t)dt
-	double operator()(ImageIterator<IN> *iterator)
+	double operator()(LineIterator<IN> *iterator)
 	{
 		double integral = 0;
 		while (iterator->hasNext()) {
@@ -112,18 +118,14 @@ class TFunctional1 : public TFunctional<IN, double>
 {
 public:
 	// T(f(t)) = Int[0-inf] r*f(r)dr
-	double operator()(ImageIterator<IN> *iterator)
+	double operator()(LineIterator<IN> *iterator)
 	{
-		// This functional only operates on line iterators
-		LineIterator<IN> *lineiterator = dynamic_cast<LineIterator<IN>*>(iterator);
-		assert(lineiterator != 0);
-
 		// Transform the domain from t to r
-		Point r = iterator_weighedmedian(lineiterator);
-		LineIterator<IN> transformed = lineiterator->transformDomain(
+		iterator_weighedmedian(iterator);
+		LineIterator<IN> transformed = iterator->transformDomain(
 			Segment{
-				r,
-				lineiterator->segment().end
+				iterator->point(),
+				iterator->segment().end
 			}
 		);
 
@@ -142,18 +144,14 @@ class TFunctional2 : public TFunctional<IN, double>
 {
 public:
 	// T(f(t)) = Int[0-inf] r^2*f(r)dr
-	double operator()(ImageIterator<IN> *iterator)
+	double operator()(LineIterator<IN> *iterator)
 	{
-		// This functional only operates on line iterators
-		LineIterator<IN> *lineiterator = dynamic_cast<LineIterator<IN>*>(iterator);
-		assert(lineiterator != 0);
-
 		// Transform the domain from t to r
-		Point r = iterator_weighedmedian(lineiterator);
-		LineIterator<IN> transformed = lineiterator->transformDomain(
+		iterator_weighedmedian(iterator);
+		LineIterator<IN> transformed = iterator->transformDomain(
 			Segment{
-				r,
-				lineiterator->segment().end
+				iterator->point(),
+				iterator->segment().end
 			}
 		);
 
@@ -172,18 +170,14 @@ class TFunctional3 : public TFunctional<IN, double>
 {
 public:
 	// T(f(t)) = Int[0-inf] exp(5i*log(r1))*r1*f(r1)dr1
-	double operator()(ImageIterator<IN> *iterator)
-	{
-		// This functional only operates on line iterators
-		LineIterator<IN> *lineiterator = dynamic_cast<LineIterator<IN>*>(iterator);
-		assert(lineiterator != 0);
-		
+	double operator()(LineIterator<IN> *iterator)
+	{		
 		// Transform the domain from t to r1
-		Point r1 = iterator_weighedmedian_sqrt(lineiterator);
-		LineIterator<IN> transformed = lineiterator->transformDomain(
+		iterator_weighedmedian_sqrt(iterator);
+		LineIterator<IN> transformed = iterator->transformDomain(
 			Segment{
-				r1,
-				lineiterator->segment().end
+				iterator->point(),
+				iterator->segment().end
 			}
 		);
 
@@ -205,18 +199,14 @@ class TFunctional4 : public TFunctional<IN, double>
 {
 public:
 	// T(f(t)) = Int[0-inf] exp(3i*log(r1))*f(r1)dr1
-	double operator()(ImageIterator<IN> *iterator)
-	{
-		// This functional only operates on line iterators
-		LineIterator<IN> *lineiterator = dynamic_cast<LineIterator<IN>*>(iterator);
-		assert(lineiterator != 0);
-		
+	double operator()(LineIterator<IN> *iterator)
+	{		
 		// Transform the domain from t to r1
-		Point r1 = iterator_weighedmedian_sqrt(lineiterator);
-		LineIterator<IN> transformed = lineiterator->transformDomain(
+		iterator_weighedmedian_sqrt(iterator);
+		LineIterator<IN> transformed = iterator->transformDomain(
 			Segment{
-				r1,
-				lineiterator->segment().end
+				iterator->point(),
+				iterator->segment().end
 			}
 		);
 
@@ -238,18 +228,14 @@ class TFunctional5 : public TFunctional<IN, double>
 {
 public:
 	// T(f(t)) = Int[0-inf] exp(4i*log(r1))*sqrt(r1)*f(r1)dr1
-	double operator()(ImageIterator<IN> *iterator)
-	{
-		// This functional only operates on line iterators
-		LineIterator<IN> *lineiterator = dynamic_cast<LineIterator<IN>*>(iterator);
-		assert(lineiterator != 0);
-		
+	double operator()(LineIterator<IN> *iterator)
+	{		
 		// Transform the domain from t to r1
-		Point r1 = iterator_weighedmedian_sqrt(lineiterator);
-		LineIterator<IN> transformed = lineiterator->transformDomain(
+		iterator_weighedmedian_sqrt(iterator);
+		LineIterator<IN> transformed = iterator->transformDomain(
 			Segment{
-				r1,
-				lineiterator->segment().end
+				iterator->point(),
+				iterator->segment().end
 			}
 		);
 
@@ -278,6 +264,13 @@ public:
 template <typename IN, typename OUT>
 class PFunctional : public Functional<IN, OUT>
 {
+public:
+	OUT operator()(ImageIterator<IN> *iterator)
+	{
+		assert(false);
+	}
+
+	virtual OUT operator()(ColumnIterator<IN> *iterator) = 0;
 };
 
 template <typename IN, typename OUT>
@@ -300,7 +293,7 @@ class PFunctional1 : public PFunctional<IN, double>
 {
 public:
 	// P(g(p)) = Sum(k) abs(g(p+1) -g(p))
-	double operator()(ImageIterator<IN> *iterator)
+	double operator()(ColumnIterator<IN> *iterator)
 	{
 		double sum = 0;
 		double previous;
@@ -323,10 +316,10 @@ class PFunctional2 : public PFunctional<IN, double>
 {
 public:
 	// P(g(p)) = median(g(p))
-	double operator()(ImageIterator<IN> *iterator)
+	double operator()(ColumnIterator<IN> *iterator)
 	{
-		Point median = iterator_weighedmedian(iterator);
-		return iterator->value(median);	// TODO: paper doesn't say g(median)?
+		iterator_weighedmedian(iterator);
+		return iterator->value();	// TODO: paper doesn't say g(median)?
 	}
 };
 
@@ -335,7 +328,7 @@ class PFunctional3 : public PFunctional<IN, double>
 {
 public:
 	// P(g(p)) = Int |Fourier(g(p))|^4
-	double operator()(ImageIterator<IN> *iterator)
+	double operator()(ColumnIterator<IN> *iterator)
 	{
 		// Dump the trace in a vector
 		// TODO: don't do this explicitly?
@@ -370,7 +363,7 @@ public:
 	}
 
 	// Hn(g(p)) = Int psi(z)
-	double operator()(ImageIterator<IN> *iterator)
+	double operator()(ColumnIterator<IN> *iterator)
 	{
 		// Discretize the [-10, 10] domain to fit the column iterator
 		double z = -10;
