@@ -19,6 +19,7 @@
 //
 // Class definition
 //
+
 template <typename T>
 class ImageIterator {
 public:
@@ -46,8 +47,8 @@ public:
 
 	virtual bool hasNext() const = 0;
 	virtual void next() = 0;
-	virtual unsigned int samples() = 0;
 	virtual void toFront() = 0;
+	virtual unsigned int samples() const = 0;
 
 
 	//
@@ -77,7 +78,7 @@ public:
 
 	// Look for the median of the weighed indexes, but take the square root
 	// of the pixel values as weight
-	void findWeighedSquaredMedian()
+	void findWeighedMedianSquared()
 	{		
 		double sum = 0;
 		while (hasNext()) {
@@ -96,10 +97,15 @@ public:
 	}
 
 protected:
+	//
+	// Protected I/O
+	//
+
 	const cv::Mat &image() const
 	{
 		return m_image;
 	}
+
 	T pixel(int y, int x) const
 	{
 		return m_image.at<T>(y, x);
@@ -142,11 +148,6 @@ public:
 	{
 		return m_valid;
 	}
-
-	unsigned int row() const
-	{
-		return m_row;
-	}
 	
 	T value() const
 	{
@@ -158,9 +159,14 @@ public:
 		return this->pixel(i_row, m_column);
 	}
 
+	unsigned int row() const
+	{
+		return m_row;
+	}
+
 
 	//
-	// Iteration methods
+	// Iteration interface
 	//
 
 	bool hasNext() const
@@ -171,11 +177,10 @@ public:
 
 	void next()
 	{
-		// Advance
 		m_row++;
 	}
 
-	unsigned int samples()
+	unsigned int samples() const
 	{
 		return this->image().rows;
 	}
@@ -239,16 +244,6 @@ public:
 	{
 		return m_valid;
 	}
-
-	const Segment &segment() const
-	{
-		return m_segment;
-	}
-
-	Point point() const
-	{
-		return m_p;
-	}
 	
 	T value() const
 	{
@@ -301,9 +296,19 @@ public:
 		return pixel;
 	}
 
+	const Segment &segment() const
+	{
+		return m_segment;
+	}
+
+	Point point() const
+	{
+		return m_p;
+	}
+
 
 	//
-	// Iteration methods
+	// Iteration interface
 	//
 
 	bool hasNext() const
@@ -335,7 +340,7 @@ public:
 		}
 	}
 
-	unsigned int samples()
+	unsigned int samples() const
 	{
 		return 1 + (unsigned int) std::floor(m_clipped.length());
 	}

@@ -173,7 +173,7 @@ public:
 	double operator()(LineIterator<IN> *iterator)
 	{		
 		// Transform the domain from t to r1
-		iterator->findWeighedSquaredMedian();
+		iterator->findWeighedMedianSquared();
 		LineIterator<IN> transformed = iterator->transformDomain(
 			Segment{
 				iterator->point(),
@@ -202,7 +202,7 @@ public:
 	double operator()(LineIterator<IN> *iterator)
 	{		
 		// Transform the domain from t to r1
-		iterator->findWeighedSquaredMedian();
+		iterator->findWeighedMedianSquared();
 		LineIterator<IN> transformed = iterator->transformDomain(
 			Segment{
 				iterator->point(),
@@ -231,7 +231,7 @@ public:
 	double operator()(LineIterator<IN> *iterator)
 	{		
 		// Transform the domain from t to r1
-		iterator->findWeighedSquaredMedian();
+		iterator->findWeighedMedianSquared();
 		LineIterator<IN> transformed = iterator->transformDomain(
 			Segment{
 				iterator->point(),
