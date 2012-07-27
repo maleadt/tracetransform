@@ -5,16 +5,24 @@ function [psi xc] = hermite_wpol(n,cf,N,range)
 %N = Number of samples
 %range = Range in the continuos domain
 
-Nup = cf ;
-Ndown = N - Nup;
-[Nf idx] = max([Nup,Ndown]);
-x = linspace(-range, range,2*Nf);
-if idx == 2
-    xc = [x(Nf-Nup+1:Nf) x(Nf+1:end)];
-else
-    xc = [x(1:Nf) x(Nf+1:Nf+Ndown)];
-end
-xc = [-10 -7.5 -5.0 -2.5 0 2.5 5.0 7.5 10]
+Nneg = cf ;
+Npos = N - cf + 1;
+xneg = linspace(-range, 0,Nneg);
+xpos = linspace(0, range,Npos);
+xc = union(xneg,xpos);
+
+%% Change on 27/07/2012. Commented because produces significant errors when
+%  the number of samples is small.
+% Nup = cf ;
+% Ndown = N - cf;
+% [Nf idx] = max([Nup,Ndown]);
+% x = linspace(-range, range,2*Nf);
+% if idx == 2
+%     xc = [x(Nf-Nup+1:Nf) x(Nf+1:end)];
+% else
+%     xc = [x(1:Nf) x(Nf+1:Nf+Ndown)];
+% end
+%%
 
 psi0 = (1/(pi)^.25)*exp(-xc.^2/2);
 psi1 = 2*((2*sqrt(pi))^-.5)*xc.*exp(-xc.^2/2);
