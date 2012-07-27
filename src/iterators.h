@@ -49,6 +49,52 @@ public:
 	virtual unsigned int samples() = 0;
 	virtual void toFront() = 0;
 
+
+	//
+	// Lookup methods
+	//
+
+	// Conceptually this expands the list of indexes to a weighed one (in
+	// which each index is repeated as many times as the pixel value it
+	// represents), after which the median value of that array is located.
+	void findWeighedMedian()
+	{		
+		double sum = 0;
+		while (hasNext()) {
+			sum += value();
+			next();
+		}
+		toFront();
+
+		double integral = 0;
+		while (hasNext()) {
+			integral += value();
+			if (2*integral >= sum)
+				break;
+			next();
+		}
+	}
+
+	// Look for the median of the weighed indexes, but take the square root
+	// of the pixel values as weight
+	void findWeighedSquaredMedian()
+	{		
+		double sum = 0;
+		while (hasNext()) {
+			sum += std::sqrt(value());
+			next();
+		}
+		toFront();
+
+		double integral = 0;
+		while (hasNext()) {
+			integral += std::sqrt(value());
+			if (2*integral >= sum)
+				break;
+			next();
+		}
+	}
+
 protected:
 	const cv::Mat &image() const
 	{
@@ -62,6 +108,11 @@ protected:
 private:
 	const cv::Mat &m_image;
 };
+
+
+//
+// Column iterator
+//
 
 template <typename T>
 class ColumnIterator : public ImageIterator<T> {
@@ -139,9 +190,11 @@ private:
 	bool m_valid;
 };
 
-// This class allows to iterate a line within an image, without having to rotate
-// it completely. It uses bilinear interpolation to get values of pixels not
-// addressable using integer indexes
+
+//
+// Line iterator
+//
+
 template <typename T>
 class LineIterator : public ImageIterator<T> {
 public:
@@ -311,55 +364,5 @@ private:
 	Point m_p, m_leap;
 	unsigned int m_step;
 };
-
-
-//
-// Iterator helpers
-//
-
-// Look for the median of the weighed indexes
-//
-// Conceptually this expands the list of indexes to a weighed one (in which each
-// index is repeated as many times as the pixel value it represents), after
-// which the median value of that array is located.
-template <typename T>
-void iterator_weighedmedian(ImageIterator<T> *iterator)
-{
-	double sum = 0;
-	while (iterator->hasNext()) {
-		sum += iterator->value();
-		iterator->next();
-	}
-	iterator->toFront();
-
-	double integral = 0;
-	while (iterator->hasNext()) {
-		integral += iterator->value();
-		if (2*integral >= sum)
-			break;
-		iterator->next();
-	}
-}
-
-// Look for the median of the weighed indexes, but take the square root of the
-// pixel values as weight
-template <typename T>
-void iterator_weighedmedian_sqrt(ImageIterator<T> *iterator)
-{
-	double sum = 0;
-	while (iterator->hasNext()) {
-		sum += std::sqrt(iterator->value());
-		iterator->next();
-	}
-	iterator->toFront();
-
-	double integral = 0;
-	while (iterator->hasNext()) {
-		integral += std::sqrt(iterator->value());
-		if (2*integral >= sum)
-			break;
-		iterator->next();
-	}
-}
 
 #endif

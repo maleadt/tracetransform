@@ -47,7 +47,7 @@ cv::Mat nearest_orthonormal_sinogram(
 		assert(iterator.valid());
 
 		// Get and compare the median
-		iterator_weighedmedian(&iterator);
+		iterator.findWeighedMedian();
 		offset[p] = (iterator.row() - sinogram_center);
 	}
 
@@ -121,7 +121,7 @@ public:
 	double operator()(LineIterator<IN> *iterator)
 	{
 		// Transform the domain from t to r
-		iterator_weighedmedian(iterator);
+		iterator->findWeighedMedian();
 		LineIterator<IN> transformed = iterator->transformDomain(
 			Segment{
 				iterator->point(),
@@ -147,7 +147,7 @@ public:
 	double operator()(LineIterator<IN> *iterator)
 	{
 		// Transform the domain from t to r
-		iterator_weighedmedian(iterator);
+		iterator->findWeighedMedian();
 		LineIterator<IN> transformed = iterator->transformDomain(
 			Segment{
 				iterator->point(),
@@ -173,7 +173,7 @@ public:
 	double operator()(LineIterator<IN> *iterator)
 	{		
 		// Transform the domain from t to r1
-		iterator_weighedmedian_sqrt(iterator);
+		iterator->findWeighedSquaredMedian();
 		LineIterator<IN> transformed = iterator->transformDomain(
 			Segment{
 				iterator->point(),
@@ -202,7 +202,7 @@ public:
 	double operator()(LineIterator<IN> *iterator)
 	{		
 		// Transform the domain from t to r1
-		iterator_weighedmedian_sqrt(iterator);
+		iterator->findWeighedSquaredMedian();
 		LineIterator<IN> transformed = iterator->transformDomain(
 			Segment{
 				iterator->point(),
@@ -231,7 +231,7 @@ public:
 	double operator()(LineIterator<IN> *iterator)
 	{		
 		// Transform the domain from t to r1
-		iterator_weighedmedian_sqrt(iterator);
+		iterator->findWeighedSquaredMedian();
 		LineIterator<IN> transformed = iterator->transformDomain(
 			Segment{
 				iterator->point(),
@@ -318,7 +318,7 @@ public:
 	// P(g(p)) = median(g(p))
 	double operator()(ColumnIterator<IN> *iterator)
 	{
-		iterator_weighedmedian(iterator);
+		iterator->findWeighedMedian();
 		return iterator->value();	// TODO: paper doesn't say g(median)?
 	}
 };
