@@ -48,26 +48,6 @@ struct Profiler
 	time_t t1, t2;
 };
 
-std::string ordinalSuffix(unsigned long n) {
-	// Numbers from 11 to 13 don't have st, nd, rd
-	if (10 < (n%100) && (n%100) < 14)
-		return "th";
-
-	switch(n % 10) {
-	case 1:
-		return "st";
-
-	case 2:
-		return "nd";
-
-	case 3:
-		return "rd";
-
-	default:
-		return "th";
-	}
-} 
-
 
 //
 // Main
@@ -90,6 +70,7 @@ int main(int argc, char **argv)
 
 	// Get the chosen T-functionals
 	std::vector<TFunctional<double,double>*> tfunctionals;
+	std::vector<std::string> tfunctional_names;
 	std::stringstream ss;
 	ss << argv[2];
 	while (!ss.eof()) {
@@ -100,6 +81,7 @@ int main(int argc, char **argv)
 			return 1;
 		}
 
+		std::stringstream name;
 		switch (i) {
 		case 0:
 			tfunctionals.push_back(new TFunctionalRadon<double>());
@@ -123,6 +105,8 @@ int main(int argc, char **argv)
 			std::cerr << "Error: invalid T-functional provided" << std::endl;
 			return 1;
 		}
+		name << "T" << i;
+		tfunctional_names.push_back(name.str());
 
 		if (ss.peek() == ',')
 			ss.ignore();
@@ -130,6 +114,7 @@ int main(int argc, char **argv)
 
 	// Get the chosen P-functional
 	std::vector<PFunctional<double,double>*> pfunctionals;
+	std::vector<std::string> pfunctional_names;
 	if (argc >= 4) {
 		ss.clear();
 		ss << argv[3];
@@ -147,6 +132,7 @@ int main(int argc, char **argv)
 				return 1;
 			}
 
+			std::stringstream name;
 			switch (type) {
 			case REGULAR:
 			{
@@ -164,12 +150,15 @@ int main(int argc, char **argv)
 					std::cerr << "Error: invalid P-functional provided" << std::endl;
 					return 1;
 				}
+				name << "P" << i;
 				break;
 			}
 			case HERMITE:
 				pfunctionals.push_back(new PFunctionalHermite<double>(i));
+				name << "H" << i;
 				break;	
 			}
+			pfunctional_names.push_back(name.str());
 
 			if (ss.peek() == ',')
 				ss.ignore();
@@ -193,10 +182,10 @@ int main(int argc, char **argv)
 	// Process all T-functionals
 	cv::Mat data;
 	int decimals = 7;	// size of the column header
-	std::cerr << "Calculating ";
+	std::cerr << "Calculating";
 	for (unsigned int t = 0; t < tfunctionals.size(); t++) {
 		// Calculate the trace transform sinogram
-		std::cerr << t+1 << ordinalSuffix(t+1) << " T" << "..." << std::flush;
+		std::cerr << " " << tfunctional_names[t] << "..." << std::flush;
 		Profiler tprofiler;
 		cv::Mat sinogram = getTraceTransform(
 			input,
@@ -217,7 +206,7 @@ int main(int argc, char **argv)
 		// Process all P-functionals
 		for (unsigned int p = 0; p < pfunctionals.size(); p++) {
 			// Calculate the circus function
-			std::cerr << p+1 << ordinalSuffix(p+1) << " P" << "..." << std::flush;
+			std::cerr << " " << pfunctional_names[p] << "..." << std::flush;
 			Profiler pprofiler;
 			cv::Mat circus = getCircusFunction(
 				sinogram,
@@ -263,8 +252,8 @@ int main(int argc, char **argv)
 			size_t t = tp / pfunctionals.size();
 			size_t p = tp % pfunctionals.size();
 			std::stringstream header;
-			header << t+1 << ordinalSuffix(t+1) << " T, "
-				<< p+1 << ordinalSuffix(p+1) << " P";
+			header << tfunctional_names[t] << "-"
+				<< pfunctional_names[p];
 			std::cout << std::setw(decimals) << header.str();
 		}
 		std::cout << "\n";
