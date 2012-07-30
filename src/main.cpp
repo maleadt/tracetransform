@@ -216,22 +216,25 @@ int main(int argc, char **argv)
 			runtimes[t*pfunctionals.size()+p]
 				= tprofiler.elapsed() + pprofiler.elapsed();
 
+			// Normalize
+			cv::Mat normalized = zscore<double>(circus);
+
 			// Allocate the data
 			if (data.empty()) {
 				data = cv::Mat(
 					cv::Size(
-						 circus.cols,
+						 normalized.cols,
 						 tfunctionals.size()*pfunctionals.size()
 					),
 					CV_64FC1
 				);
 			} else {
-				assert(data.cols == circus.cols);
+				assert(data.cols == normalized.cols);
 			}
 
 			// Copy the data
-			for (int i = 0; i < circus.cols; i++) {
-				double pixel = circus.at<double>(0, i);
+			for (int i = 0; i < normalized.cols; i++) {
+				double pixel = normalized.at<double>(0, i);
 				data.at<double>(
 					t*pfunctionals.size()+p,	// row
 					i				// column

@@ -289,4 +289,56 @@ double hermite_function(unsigned int order, double x) {
 		);
 }
 
+template <typename T>
+double arithmetic_mean(const cv::Mat &vector)
+{
+	assert(vector.rows == 1);
+	if (vector.cols <= 0)
+		return NAN;
+
+	double sum = 0;
+	for (int i = 0; i < vector.cols; i++) {
+		sum += vector.at<T>(0, i);
+	}
+
+	return sum / vector.cols;
+}
+
+template <typename T>
+double standard_deviation(const cv::Mat &vector)
+{
+	assert(vector.rows == 1);
+	if (vector.cols <= 0)
+		return NAN;
+
+	double mean = arithmetic_mean<T>(vector);
+	double sum = 0;
+	for (int i = 0; i < vector.cols; i++) {
+		double diff = vector.at<T>(0, i) - mean;
+		sum += diff*diff;
+	}
+	
+	// NOTE: this is the default MATLAB interpretation, Wiki's std()
+	//       uses vector.cols
+	return std::sqrt(sum / (vector.cols-1));
+}
+
+template <typename T>
+cv::Mat zscore(const cv::Mat &vector)
+{
+	assert(vector.rows == 1);
+	if (vector.cols <= 0)
+		return cv::Mat();
+
+	double mean = arithmetic_mean<T>(vector);
+	double stdev = standard_deviation<T>(vector);
+
+	cv::Mat transformed(vector.size(), vector.type());
+	for (int i = 0; i < vector.cols; i++) {
+		transformed.at<T>(0, i) = (vector.at<T>(0, i) - mean) / stdev;
+	}
+
+	return transformed;
+}
+
 #endif
