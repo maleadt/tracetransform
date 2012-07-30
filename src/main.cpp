@@ -182,6 +182,7 @@ int main(int argc, char **argv)
 	std::vector<double> runtimes(tfunctionals.size()*pfunctionals.size());
 
 	// Process all T-functionals
+	Profiler mainprofiler;
 	cv::Mat data;
 	int decimals = 7;	// size of the column header
 	std::cerr << "Calculating";
@@ -245,7 +246,10 @@ int main(int argc, char **argv)
 			}
 		}
 	}
-	std::cerr << std::endl;
+	std::cerr << "\n";
+	mainprofiler.stop();
+	std::cerr << "Total execution time: " << mainprofiler.elapsed()
+		<< " sec" << std::endl;
 
 	// Save the output data
 	if (pfunctionals.size() > 0) {
