@@ -249,7 +249,7 @@ int main(int argc, char **argv)
 	if (pfunctionals.size() > 0) {
 		// Headers
 		decimals += 2;
-		std::cout << "#  ";
+		std::cout << "%  ";
 		std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(0);
 		for (size_t tp = 0; tp < (unsigned)data.rows; tp++) {
 			size_t t = tp / pfunctionals.size();
@@ -274,7 +274,7 @@ int main(int argc, char **argv)
 
 		// Footer
 		std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(0);
-		std::cout << "#  ";
+		std::cout << "%  ";
 		for (size_t tp = 0; tp < (unsigned)data.rows; tp++) {
 			std::stringstream runtime;
 			runtime << 1000.0*runtimes[tp] << "ms";
