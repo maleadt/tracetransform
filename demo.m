@@ -11,7 +11,7 @@ Code_Pfunct = [4 5 6 7];                %Code of P functionals to be used, numbe
                                         %use the classical P-functionals defined in "Apply_Pfunct",
                                         % from 4 onwards the Hermite functionals are employed.
                                         
-angle_intrvl = 3;                       %3 degrees of angle interval between rotations
+angle_intrvl = 1;                       %3 degrees of angle interval between rotations
 flag = 1;                               %Flag 0 (no sinogram orthonormalization) or 1 (sinogram orthonormalization) 
 
 % Main function that extracts the orthonormal signatures.
