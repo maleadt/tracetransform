@@ -9,6 +9,8 @@
 #include <sstream>
 #include <vector>
 #include <ctime>
+#include <fstream>
+#include <sys/stat.h>
 
 // OpenCV includes
 #include <cv.h>
@@ -245,43 +247,73 @@ int main(int argc, char **argv)
 	}
 	std::cerr << std::endl;
 
-	// Display the results of the P-functionals
+	// Save the output data
 	if (pfunctionals.size() > 0) {
+		std::ofstream fd_data("main.dat");
+
 		// Headers
 		decimals += 2;
-		std::cout << "%  ";
-		std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(0);
+		fd_data << "%  ";
+		fd_data << std::setiosflags(std::ios::fixed) << std::setprecision(0);
+		fd_data << std::setw(decimals) << "Angle";
 		for (size_t tp = 0; tp < (unsigned)data.rows; tp++) {
 			size_t t = tp / pfunctionals.size();
 			size_t p = tp % pfunctionals.size();
 			std::stringstream header;
 			header << tfunctional_names[t] << "-"
 				<< pfunctional_names[p];
-			std::cout << std::setw(decimals) << header.str();
+			fd_data << std::setw(decimals) << header.str();
 		}
-		std::cout << "\n";
+		fd_data << "\n";
 
 		// Data
-		std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(2);
+		fd_data << std::setiosflags(std::ios::fixed) << std::setprecision(2);
 		for (int i = 0; i < data.cols; i++) {
-			std::cout << "   ";
+			fd_data << "   " << std::setw(decimals) << i;
 			for (int tp = 0; tp < data.rows; tp++) {
-				std::cout << std::setw(decimals)
+				fd_data << std::setw(decimals)
 					<< data.at<double>(tp, i);
 			}
-			std::cout << "\n";
+			fd_data << "\n";
 		}
 
 		// Footer
-		std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(0);
-		std::cout << "%  ";
+		fd_data << std::setiosflags(std::ios::fixed) << std::setprecision(0);
+		fd_data << "%  ";
 		for (size_t tp = 0; tp < (unsigned)data.rows; tp++) {
 			std::stringstream runtime;
 			runtime << 1000.0*runtimes[tp] << "ms";
-			std::cout << std::setw(decimals) << runtime.str();
+			fd_data << std::setw(decimals) << runtime.str();
 		}
-		std::cout << std::endl;
+
+		fd_data << std::endl;
+		fd_data.close();
 	}
+
+	// Generate a gnuplot script
+	if (pfunctionals.size() > 0) {
+		std::ofstream fd_gnuplot("main.gp");
+
+		fd_gnuplot << "#!/usr/bin/gnuplot -persist\n";
+		fd_gnuplot << "set datafile commentschars '%'\n";
+
+		fd_gnuplot << "plot";
+		for (size_t tp = 0; tp < (unsigned)data.rows; tp++) {
+			size_t t = tp / pfunctionals.size();
+			size_t p = tp % pfunctionals.size();
+			fd_gnuplot << "'main.dat' using 1:" << tp+2
+				<< " with lines title '" << tfunctional_names[t] << "-"
+				<< pfunctional_names[p] << "'";
+			if (tp+1 < (unsigned)data.rows)
+				fd_gnuplot << ", \\";
+			fd_gnuplot << "\n";
+		}
+
+		fd_gnuplot << std::endl;
+		fd_gnuplot.close();
+		chmod("main.gp", 0755);
+	}
+
 
 	// Give the user time to look at the images
 	#ifdef DEBUG_IMAGES
