@@ -259,7 +259,6 @@ int main(int argc, char **argv)
 		decimals += 2;
 		fd_data << "%  ";
 		fd_data << std::setiosflags(std::ios::fixed) << std::setprecision(0);
-		fd_data << std::setw(decimals) << "Angle";
 		for (size_t tp = 0; tp < (unsigned)data.rows; tp++) {
 			size_t t = tp / pfunctionals.size();
 			size_t p = tp % pfunctionals.size();
@@ -273,7 +272,7 @@ int main(int argc, char **argv)
 		// Data
 		fd_data << std::setiosflags(std::ios::fixed) << std::setprecision(2);
 		for (int i = 0; i < data.cols; i++) {
-			fd_data << "   " << std::setw(decimals) << i;
+			fd_data << "   ";
 			for (int tp = 0; tp < data.rows; tp++) {
 				fd_data << std::setw(decimals)
 					<< data.at<double>(tp, i);
@@ -305,7 +304,7 @@ int main(int argc, char **argv)
 		for (size_t tp = 0; tp < (unsigned)data.rows; tp++) {
 			size_t t = tp / pfunctionals.size();
 			size_t p = tp % pfunctionals.size();
-			fd_gnuplot << "'main.dat' using 1:" << tp+2
+			fd_gnuplot << "\t'main.dat' using :" << tp+1
 				<< " with lines title '" << tfunctional_names[t] << "-"
 				<< pfunctional_names[p] << "'";
 			if (tp+1 < (unsigned)data.rows)
