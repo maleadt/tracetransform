@@ -295,7 +295,7 @@ int main(int argc, char **argv)
 
 	// Generate a gnuplot script
 	if (pfunctionals.size() > 0) {
-		std::ofstream fd_gnuplot("main.gp");
+		std::ofstream fd_gnuplot("circus.gp");
 
 		fd_gnuplot << "#!/usr/bin/gnuplot -persist\n";
 		fd_gnuplot << "set datafile commentschars '%'\n";
@@ -314,7 +314,7 @@ int main(int argc, char **argv)
 
 		fd_gnuplot << std::endl;
 		fd_gnuplot.close();
-		chmod("main.gp", 0755);
+		chmod("circus.gp", 0755);
 	}
 
 

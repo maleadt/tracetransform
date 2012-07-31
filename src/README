@@ -1,0 +1,31 @@
+About
+-----
+
+This is a C++ implementation of the trace transform using orthonormal circus
+functions.
+
+
+Compilation
+-----------
+
+$ mkdir build && cd build
+$ cmake ../
+$ make transform
+
+
+Usage
+-----
+
+$ ./transform ../../test/Cam1_V1.pgm 1,2 1,H2
+
+Parameters:
+  1) image to process
+  2) T-functionals: from 1 to 5, comma-separated
+  3) P-functionals: from 1 to 3 for regular ones, or Hn (with n being the order)
+     for an orthonormal Hermite-functional; comma-separated
+
+Output:
+  - circus.dat: MATLAB-compatible data file with the circus functions
+    $ circus = load("circus.dat")
+  - circus.gp: executable gnuplot script visualizing that data
+    $ ./circus.gp

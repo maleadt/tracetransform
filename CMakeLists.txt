@@ -24,8 +24,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wvla")
 
 FIND_PACKAGE(OpenCV REQUIRED)
 
-ADD_EXECUTABLE(main src/main.cpp)
-TARGET_LINK_LIBRARIES(main ${OpenCV_LIBS})
+ADD_EXECUTABLE(transform src/main.cpp)
+TARGET_LINK_LIBRARIES(transform ${OpenCV_LIBS})
 
 ADD_EXECUTABLE(test_tutorial src/test_tutorial.cpp)
 TARGET_LINK_LIBRARIES(test_tutorial ${OpenCV_LIBS})
