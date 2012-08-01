@@ -22,9 +22,6 @@
 #include "tracetransform.h"
 #include "circusfunction.h"
 
-// Debug flags
-//#define DEBUG_IMAGES
-
 
 //
 // Auxiliary
@@ -198,13 +195,10 @@ int main(int argc, char **argv)
 		);
 		tprofiler.stop();
 
-		// Show the trace transform sinogram
-		#ifdef DEBUG_IMAGES
-		std::stringstream sinogram_title;
-		sinogram_title << "sinogram after " << t+1 << ordinalSuffix(t+1)
-			<< " T-functional";
-		cv::imshow(sinogram_title.str(), mat2gray(sinogram));
-		#endif
+		// Save the sinogram
+		std::stringstream fn_trace;
+		fn_trace << "trace_" << tfunctional_names[t] << ".pgm";
+		cv::imwrite(fn_trace.str(), mat2gray(sinogram));
 
 		// Process all P-functionals
 		for (unsigned int p = 0; p < pfunctionals.size(); p++) {

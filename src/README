@@ -8,8 +8,7 @@ functions.
 Compilation
 -----------
 
-$ mkdir build && cd build
-$ cmake ../
+$ cmake
 $ make transform
 
 
@@ -25,6 +24,7 @@ Parameters:
      for an orthonormal Hermite-functional; comma-separated
 
 Output:
+  - trace_T$i.pgm: series of images containing the trace transform sinogram
   - circus.dat: MATLAB-compatible data file with the circus functions
     $ circus = load("circus.dat")
   - circus.gp: executable gnuplot script visualizing that data
