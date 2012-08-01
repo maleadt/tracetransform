@@ -176,7 +176,8 @@ int main(int argc, char **argv)
 	input = gray2mat(input);
 
 	// Save profiling data
-	std::vector<double> runtimes(tfunctionals.size()*pfunctionals.size());
+	std::vector<double> tfunctional_runtimes(tfunctionals.size());
+	std::vector<double> pfunctional_runtimes(pfunctionals.size(), 0);
 
 	// Process all T-functionals
 	Profiler mainprofiler;
@@ -194,6 +195,11 @@ int main(int argc, char **argv)
 			tfunctionals[t]
 		);
 		tprofiler.stop();
+		tfunctional_runtimes[t] = tprofiler.elapsed();
+
+		// DEBUG: load the Matlab sinogram here, and test whether it
+		//        gives more accurate output
+		//        If so, Andres' rotation code "must" introduce errors
 
 		// Save the sinogram image
 		std::stringstream fn_trace_image;
@@ -222,7 +228,7 @@ int main(int argc, char **argv)
 			}
 			fd_trace << "\n";
 		}
-		fd_trace << std::endl;
+		fd_trace << std::flush;
 		fd_trace.close();
 
 		// Process all P-functionals
@@ -235,8 +241,7 @@ int main(int argc, char **argv)
 				pfunctionals[p]
 			);
 			pprofiler.stop();
-			runtimes[t*pfunctionals.size()+p]
-				= tprofiler.elapsed() + pprofiler.elapsed();
+			pfunctional_runtimes[p] += pprofiler.elapsed();
 
 			// Normalize
 			cv::Mat normalized = zscore<double>(circus);
@@ -269,8 +274,18 @@ int main(int argc, char **argv)
 	}
 	std::cerr << "\n";
 	mainprofiler.stop();
-	std::cerr << "Total execution time: " << mainprofiler.elapsed()
-		<< " sec" << std::endl;
+
+	// Print runtime measurements	
+	std::cerr << "t(total) = " << mainprofiler.elapsed()
+		<< " s" << std::endl;
+	for (int t = 0; t < tfunctionals.size(); t++) {
+		std::cerr << "t(" << tfunctional_names[t] << ") = "
+			<< tfunctional_runtimes[t] << " s\n";
+	}
+	for (int p = 0; p < pfunctionals.size(); p++) {
+		std::cerr << "t(" << pfunctional_names[p] << ") = "
+			<< pfunctional_runtimes[p] / tfunctionals.size() << " s\n";
+	}
 
 	// Save the output data
 	if (pfunctionals.size() > 0) {
@@ -303,16 +318,7 @@ int main(int argc, char **argv)
 			fd_data << "\n";
 		}
 
-		// Footer
-		fd_data << std::setiosflags(std::ios::fixed) << std::setprecision(0);
-		fd_data << "%  ";
-		for (size_t tp = 0; tp < (unsigned)data.rows; tp++) {
-			std::stringstream runtime;
-			runtime << 1000.0*runtimes[tp] << "ms";
-			fd_data << std::setw(circus_decimals) << runtime.str();
-		}
-
-		fd_data << std::endl;
+		fd_data << std::flush;
 		fd_data.close();
 	}
 
