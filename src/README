@@ -25,7 +25,10 @@ Parameters:
 
 Output:
   - trace_T$i.pgm: series of images containing the trace transform sinogram
-  - circus.dat: MATLAB-compatible data file with the circus functions
+  - trace_T$i.data: series of MATLAB-compatible data files containing the trace
+    transform sinogram
+    $ trace_T1 = load("trace_T1.dat")
+  - circus.dat: MATLAB-compatible data file contain the circus functions
     $ circus = load("circus.dat")
   - circus.gp: executable gnuplot script visualizing that data
     $ ./circus.gp

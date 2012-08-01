@@ -181,7 +181,7 @@ int main(int argc, char **argv)
 	// Process all T-functionals
 	Profiler mainprofiler;
 	cv::Mat data;
-	int decimals = 7;	// size of the column header
+	int circus_decimals = 0;
 	std::cerr << "Calculating";
 	for (unsigned int t = 0; t < tfunctionals.size(); t++) {
 		// Calculate the trace transform sinogram
@@ -195,10 +195,35 @@ int main(int argc, char **argv)
 		);
 		tprofiler.stop();
 
-		// Save the sinogram
-		std::stringstream fn_trace;
-		fn_trace << "trace_" << tfunctional_names[t] << ".pgm";
-		cv::imwrite(fn_trace.str(), mat2gray(sinogram));
+		// Save the sinogram image
+		std::stringstream fn_trace_image;
+		fn_trace_image << "trace_" << tfunctional_names[t] << ".pgm";
+		cv::imwrite(fn_trace_image.str(), mat2gray(sinogram));
+
+		// Save the sinogram data
+		std::stringstream fn_trace_data;
+		fn_trace_data << "trace_" << tfunctional_names[t] << ".dat";
+		int trace_decimals = 0;
+		for (int i = 0; i < sinogram.rows; i++) {
+			for (int j = 0; j < sinogram.cols; j++) {
+				double pixel = sinogram.at<double>(i, j);
+				trace_decimals = std::max(trace_decimals,
+					(int)std::log10(pixel)
+					+ 3);	// for comma and 2 decimals
+			}
+		}
+		trace_decimals += 2;	// add spacing
+		std::ofstream fd_trace(fn_trace_data.str());
+		fd_trace << std::setiosflags(std::ios::fixed) << std::setprecision(2);
+		for (int i = 0; i < sinogram.rows; i++) {
+			for (int j = 0; j < sinogram.cols; j++) {
+				double pixel = sinogram.at<double>(i, j);
+				fd_trace << std::setw(trace_decimals) << pixel;
+			}
+			fd_trace << "\n";
+		}
+		fd_trace << std::endl;
+		fd_trace.close();
 
 		// Process all P-functionals
 		for (unsigned int p = 0; p < pfunctionals.size(); p++) {
@@ -236,7 +261,9 @@ int main(int argc, char **argv)
 					t*pfunctionals.size()+p,	// row
 					i				// column
 				) = pixel;
-				decimals = std::max(decimals, (int)std::log10(pixel)+3);
+				circus_decimals = std::max(circus_decimals,
+					(int)std::log10(pixel)
+					+ 3);	// for comma and 2 decimals
 			}
 		}
 	}
@@ -247,10 +274,12 @@ int main(int argc, char **argv)
 
 	// Save the output data
 	if (pfunctionals.size() > 0) {
-		std::ofstream fd_data("main.dat");
+		std::ofstream fd_data("circus.dat");
 
 		// Headers
-		decimals += 2;
+		if (circus_decimals < 5)
+			circus_decimals = 5;	// size of column header
+		circus_decimals += 2;		// add spacing
 		fd_data << "%  ";
 		fd_data << std::setiosflags(std::ios::fixed) << std::setprecision(0);
 		for (size_t tp = 0; tp < (unsigned)data.rows; tp++) {
@@ -259,7 +288,7 @@ int main(int argc, char **argv)
 			std::stringstream header;
 			header << tfunctional_names[t] << "-"
 				<< pfunctional_names[p];
-			fd_data << std::setw(decimals) << header.str();
+			fd_data << std::setw(circus_decimals) << header.str();
 		}
 		fd_data << "\n";
 
@@ -268,7 +297,7 @@ int main(int argc, char **argv)
 		for (int i = 0; i < data.cols; i++) {
 			fd_data << "   ";
 			for (int tp = 0; tp < data.rows; tp++) {
-				fd_data << std::setw(decimals)
+				fd_data << std::setw(circus_decimals)
 					<< data.at<double>(tp, i);
 			}
 			fd_data << "\n";
@@ -280,7 +309,7 @@ int main(int argc, char **argv)
 		for (size_t tp = 0; tp < (unsigned)data.rows; tp++) {
 			std::stringstream runtime;
 			runtime << 1000.0*runtimes[tp] << "ms";
-			fd_data << std::setw(decimals) << runtime.str();
+			fd_data << std::setw(circus_decimals) << runtime.str();
 		}
 
 		fd_data << std::endl;
@@ -298,7 +327,7 @@ int main(int argc, char **argv)
 		for (size_t tp = 0; tp < (unsigned)data.rows; tp++) {
 			size_t t = tp / pfunctionals.size();
 			size_t p = tp % pfunctionals.size();
-			fd_gnuplot << "\t'main.dat' using :" << tp+1
+			fd_gnuplot << "\t'circus.dat' using :" << tp+1
 				<< " with lines title '" << tfunctional_names[t] << "-"
 				<< pfunctional_names[p] << "'";
 			if (tp+1 < (unsigned)data.rows)
