@@ -82,18 +82,12 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
             }
         }
      }
-
     
-     StackSinog[0] = Input_Stacking[2];
-     StackSinog[1] = (mxArray*)prhs[2];
-     StackSinog[2] = (mxArray*)prhs[4];
-     mexCallMATLAB(1,&Nonorm_CircusF[0],3,StackSinog,"Apply_Pfunct");    /*Applying the P functional*/   
-     mexCallMATLAB(1, plhs, 1, Nonorm_CircusF, "zscore");                /* Normalization of the signatures */
+     plhs[0] = Input_Stacking[2];
     
     /*Destroying initialized variables*/ 
     mxDestroyArray(Input_data[0]);
     mxDestroyArray(Input_data[1]);
     mxDestroyArray(Input_Stacking[1]);
-    mxDestroyArray(Input_Stacking[2]);
     mxDestroyArray(Input_Tfunct[0]);
 }

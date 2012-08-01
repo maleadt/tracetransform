@@ -1,6 +1,8 @@
-function CircusF = OrthTraceSign(I,Code_Tfunct,Code_Pfunct, angle_intrvl,flag)
+function [Sinogram CircusF] = OrthTraceSign(I,Code_Tfunct,Code_Pfunct, angle_intrvl,flag)
         Ipadd = impaddingf(I,angle_intrvl);     %% Padding the input image
-        CircusF = TraceSignatures(Ipadd,Code_Tfunct,Code_Pfunct,angle_intrvl,flag); %% Getting the signatures
+        Sinogram = TraceTransform(Ipadd,Code_Tfunct,Code_Pfunct,angle_intrvl,flag); 
+        CircusF = Apply_Pfunct(Sinogram, Code_Pfunct, flag);
+        CircusF = zscore(CircusF);
 end
 
 function Ipadd = impaddingf(I,angle_intrvl)
