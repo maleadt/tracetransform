@@ -340,11 +340,5 @@ int main(int argc, char **argv)
 		chmod("circus.gp", 0755);
 	}
 
-
-	// Give the user time to look at the images
-	#ifdef DEBUG_IMAGES
-	cv::waitKey();
-	#endif
-
 	return 0;
 }
