@@ -19,11 +19,6 @@ template <typename IN, typename OUT>
 class Functional
 {
 public:
-	virtual cv::Mat *preprocess(const cv::Mat &)
-	{
-		return nullptr;
-	}
-
 	virtual OUT operator()(ImageIterator<IN> *iterator) = 0;
 };
 
@@ -273,11 +268,8 @@ template <typename IN, typename OUT>
 class PFunctionalOrthonormal : public PFunctional<IN, OUT>
 {
 public:
-	cv::Mat *preprocess(const cv::Mat &sinogram)
-	{
-		cv::Mat *nos = new cv::Mat();
-		*nos = nearest_orthonormal_sinogram(sinogram, m_center);
-		return nos;
+	void setCenter(int i_center) {
+		m_center = i_center;
 	}
 
 protected:

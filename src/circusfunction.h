@@ -26,24 +26,16 @@ cv::Mat getCircusFunction(
 {
 	assert(sinogram.type() == CV_64FC1);
 
-	// Preprocess the sinogram
-	bool preprocessed = false;
-	const cv::Mat *actual_sinogram = functional->preprocess(sinogram);
-	if (actual_sinogram == nullptr)
-		actual_sinogram = &sinogram;
-	else
-		preprocessed = true;
-
 	// Create the matrix for the circus functions
 	cv::Mat circus(
-		cv::Size(actual_sinogram->cols, 1),
-		actual_sinogram->type()
+		cv::Size(sinogram.cols, 1),
+		sinogram.type()
 	);
 
 	// Trace all columns
-	for (int p = 0; p < actual_sinogram->cols; p++) {
+	for (int p = 0; p < sinogram.cols; p++) {
 		// Set-up the trace iterator
-		ColumnIterator<double> iterator(*actual_sinogram, p);
+		ColumnIterator<double> iterator(sinogram, p);
 		assert(iterator.valid());
 
 		// Apply the functional
@@ -53,9 +45,6 @@ cv::Mat getCircusFunction(
 			p	// column
 		) = pixel;
 	}
-
-	if (preprocessed)
-		delete actual_sinogram;
 
 	return circus;
 }

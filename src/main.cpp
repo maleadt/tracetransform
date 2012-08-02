@@ -22,6 +22,10 @@
 #include "tracetransform.h"
 #include "circusfunction.h"
 
+// Algorithm parameters
+#define ANGLE_INTERVAL		1
+#define DISTANCE_INTERVAL	1
+
 
 //
 // Auxiliary
@@ -114,6 +118,7 @@ int main(int argc, char **argv)
 	// Get the chosen P-functional
 	std::vector<PFunctional<double,double>*> pfunctionals;
 	std::vector<std::string> pfunctional_names;
+	int pfunctional_regular = 0, pfunctional_hermite = 0;
 	if (argc >= 4) {
 		ss.clear();
 		ss << argv[3];
@@ -135,6 +140,7 @@ int main(int argc, char **argv)
 			switch (type) {
 			case REGULAR:
 			{
+				pfunctional_regular++;
 				switch (i) {
 				case 1:
 					pfunctionals.push_back(new PFunctional1<double>());
@@ -153,6 +159,7 @@ int main(int argc, char **argv)
 				break;
 			}
 			case HERMITE:
+				pfunctional_hermite++;
 				pfunctionals.push_back(new PFunctionalHermite<double>(i));
 				name << "H" << i;
 				break;	
@@ -162,6 +169,10 @@ int main(int argc, char **argv)
 			if (ss.peek() == ',')
 				ss.ignore();
 		}
+	}
+	if (pfunctional_regular > 0 && pfunctional_hermite > 0) {
+		std::cerr << "Error: cannot mix orthonormal and regular P-functionals" << std::endl;
+		return 1;
 	}
 
 	// Read the image
@@ -174,6 +185,17 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	input = gray2mat(input);
+
+	// Orthonormal P-functionals need a stretched image in order to ensure
+	// a square sinogram
+	if (pfunctional_hermite > 0) {
+		int ndiag = (int) std::ceil(360.0/ANGLE_INTERVAL);
+		int nrows = (int) std::ceil(ndiag/std::sqrt(2));
+		cv::resize(
+			input,
+			input,
+			cv::Size(nrows, nrows));
+	}
 
 	// Save profiling data
 	std::vector<double> tfunctional_runtimes(tfunctionals.size());
@@ -190,8 +212,8 @@ int main(int argc, char **argv)
 		Profiler tprofiler;
 		cv::Mat sinogram = getTraceTransform(
 			input,
-			1,	// angle resolution
-			1,	// distance resolution
+			ANGLE_INTERVAL,		// angle resolution
+			DISTANCE_INTERVAL,	// distance resolution
 			tfunctionals[t]
 		);
 		tprofiler.stop();
@@ -231,8 +253,18 @@ int main(int argc, char **argv)
 		fd_trace << std::flush;
 		fd_trace.close();
 
+		// Hermite functionals require the nearest orthonormal sinogram
+		unsigned int sinogram_center;
+		if (pfunctional_hermite > 0) {
+			sinogram = nearest_orthonormal_sinogram(sinogram, sinogram_center);
+		}
+
 		// Process all P-functionals
 		for (unsigned int p = 0; p < pfunctionals.size(); p++) {
+			// Extra parameters to functional
+			if (pfunctional_hermite > 0)
+				((PFunctionalOrthonormal<double,double>*)pfunctionals[p])->setCenter(sinogram_center);
+
 			// Calculate the circus function
 			std::cerr << " " << pfunctional_names[p] << "..." << std::flush;
 			Profiler pprofiler;
