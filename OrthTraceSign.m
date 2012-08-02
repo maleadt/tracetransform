@@ -9,10 +9,10 @@ function Ipadd = impaddingf(I,angle_intrvl)
         %% Resizing and padding the image with zeros
         ndiag = ceil(360/angle_intrvl);
         nrows = ceil(ndiag/sqrt(2));
-        %% Resizing the image 
-        Irsz = imresize(im2uint8(I), [nrows nrows]);
-        M = nrows;
-        N = nrows;
+        %% Resizing the image to generate a square sinogram
+        Irsz = imresize(im2uint8(I), [nrows nrows]); %im2uint8(I);
+        M = nrows; %size(Irsz,1);
+        N = nrows; %size(Irsz,2);
         origin = floor(([M N]+1)/2);
          
         temp1 = M - 1 - origin(1);
@@ -25,6 +25,6 @@ function Ipadd = impaddingf(I,angle_intrvl)
         Ipadd = zeros(Nbins);
         originPadd = floor((size(Ipadd)+1)/2);
         df = originPadd - origin;
-        Ipadd(1+df(1):M+df(1),1+df(2):N+df(1)) = Irsz; 
+        Ipadd(1+df(1):M+df(1),1+df(2):N+df(2)) = Irsz; 
         Ipadd = im2double(uint8(Ipadd));
 end
