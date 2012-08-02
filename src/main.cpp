@@ -219,14 +219,10 @@ int main(int argc, char **argv)
 		tprofiler.stop();
 		tfunctional_runtimes[t] = tprofiler.elapsed();
 
-		// DEBUG: load the Matlab sinogram here, and test whether it
-		//        gives more accurate output
-		//        If so, Andres' rotation code "must" introduce errors
-
 		// Save the sinogram image
 		std::stringstream fn_trace_image;
 		fn_trace_image << "trace_" << tfunctional_names[t] << ".pgm";
-		cv::imwrite(fn_trace_image.str(), mat2gray(sinogram));
+		cv::imwrite(fn_trace_image.str(), mat2gray<double>(sinogram));
 
 		// Save the sinogram data
 		std::stringstream fn_trace_data;

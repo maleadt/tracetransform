@@ -32,11 +32,11 @@ Segment bounding_segment(const cv::Size &size,
 
 	return Segment{
 		Point{
-			origin.x - std::cos(a_rad) * diagonal/2.0,
-			origin.y - std::sin(a_rad) * diagonal/2.0
+			origin.x - std::cos(a_rad) * diagonal/2,
+			origin.y - std::sin(a_rad) * diagonal/2
 		}, Point{
-			origin.x + std::cos(a_rad) * diagonal/2.0,
-			origin.y + std::sin(a_rad) * diagonal/2.0
+			origin.x + std::cos(a_rad) * diagonal/2,
+			origin.y + std::sin(a_rad) * diagonal/2
 		}
 	};
 }
@@ -53,7 +53,7 @@ cv::Mat getTraceTransform(
 
 	// Calculate and create the transform matrix
 	double diagonal = std::hypot(image.size().width, image.size().height);
-	unsigned int a_steps = (unsigned int) std::ceil(360.0 / a_stepsize);
+	unsigned int a_steps = (unsigned int) std::ceil(360 / a_stepsize);
 	unsigned int p_steps = (unsigned int) std::ceil(diagonal / p_stepsize);
 	cv::Mat transform = cv::Mat::zeros(
 		(int) p_steps,	// rows

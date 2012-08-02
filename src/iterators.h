@@ -263,7 +263,7 @@ public:
 		assert(p.x >= 0 && p.y >= 0);	// 'cause *_fract end up with same sign
 		if (x_fract < std::numeric_limits<double>::epsilon()
 			&& y_fract < std::numeric_limits<double>::epsilon()) {
-			pixel = this->pixel(y_int, x_int);
+			pixel = this->pixel((int)y_int, (int)x_int);
 		} else {	// bilinear interpolation
 			double upper_left, upper_right, bottom_left, bottom_right;
 			double upper, bottom;
@@ -272,13 +272,13 @@ public:
 			bool y_pureint = y_fract < std::numeric_limits<double>::epsilon();
 
 			// Calculate fractional coordinates
-			upper_left = this->pixel(y_int, x_int);
+			upper_left = this->pixel((int)y_int, (int)x_int);
 			if (!x_pureint)
-				upper_right = this->pixel(y_int, x_int+1);
+				upper_right = this->pixel((int)y_int, (int)x_int+1);
 			if (!y_pureint)
-				bottom_left = this->pixel(y_int+1, x_int);
+				bottom_left = this->pixel((int)y_int+1, (int)x_int);
 			if (!x_pureint && !y_pureint)
-				bottom_right = this->pixel(y_int+1, x_int+1);
+				bottom_right = this->pixel((int)y_int+1, (int)x_int+1);
 
 			// Calculate pixel value
 			if (x_pureint) {

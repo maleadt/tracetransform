@@ -122,12 +122,12 @@ struct Rectangle
 
 inline double deg2rad(double degrees)
 {
-  return (degrees * M_PI / 180.0);
+  return (degrees * M_PI / 180);
 }
 
 inline double rad2deg(double degrees)
 {
-	return (degrees * 180.0 / M_PI);
+	return (degrees * 180 / M_PI);
 }
 
 // Clip a point against a rectangle
@@ -227,12 +227,13 @@ cv::Mat gray2mat(const cv::Mat &grayscale)
 
 // Convert a matrix (arbitrary values) to a grayscale image (range [0, 255]). This
 // involves detecting the maximum value, and clamping that to 255.
+template <typename T>
 cv::Mat mat2gray(const cv::Mat &matrix)
 {
-	double maximum = 0;
+	T maximum = 0;
 	for (int i = 0; i < matrix.rows; i++) {
 		for (int j = 0; j < matrix.cols; j++) {
-			double pixel = matrix.at<double>(i, j);
+			T pixel = matrix.at<T>(i, j);
 			if (pixel > maximum)
 				maximum = pixel;
 		}
@@ -249,14 +250,16 @@ std::vector<std::complex<double>> dft(const std::vector<std::complex<T>> &sample
 	for(size_t i = 0; i < sample.size(); i++) 
 	{
 		output[i] = std::complex<double>(0, 0);
-		double arg = -1.0 * 2.0 * M_PI * (double)i / (double)sample.size();
+		double arg = -2.0 * M_PI * (double)i / (double)sample.size();
 		for(size_t j = 0; j < sample.size(); j++) 
 		{
 			double cosarg = std::cos(j * arg);
 			double sinarg = std::sin(j * arg);
 			output[i] += std::complex<double>(
-				((double)sample[j].real() * cosarg - (double)sample[j].imag() * sinarg),
-				((double)sample[j].real() * sinarg + (double)sample[j].imag() * cosarg)
+				((double)sample[j].real() * cosarg
+					- (double)sample[j].imag() * sinarg),
+				((double)sample[j].real() * sinarg
+					+ (double)sample[j].imag() * cosarg)
 			);
 		}
 	}
