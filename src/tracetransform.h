@@ -91,8 +91,8 @@ cv::Mat getTraceTransform(
 			if (iterator.valid()) {
 				double pixel = (*functional)(&iterator);
 				transform.at<double>(
-					(int) p_step,	// row
-					(int) a_step	// column
+					(signed) p_step,// row
+					(signed) a_step	// column
 				) = pixel;
 			}
 		}

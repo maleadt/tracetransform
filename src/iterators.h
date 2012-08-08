@@ -252,48 +252,38 @@ public:
 
 	T value(const Point &p) const
 	{
-		// Get fractional parts, floors and ceilings
-		double x_fract, x_int;
-		x_fract = std::modf(p.x, &x_int);
-		double y_fract, y_int;
-		y_fract = std::modf(p.y, &y_int);
+		// Get fractional and integral part of the coordinates
+		double x_int, y_int;
+		double x_fract = std::modf(p.x, &x_int);
+		double y_fract = std::modf(p.y, &y_int);
 
-		// Get the pixel value
-		T pixel;
-		assert(p.x >= 0 && p.y >= 0);	// 'cause *_fract end up with same sign
-		if (x_fract < std::numeric_limits<double>::epsilon()
-			&& y_fract < std::numeric_limits<double>::epsilon()) {
-			pixel = this->pixel((int)y_int, (int)x_int);
-		} else {	// bilinear interpolation
-			double upper_left, upper_right, bottom_left, bottom_right;
-			double upper, bottom;
+		// Check if parts of the coordinates are integral
+		bool x_pureint = x_fract < std::numeric_limits<double>::epsilon();
+		bool y_pureint = y_fract < std::numeric_limits<double>::epsilon();
 
-			bool x_pureint = x_fract < std::numeric_limits<double>::epsilon();
-			bool y_pureint = y_fract < std::numeric_limits<double>::epsilon();
+		// Calculate required fractional coordinates
+		double upper_left = this->pixel((int)y_int, (int)x_int);
+		double upper_right, bottom_left, bottom_right;
+		if (!x_pureint)
+			upper_right = this->pixel((int)y_int, (int)x_int+1);
+		if (!y_pureint)
+			bottom_left = this->pixel((int)y_int+1, (int)x_int);
+		if (!x_pureint && !y_pureint)
+			bottom_right = this->pixel((int)y_int+1, (int)x_int+1);
 
-			// Calculate fractional coordinates
-			upper_left = this->pixel((int)y_int, (int)x_int);
-			if (!x_pureint)
-				upper_right = this->pixel((int)y_int, (int)x_int+1);
-			if (!y_pureint)
-				bottom_left = this->pixel((int)y_int+1, (int)x_int);
-			if (!x_pureint && !y_pureint)
-				bottom_right = this->pixel((int)y_int+1, (int)x_int+1);
-
-			// Calculate pixel value
-			if (x_pureint) {
-				pixel = (T) (upper_left*(1-y_fract) + bottom_left*y_fract);
-			} else if (y_pureint) {
-				pixel = (T) (upper_left*(1-x_fract) + upper_right*x_fract);
-			} else {
-				upper = upper_left*(1-x_fract) + upper_right*x_fract;
-				bottom = bottom_left*(1-x_fract) + bottom_right*x_fract;
-				
-				pixel = (T) (upper*(1-y_fract) + bottom*y_fract);
-			}
+		// Calculate the pixel value
+		if (x_pureint && y_pureint) {
+			return upper_left;
+		} else if (x_pureint) {
+			return (T) (upper_left*(1-y_fract) + bottom_left*y_fract);
+		} else if (y_pureint) {
+			return (T) (upper_left*(1-x_fract) + upper_right*x_fract);
+		} else {
+			double upper = upper_left*(1-x_fract) + upper_right*x_fract;
+			double bottom = bottom_left*(1-x_fract) + bottom_right*x_fract;
+			
+			return (T) (upper*(1-y_fract) + bottom*y_fract);
 		}
-
-		return pixel;
 	}
 
 	const Segment &segment() const
