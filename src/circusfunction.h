@@ -71,23 +71,26 @@ cv::Mat getCircusFunction(
 {
 	assert(input.type() == CV_64FC1);
 
-	// TODO: rotate (all rows were cols)
-	// (and debug)
+	// Transpose the input since cv::Mat is stored in row-major order
+	cv::Mat input_transposed;
+	cv::transpose(input, input_transposed);
+	cv::imwrite("/tmp/input.pgm", mat2gray<double>(input));
+	cv::imwrite("/tmp/input_transposed.pgm", mat2gray<double>(input_transposed));
 
 	// Allocate the output matrix
 	cv::Mat output(
-		cv::Size(input.rows, 1),
+		cv::Size(input_transposed.rows, 1),
 		input.type()
 	);
 
 	// Trace all rows
-	for (int p = 0; p < input.rows; p++) {
+	for (int p = 0; p < input_transposed.rows; p++) {
 		output.at<double>(
 			0,	// row
 			p	// column
 		) = pfunctional(
-			input.ptr<double>(p),
-			input.cols,
+			input_transposed.ptr<double>(p),
+			input_transposed.cols,
 			pfunctional_arguments);
 	}
 

@@ -10,7 +10,9 @@
 
 // Local includes
 #include "auxiliary.h"
-#include "functionals.h"
+extern "C" {
+	#include "functionals.h"
+}
 #include "tracetransform.h"
 #include "circusfunction.h"
 
@@ -83,7 +85,7 @@ int main() {
 	unsigned int center;
 	cv::Mat nos = nearest_orthonormal_sinogram(sinogram, center);
 
-	std::cout << "Nearest orthonormal sinogram (centered around row " << center << ":" << std::endl;
+	std::cout << "Nearest orthonormal sinogram (centered around row " << center << "):" << std::endl;
 
 	for (int i = 0; i < nos.rows; i++) {
 		std::cout << "\t";
@@ -105,7 +107,8 @@ int main() {
 	std::cout << "Output of circus functions after Hermite P-functional (2nd order):" << std::endl;
 	cv::Mat circus = getCircusFunction(
 		sinogram,
-		new PFunctionalHermite<double>(2)
+		PFunctionalHermite,
+		new ArgumentsHermite{2, 0}
 	);
 
 	for (int i = 0; i < circus.rows; i++) {
