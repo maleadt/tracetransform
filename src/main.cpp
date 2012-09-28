@@ -18,7 +18,9 @@
 
 // Local includes
 #include "auxiliary.h"
-#include "functionals.h"
+extern "C" {
+	#include "functionals.h"
+}
 #include "tracetransform.h"
 #include "circusfunction.h"
 

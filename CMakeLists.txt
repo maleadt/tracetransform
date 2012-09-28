@@ -23,9 +23,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wvla")
 #  -Wuseless-cast
 
 FIND_PACKAGE(OpenCV REQUIRED)
-
+ADD_LIBRARY(functionals src/functionals.h src/functionals.c)
 ADD_EXECUTABLE(transform src/main.cpp)
-TARGET_LINK_LIBRARIES(transform ${OpenCV_LIBS})
+TARGET_LINK_LIBRARIES(transform functionals ${OpenCV_LIBS})
 
 ADD_EXECUTABLE(test_tutorial src/test_tutorial.cpp)
-TARGET_LINK_LIBRARIES(test_tutorial ${OpenCV_LIBS})
+TARGET_LINK_LIBRARIES(test_tutorial functionals ${OpenCV_LIBS})
