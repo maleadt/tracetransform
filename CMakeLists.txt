@@ -22,7 +22,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wundef")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wvla")
 #  -Wuseless-cast
 
-FIND_PACKAGE(OpenCV REQUIRED)
+FIND_PACKAGE(OpenCV REQUIRED core highgui imgproc)
 ADD_LIBRARY(functionals src/functionals.h src/functionals.c)
 ADD_EXECUTABLE(transform src/main.cpp)
 TARGET_LINK_LIBRARIES(transform functionals ${OpenCV_LIBS})
