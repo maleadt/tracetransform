@@ -74,8 +74,6 @@ cv::Mat getCircusFunction(
 	// Transpose the input since cv::Mat is stored in row-major order
 	cv::Mat input_transposed;
 	cv::transpose(input, input_transposed);
-	cv::imwrite("/tmp/input.pgm", mat2gray<double>(input));
-	cv::imwrite("/tmp/input_transposed.pgm", mat2gray<double>(input_transposed));
 
 	// Allocate the output matrix
 	cv::Mat output(
