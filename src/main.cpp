@@ -72,7 +72,8 @@ int main(int argc, char **argv)
 	std::string fn_input = argv[1];
 
 	// Get the chosen T-functionals
-	std::vector<TFunctional<double,double>*> tfunctionals;
+	std::vector<Functional> tfunctionals;
+	std::vector<void*> tfunctional_arguments;
 	std::vector<std::string> tfunctional_names;
 	std::stringstream ss;
 	ss << argv[2];
@@ -87,22 +88,28 @@ int main(int argc, char **argv)
 		std::stringstream name;
 		switch (i) {
 		case 0:
-			tfunctionals.push_back(new TFunctionalRadon<double>());
+			tfunctionals.push_back(TFunctionalRadon);
+			tfunctional_arguments.push_back(nullptr);
 			break;
 		case 1:
-			tfunctionals.push_back(new TFunctional1<double>());
+			tfunctionals.push_back(TFunctional1);
+			tfunctional_arguments.push_back(nullptr);
 			break;
 		case 2:
-			tfunctionals.push_back(new TFunctional2<double>());
+			tfunctionals.push_back(TFunctional2);
+			tfunctional_arguments.push_back(nullptr);
 			break;
 		case 3:
-			tfunctionals.push_back(new TFunctional3<double>());
+			tfunctionals.push_back(TFunctional3);
+			tfunctional_arguments.push_back(nullptr);
 			break;
 		case 4:
-			tfunctionals.push_back(new TFunctional4<double>());
+			tfunctionals.push_back(TFunctional4);
+			tfunctional_arguments.push_back(nullptr);
 			break;
 		case 5:
-			tfunctionals.push_back(new TFunctional5<double>());
+			tfunctionals.push_back(TFunctional5);
+			tfunctional_arguments.push_back(nullptr);
 			break;
 		default:
 			std::cerr << "Error: invalid T-functional provided" << std::endl;
@@ -116,7 +123,8 @@ int main(int argc, char **argv)
 	}
 
 	// Get the chosen P-functional
-	std::vector<PFunctional<double,double>*> pfunctionals;
+	std::vector<Functional> pfunctionals;
+	std::vector<void*> pfunctional_arguments;
 	std::vector<std::string> pfunctional_names;
 	int pfunctional_regular = 0, pfunctional_hermite = 0;
 	if (argc >= 4) {
@@ -143,13 +151,16 @@ int main(int argc, char **argv)
 				pfunctional_regular++;
 				switch (i) {
 				case 1:
-					pfunctionals.push_back(new PFunctional1<double>());
+					pfunctionals.push_back(PFunctional1);
+					pfunctional_arguments.push_back(nullptr);
 					break;
 				case 2:
-					pfunctionals.push_back(new PFunctional2<double>());
+					pfunctionals.push_back(PFunctional2);
+					pfunctional_arguments.push_back(nullptr);
 					break;
 				case 3:
-					pfunctionals.push_back(new PFunctional3<double>());
+					pfunctionals.push_back(PFunctional3);
+					pfunctional_arguments.push_back(nullptr);
 					break;
 				default:
 					std::cerr << "Error: invalid P-functional provided" << std::endl;
@@ -160,7 +171,8 @@ int main(int argc, char **argv)
 			}
 			case HERMITE:
 				pfunctional_hermite++;
-				pfunctionals.push_back(new PFunctionalHermite<double>(i));
+				pfunctionals.push_back(PFunctionalHermite);
+				pfunctional_arguments.push_back(new ArgumentsHermite{i, 0});
 				name << "H" << i;
 				break;	
 			}
@@ -227,10 +239,11 @@ int main(int argc, char **argv)
 		std::cerr << " " << tfunctional_names[t] << "..." << std::flush;
 		Profiler tprofiler;
 		cv::Mat sinogram = getTraceTransform(
-			input,
+			input_padded,
 			ANGLE_INTERVAL,		// angle resolution
 			DISTANCE_INTERVAL,	// distance resolution
-			tfunctionals[t]
+			tfunctionals[t],
+			tfunctional_arguments[t]
 		);
 		tprofiler.stop();
 		tfunctional_runtimes[t] = tprofiler.elapsed();
@@ -267,22 +280,22 @@ int main(int argc, char **argv)
 
 		// Hermite functionals require the nearest orthonormal sinogram
 		unsigned int sinogram_center;
-		if (pfunctional_hermite > 0) {
+		if (pfunctional_hermite > 0)
 			sinogram = nearest_orthonormal_sinogram(sinogram, sinogram_center);
-		}
 
 		// Process all P-functionals
 		for (unsigned int p = 0; p < pfunctionals.size(); p++) {
 			// Extra parameters to functional
 			if (pfunctional_hermite > 0)
-				((PFunctionalOrthonormal<double,double>*)pfunctionals[p])->setCenter(sinogram_center);
+				((ArgumentsHermite*)pfunctional_arguments[p])->center = sinogram_center;
 
 			// Calculate the circus function
 			std::cerr << " " << pfunctional_names[p] << "..." << std::flush;
 			Profiler pprofiler;
 			cv::Mat circus = getCircusFunction(
 				sinogram,
-				pfunctionals[p]
+				pfunctionals[p],
+				pfunctional_arguments[p]
 			);
 			pprofiler.stop();
 			pfunctional_runtimes[p] += pprofiler.elapsed();

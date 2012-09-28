@@ -14,7 +14,6 @@
 
 // Local includes
 #include "auxiliary.h"
-#include "iterators.h"
 
 
 //
@@ -42,63 +41,49 @@ Segment bounding_segment(const cv::Size &size,
 }
 
 cv::Mat getTraceTransform(
-	const cv::Mat &image,
+	const cv::Mat &input,
 	const double a_stepsize,
 	const double p_stepsize,
-	TFunctional<double, double> *functional)
+	Functional tfunctional,
+	void *tfunctional_arguments)
 {
 	assert(a_stepsize > 0);
 	assert(p_stepsize > 0);
-	assert(image.type() == CV_64FC1);
+	assert(input.size().width == input.size().height);	// padded image!
+	assert(input.type() == CV_64FC1);
 
-	// Calculate and create the transform matrix
-	double diagonal = std::hypot(image.size().width, image.size().height);
-	unsigned int a_steps = (unsigned int) std::ceil(360 / a_stepsize);
-	unsigned int p_steps = (unsigned int) std::ceil(diagonal / p_stepsize);
-	cv::Mat transform = cv::Mat::zeros(
+	// Get the image origin to rotate around
+	Point origin{std::floor(input.size().width/2), std::floor(input.size().height/2)};
+
+	// Calculate and allocate the output matrix
+	unsigned int a_steps = (unsigned int) std::floor(360 / a_stepsize);
+	unsigned int p_steps = (unsigned int) std::floor(input.size().height / p_stepsize);
+	cv::Mat output = cv::Mat::zeros(
 		(int) p_steps,	// rows
 		(int) a_steps,	// columns
 		CV_64FC1);
 
 	// Process all angles
 	for (unsigned int a_step = 0; a_step < a_steps; a_step++) {
+		// Calculate the transform matrix and rotate the image
 		double a = a_step * a_stepsize;
+		cv::Mat transform = cv::getRotationMatrix2D(origin.getPoint2f(), a+90, 1.0);
+		cv::Mat input_rotated;
+		cv::warpAffine(input, input_rotated, transform, input.size());
 
-		// Calculate projection line
-		Segment proj = bounding_segment(
-			image.size(),
-			a,
-			Point{image.size().width/2.0, image.size().height/2.0}
-		);
-
-		// Partition the projection line in projection bands
+		// Process all projection bands
 		for (unsigned int p_step = 0; p_step < p_steps; p_step++) {
-			double p = p_step * p_stepsize;
-			double proj_x = proj.begin.x + p*proj.rcx();
-			double proj_y = proj.begin.y + p*proj.rcy();
-
-			// Determine the trace segment
-			Segment trace = bounding_segment(
-				image.size(),
-				a + 90,
-				Point{proj_x, proj_y}
-			);
-
-			// Set-up the trace iterator
-			LineIterator<double> iterator(image, trace);
-
-			// Apply the functional
-			if (iterator.valid()) {
-				double pixel = (*functional)(&iterator);
-				transform.at<double>(
-					(signed) p_step,// row
-					(signed) a_step	// column
-				) = pixel;
-			}
+			output.at<double>(
+				(signed) (p_steps - p_step - 1),	// row
+				(signed) a_step				// column
+			) = tfunctional(
+				input_rotated.ptr<double>((int) (p_step*p_stepsize)),
+				input.cols,
+				tfunctional_arguments);
 		}
 	}
 
-	return transform;
+	return output;
 }
 
 #endif
