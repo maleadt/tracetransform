@@ -197,6 +197,22 @@ int main(int argc, char **argv)
 			cv::Size(nrows, nrows));
 	}
 
+	// Pad the image so we can freely rotate without losing information
+	// TODO: it is possible to rotate far less when not stretching the image
+	Point origin{std::floor(input.size().width/2), std::floor(input.size().height/2)};
+	int rLast = std::ceil(std::hypot(input.size().width - origin.x - 1, input.size().width - origin.y - 1));
+	int rFirst = -rLast;
+	int nBins = rLast - rFirst;
+	cv::Mat input_padded = cv::Mat::zeros(nBins, nBins, input.type());
+	Point origin_padded{std::floor(input_padded.size().width/2), std::floor(input_padded.size().height/2)};
+	Point df = origin_padded - origin;
+	for (int i = 0; i < input.size().height; i++) {
+		for (int j = 0; j < input.size().width; j++) {
+			input_padded.at<double>(i + df.y, j + df.x) = 
+				input.at<double>(i, j);
+		}
+	}
+
 	// Save profiling data
 	std::vector<double> tfunctional_runtimes(tfunctionals.size());
 	std::vector<double> pfunctional_runtimes(pfunctionals.size(), 0);
