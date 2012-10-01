@@ -24,6 +24,10 @@ cv::Mat nearest_orthonormal_sinogram(
 	const cv::Mat &input,
 	unsigned int& new_center)
 {
+	// Transpose the input since cv::Mat is stored in row-major order
+	cv::Mat input_transposed;
+	cv::transpose(input, input_transposed);
+
 	// Detect the offset of each column to the sinogram center
 	assert(input.rows > 0);
 	assert(input.cols >= 0);
@@ -31,12 +35,13 @@ cv::Mat nearest_orthonormal_sinogram(
 	std::vector<int> offset(input.cols);
 	for (int p = 0; p < input.cols; p++) {
 		size_t median = findWeighedMedian(
-			input.ptr<double>(p),
-			input.cols);
-		offset[p] = median- sinogram_center;
+			input_transposed.ptr<double>(p),
+			input_transposed.cols);
+		offset[p] = median - sinogram_center;
 	}
 
 	// Align each column to the sinogram center
+	// TODO: do in row-major order
 	int min = *(std::min_element(offset.begin(), offset.end()));
 	int max = *(std::max_element(offset.begin(), offset.end()));
 	unsigned int padding = max + std::abs(min);
@@ -77,12 +82,12 @@ cv::Mat getCircusFunction(
 
 	// Allocate the output matrix
 	cv::Mat output(
-		cv::Size(input_transposed.rows, 1),
+		cv::Size(input.cols, 1),
 		input.type()
 	);
 
-	// Trace all rows
-	for (int p = 0; p < input_transposed.rows; p++) {
+	// Trace all columns
+	for (int p = 0; p < input.cols; p++) {
 		output.at<double>(
 			0,	// row
 			p	// column

@@ -108,7 +108,7 @@ int main() {
 	cv::Mat circus = getCircusFunction(
 		sinogram,
 		PFunctionalHermite,
-		new ArgumentsHermite{2, 0}
+		new ArgumentsHermite{2, 2}
 	);
 
 	for (int i = 0; i < circus.rows; i++) {

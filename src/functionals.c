@@ -223,7 +223,7 @@ double PFunctionalHermite(const double* data, const size_t length, const void* _
 
 	// Calculate the integral
 	double integral = 0;
-	for (size_t t = 1; t < length; t++) {
+	for (size_t t = 0; t < length; t++) {
 		integral += data[t] * hermite_function(arguments->order, z);
 		if (z < 0)
 			z += stepsize_lower;
