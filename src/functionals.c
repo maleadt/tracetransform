@@ -119,8 +119,8 @@ double TFunctional3(const double* data, const size_t length, const void* argumen
 	size_t squaredmedian = findWeighedMedianSquared(data, length);
 
 	// Integrate
-	double _Complex integral = 0;
-	const double _Complex factor = 0 + 5*I;
+	double complex integral = 0 + 0*I;
+	const double complex factor = 0 + 5*I;
 	for (size_t r1 = 0; r1 < length-squaredmedian; r1++) {
 		if (r1 > 0)	// since exp(i*log(0)) == 0
 			integral += cexp(factor*log(r1))
@@ -136,8 +136,8 @@ double TFunctional4(const double* data, const size_t length, const void* argumen
 	size_t squaredmedian = findWeighedMedianSquared(data, length);
 
 	// Integrate
-	double _Complex integral = 0;
-	const double _Complex factor = 0 + 3*I;
+	double complex integral = 0 + 0*I;
+	const double complex factor = 0 + 3*I;
 	for (size_t r1 = 0; r1 < length-squaredmedian; r1++) {
 		if (r1 > 0)	// since exp(i*log(0)) == 0
 			integral += cexp(factor*log(r1))
@@ -153,8 +153,8 @@ double TFunctional5(const double* data, const size_t length, const void* argumen
 	size_t squaredmedian = findWeighedMedianSquared(data, length);
 
 	// Integrate
-	double _Complex integral = 0;
-	const double _Complex factor = 0 + 4*I;
+	double complex integral = 0 + 0*I;
+	const double complex factor = 0 + 4*I;
 	for (size_t r1 = 0; r1 < length-squaredmedian; r1++) {
 		if (r1 > 0)	// since exp(i*log(0)) == 0
 			integral += cexp(factor*log(r1))
@@ -173,8 +173,8 @@ double PFunctional1(const double* data, const size_t length, const void* argumen
 {
 	double sum = 0;
 	double previous = data[0];
-	for (size_t t = 1; t < length; t++) {
-		double current = data[t];
+	for (size_t p = 1; p < length; p++) {
+		double current = data[p];
 		sum += abs(previous - current);
 		previous = current;
 	}
@@ -190,10 +190,11 @@ double PFunctional2(const double* data, const size_t length, const void* argumen
 double PFunctional3(const double* data, const size_t length, const void* arguments)
 {
 	// Calculate the Fourier transform
-	double _Complex *fourier = (double _Complex *) malloc(length * sizeof(double _Complex *));
+	double complex *fourier = (double complex *)
+		malloc(2 * length * sizeof(double *));	// As per C99 6.2.5/13
+	// TODO: shouldn't sizeof(double complex *) then be 2*sizeof(double *)?
 	for(size_t i = 0; i < length; i++) {
-		fourier[i] = 0;
-		exit(1);
+		fourier[i] = 0 + 0*I;
 		double arg = -2.0 * M_PI * (double)i / (double)length;
 		for(size_t j = 0; j < length; j++) {
 			double cosarg = cos(j * arg);
@@ -205,8 +206,8 @@ double PFunctional3(const double* data, const size_t length, const void* argumen
 
 	// Integrate
 	double sum = 0;
-	for (size_t i = 0; i < length; i++)
-		sum += pow(cabs(fourier[i]), 4);
+	for (size_t p = 0; p < length; p++)
+		sum += pow(cabs(fourier[p]), 4);
 	free(fourier);
 	return sum;
 }
@@ -223,8 +224,8 @@ double PFunctionalHermite(const double* data, const size_t length, const void* _
 
 	// Calculate the integral
 	double integral = 0;
-	for (size_t t = 0; t < length; t++) {
-		integral += data[t] * hermite_function(arguments->order, z);
+	for (size_t p = 0; p < length; p++) {
+		integral += data[p] * hermite_function(arguments->order, z);
 		if (z < 0)
 			z += stepsize_lower;
 		else
