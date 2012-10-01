@@ -190,9 +190,7 @@ double PFunctional2(const double* data, const size_t length, const void* argumen
 double PFunctional3(const double* data, const size_t length, const void* arguments)
 {
 	// Calculate the Fourier transform
-	double complex *fourier = (double complex *)
-		malloc(2 * length * sizeof(double *));	// As per C99 6.2.5/13
-	// TODO: shouldn't sizeof(double complex *) then be 2*sizeof(double *)?
+	double complex *fourier = (double complex *) malloc(length * sizeof(double complex));
 	for(size_t i = 0; i < length; i++) {
 		fourier[i] = 0 + 0*I;
 		double arg = -2.0 * M_PI * (double)i / (double)length;
