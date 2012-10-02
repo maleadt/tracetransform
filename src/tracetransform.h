@@ -20,26 +20,6 @@
 // Routines
 //
 
-// Calculate the endpoints of the bounding segment
-Segment bounding_segment(const cv::Size &size,
-	const double a,
-	const Point origin)
-{
-	double a_rad = deg2rad(a);
-
-	double diagonal = std::hypot(size.width, size.height);
-
-	return Segment{
-		Point{
-			origin.x - std::cos(a_rad) * diagonal/2,
-			origin.y - std::sin(a_rad) * diagonal/2
-		}, Point{
-			origin.x + std::cos(a_rad) * diagonal/2,
-			origin.y + std::sin(a_rad) * diagonal/2
-		}
-	};
-}
-
 cv::Mat getTraceTransform(
 	const cv::Mat &input,
 	const double a_stepsize,

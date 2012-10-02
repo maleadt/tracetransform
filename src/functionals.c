@@ -35,7 +35,7 @@ size_t findWeighedMedian(const double* data, const size_t length)
 	return length-1;
 }
 
-size_t findWeighedMedianSquared(const double* data, const size_t length)
+size_t findWeighedMedianSqrt(const double* data, const size_t length)
 {		
 	double sum = 0;
 	for (size_t i = 0; i < length; i++)
@@ -116,15 +116,15 @@ double TFunctional2(const double* data, const size_t length, const void* argumen
 double TFunctional3(const double* data, const size_t length, const void* arguments)
 {
 	// Transform the domain from t to r1
-	size_t squaredmedian = findWeighedMedianSquared(data, length);
+	size_t squaredmedian = findWeighedMedianSqrt(data, length);
 
 	// Integrate
 	double complex integral = 0 + 0*I;
 	const double complex factor = 0 + 5*I;
-	for (size_t r1 = 0; r1 < length-squaredmedian; r1++) {
-		if (r1 > 0)	// since exp(i*log(0)) == 0
-			integral += cexp(factor*log(r1))
-				* (r1*data[r1+squaredmedian]);
+	for (size_t r1 = 1; r1 < length-squaredmedian; r1++) {
+		// From 1, since exp(i*log(0)) == 0
+		integral += cexp(factor*log(r1))
+			* (r1*data[r1+squaredmedian]);
 
 	}
 	return cabs(integral);
@@ -133,16 +133,15 @@ double TFunctional3(const double* data, const size_t length, const void* argumen
 double TFunctional4(const double* data, const size_t length, const void* arguments)
 {
 	// Transform the domain from t to r1
-	size_t squaredmedian = findWeighedMedianSquared(data, length);
+	size_t squaredmedian = findWeighedMedianSqrt(data, length);
 
 	// Integrate
 	double complex integral = 0 + 0*I;
 	const double complex factor = 0 + 3*I;
-	for (size_t r1 = 0; r1 < length-squaredmedian; r1++) {
-		if (r1 > 0)	// since exp(i*log(0)) == 0
-			integral += cexp(factor*log(r1))
-				* data[r1+squaredmedian];
-
+	for (size_t r1 = 1; r1 < length-squaredmedian; r1++) {
+		// From 1, since exp(i*log(0)) == 0
+		integral += cexp(factor*log(r1))
+			* data[r1+squaredmedian];
 	}
 	return cabs(integral);
 }
@@ -150,15 +149,15 @@ double TFunctional4(const double* data, const size_t length, const void* argumen
 double TFunctional5(const double* data, const size_t length, const void* arguments)
 {
 	// Transform the domain from t to r1
-	size_t squaredmedian = findWeighedMedianSquared(data, length);
+	size_t squaredmedian = findWeighedMedianSqrt(data, length);
 
 	// Integrate
 	double complex integral = 0 + 0*I;
 	const double complex factor = 0 + 4*I;
-	for (size_t r1 = 0; r1 < length-squaredmedian; r1++) {
-		if (r1 > 0)	// since exp(i*log(0)) == 0
-			integral += cexp(factor*log(r1))
-				* (sqrt(r1)*data[r1+squaredmedian]);
+	for (size_t r1 = 1; r1 < length-squaredmedian; r1++) {
+		// From 1, since exp(i*log(0)) == 0
+		integral += cexp(factor*log(r1))
+			* (sqrt(r1)*data[r1+squaredmedian]);
 
 	}
 	return cabs(integral);
