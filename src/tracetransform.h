@@ -12,9 +12,6 @@
 // OpenCV includes
 #include <cv.h>
 
-// Local includes
-#include "auxiliary.h"
-
 
 //
 // Routines
@@ -33,7 +30,7 @@ cv::Mat getTraceTransform(
 	assert(input.type() == CV_64FC1);
 
 	// Get the image origin to rotate around
-	Point origin{std::floor(input.size().width/2), std::floor(input.size().height/2)};
+	cv::Point2f origin{(input.size().width-1)/2.0, (input.size().height-1)/2.0};
 
 	// Calculate and allocate the output matrix
 	unsigned int a_steps = (unsigned int) std::floor(360 / a_stepsize);
@@ -47,7 +44,7 @@ cv::Mat getTraceTransform(
 	for (unsigned int a_step = 0; a_step < a_steps; a_step++) {
 		// Calculate the transform matrix and rotate the image
 		double a = a_step * a_stepsize;
-		cv::Mat transform = cv::getRotationMatrix2D(origin.getPoint2f(), a+90, 1.0);
+		cv::Mat transform = cv::getRotationMatrix2D(origin, a+90, 1.0);
 		cv::Mat input_rotated;
 		cv::warpAffine(input, input_rotated, transform, input.size());
 
