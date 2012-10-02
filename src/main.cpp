@@ -235,7 +235,7 @@ int main(int argc, char **argv)
 	cv::Mat data;
 	int circus_decimals = 0;
 	std::cerr << "Calculating";
-	for (unsigned int t = 0; t < tfunctionals.size(); t++) {
+	for (size_t t = 0; t < tfunctionals.size(); t++) {
 		// Calculate the trace transform sinogram
 		std::cerr << " " << tfunctional_names[t] << "..." << std::flush;
 		Profiler tprofiler;
@@ -285,7 +285,7 @@ int main(int argc, char **argv)
 			sinogram = nearest_orthonormal_sinogram(sinogram, sinogram_center);
 
 		// Process all P-functionals
-		for (unsigned int p = 0; p < pfunctionals.size(); p++) {
+		for (size_t p = 0; p < pfunctionals.size(); p++) {
 			// Extra parameters to functional
 			if (pfunctional_hermite > 0)
 				((ArgumentsHermite*)pfunctional_arguments[p])->center = sinogram_center;
@@ -336,11 +336,11 @@ int main(int argc, char **argv)
 	// Print runtime measurements	
 	std::cerr << "t(total) = " << mainprofiler.elapsed()
 		<< " s" << std::endl;
-	for (int t = 0; t < tfunctionals.size(); t++) {
+	for (size_t t = 0; t < tfunctionals.size(); t++) {
 		std::cerr << "t(" << tfunctional_names[t] << ") = "
 			<< tfunctional_runtimes[t] << " s\n";
 	}
-	for (int p = 0; p < pfunctionals.size(); p++) {
+	for (size_t p = 0; p < pfunctionals.size(); p++) {
 		std::cerr << "t(" << pfunctional_names[p] << ") = "
 			<< pfunctional_runtimes[p] / tfunctionals.size() << " s\n";
 	}

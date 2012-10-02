@@ -33,10 +33,6 @@ struct Point
 		return Point{x-term.x, y-term.y};
 	}
 
-	cv::Point2f getPoint2f() const {
-		return cv::Point2f(x, y);
-	}
-
 	double x;
 	double y;
 };

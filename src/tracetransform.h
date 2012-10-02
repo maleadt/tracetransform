@@ -30,7 +30,7 @@ cv::Mat getTraceTransform(
 	assert(input.type() == CV_64FC1);
 
 	// Get the image origin to rotate around
-	cv::Point2f origin{(input.size().width-1)/2.0, (input.size().height-1)/2.0};
+	cv::Point2d origin{(input.size().width-1)/2.0, (input.size().height-1)/2.0};
 
 	// Calculate and allocate the output matrix
 	unsigned int a_steps = (unsigned int) std::floor(360 / a_stepsize);
