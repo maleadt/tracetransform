@@ -192,8 +192,8 @@ int main(int argc, char **argv)
 
 	// Read the image
 	Eigen::MatrixXd _input = readPgm(fn_input);
+	_input = gray2mat(_input);
 	cv::Mat input = eigen2opencv(_input);
-	input = gray2mat(input);
 
 	// Orthonormal P-functionals need a stretched image in order to ensure
 	// a square sinogram

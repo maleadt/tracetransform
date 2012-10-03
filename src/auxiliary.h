@@ -140,10 +140,15 @@ void writePgm(const Eigen::MatrixXd &data, std::string filename)
 }
 
 // Convert a grayscale image (range [0, 255]) to a matrix (range [0, 1]).
-cv::Mat gray2mat(const cv::Mat &grayscale)
+Eigen::MatrixXd gray2mat(const Eigen::MatrixXd &grayscale)
 {
-	cv::Mat matrix(grayscale.size(), CV_64FC1);
-	grayscale.convertTo(matrix, CV_64FC1, 1/255., 0);
+	Eigen::MatrixXd matrix(grayscale.rows(), grayscale.cols());
+	// TODO: value scale intrinsic?
+	for (unsigned int row = 0; row < matrix.rows(); row++) {
+		for (unsigned int col = 0; col < matrix.cols(); col++) {
+			matrix(row, col) = grayscale(row, col) / 255.0;
+		}
+	}
 	return matrix;
 }
 
