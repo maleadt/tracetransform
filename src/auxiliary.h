@@ -6,8 +6,14 @@
 #ifndef AUXILIARY_H
 #define AUXILIARY_H
 
-// OpenCV includes
+// System includes
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
+// Library includes
 #include <cv.h>
+#include <Eigen/Dense>
 
 
 //
@@ -47,6 +53,91 @@ std::ostream& operator<<(std::ostream &stream, const Point& point) {
 //
 // Routines
 //
+
+// Temporary conversion routine to ease migration from OpenCV to Eigen3
+cv::Mat eigen2opencv(const Eigen::MatrixXd &eigen) {
+	cv::Mat opencv(eigen.rows(), eigen.cols(), CV_64FC1);
+	for (size_t i = 0; i < eigen.rows(); i++) {
+		for (size_t j = 0; j < eigen.cols(); j++) {
+			opencv.at<double>(i, j) = eigen(i, j);
+		}
+	}
+	return opencv;
+}
+
+// Read an ASCII PGM file
+Eigen::MatrixXd readPgm(std::string filename)
+{
+	std::ifstream infile(filename);
+	std::string inputLine = "";
+
+	// First line: version
+	getline(infile, inputLine);
+	if (inputLine.compare("P2") != 0) {
+		std::cerr << "readPGM: invalid PGM version " << inputLine << std::endl;
+		exit(1);
+	}
+
+	// Second line: comment (optional)
+	if (infile.peek() == '#')
+		getline(infile, inputLine);
+
+	// Continue with a stringstream
+	std::stringstream ss;
+	ss << infile.rdbuf();
+
+	// Size
+	unsigned int numrows = 0, numcols = 0;
+	ss >> numcols >> numrows;
+	Eigen::MatrixXd data(numrows, numcols);
+
+	// Maxval
+	unsigned int maxval;
+	ss >> maxval;
+	assert(maxval == 255);
+
+	// Data
+	double value;
+	for (unsigned int row = 0; row < numrows; row++) {
+		for (unsigned int col = 0; col < numcols; col++) {
+			ss >> value;
+			data(row, col) = value;
+		}
+	}
+	infile.close();
+
+	return data;
+}
+
+// Write an ASCII PGM file
+void writePgm(const Eigen::MatrixXd &data, std::string filename)
+{
+	std::ofstream outfile(filename);
+
+	// First line: version
+	outfile << "P2" << "\n";
+
+	// Second line: size
+	outfile << data.cols() << " " << data.rows() << "\n";
+
+	// Third line: maxval
+	outfile << 255 << "\n";
+
+	// Data
+	long pos = outfile.tellp();
+	for (unsigned int row = 0; row < data.rows(); row++) {
+		for (unsigned int col = 0; col < data.cols(); col++) {
+			outfile << data(row, col);
+			if (outfile.tellp() - pos > 66) {
+				outfile << "\n";
+				pos = outfile.tellp();
+			} else {
+				outfile << " ";
+			}
+		}
+	}
+	outfile.close();
+}
 
 // Convert a grayscale image (range [0, 255]) to a matrix (range [0, 1]).
 cv::Mat gray2mat(const cv::Mat &grayscale)

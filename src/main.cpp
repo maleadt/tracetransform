@@ -12,9 +12,10 @@
 #include <fstream>
 #include <sys/stat.h>
 
-// OpenCV includes
+// Library includes
 #include <cv.h>
 #include <highgui.h>
+#include <Eigen/Dense>
 
 // Local includes
 #include "auxiliary.h"
@@ -190,14 +191,8 @@ int main(int argc, char **argv)
 	}
 
 	// Read the image
-	cv::Mat input = cv::imread(
-		fn_input,	// filename
-		0		// flags (0 = force grayscale)
-	);
-	if (input.empty()) {
-		std::cerr << "Error: could not load image" << std::endl;
-		return 1;
-	}
+	Eigen::MatrixXd _input = readPgm(fn_input);
+	cv::Mat input = eigen2opencv(_input);
 	input = gray2mat(input);
 
 	// Orthonormal P-functionals need a stretched image in order to ensure
