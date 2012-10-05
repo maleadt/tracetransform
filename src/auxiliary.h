@@ -66,7 +66,7 @@ cv::Mat eigen2opencv(const Eigen::MatrixXd &eigen) {
 }
 
 // Read an ASCII PGM file
-Eigen::MatrixXd readPgm(std::string filename)
+Eigen::MatrixXd pgmRead(std::string filename)
 {
 	std::ifstream infile(filename);
 	std::string inputLine = "";
@@ -109,8 +109,98 @@ Eigen::MatrixXd readPgm(std::string filename)
 	return data;
 }
 
+// Stretch the rows of a matrix (this increases the amount of columns)
+Eigen::MatrixXd stretch_rows(const Eigen::MatrixXd &input, const size_t cols)
+{
+	// Calculate stretch factor
+	double factor = ((double) input.cols()) / cols;
+
+	// Interpolate each row
+	Eigen::MatrixXd output(input.rows(), cols);
+	for (size_t row = 0; row < input.rows(); row++) {
+		output(row, 0) = input(row, 0);				// HACK
+		output(row, cols-1) = input(row, input.cols()-1);	// HACK
+		for (size_t col = 1; col < cols-1; col++) {		// HACK
+			double colsource = (col + 0.5) * factor - 0.5;
+			double integral, fractional;
+			fractional = std::modf(colsource, &integral);
+			output(row, col) = (1-fractional)*input(row, (size_t) integral)
+				+ fractional*input(row, (size_t) (integral+1));
+		}
+	}
+
+	return output;
+}
+
+// Stretch the columns of a matrix (this increases the amount of rows)
+Eigen::MatrixXd stretch_cols(const Eigen::MatrixXd &input, const size_t rows)
+{
+	// Calculate stretch factor
+	double factor = ((double) input.rows()) / rows;
+
+	// Interpolate each column
+	Eigen::MatrixXd output(rows, input.cols());
+	for (size_t col = 0; col < input.cols(); col++) {
+		output(0, col) = input(0, col);				// HACK
+		output(rows-1, col) = input(input.rows()-1, col);	// HACK
+		for (size_t row = 1; row < rows-1; row++) {		// HACK
+			double rowsource = (row + 0.5) * factor - 0.5;
+			double integral, fractional;
+			fractional = std::modf(rowsource, &integral);
+			output(row, col) = (1-fractional)*input((size_t) integral, col)
+				+ fractional*input((size_t) (integral+1), col);
+		}
+	}
+
+	return output;
+}
+
+// Resize the matrix
+// TODO: fix this up
+Eigen::MatrixXd resize(const Eigen::MatrixXd &input, const size_t cols, const size_t rows)
+{
+	// x == col
+	// y == row
+
+	// Calculate stretch factor
+	double colscale = (double)input.cols() / cols;
+	double rowscale = (double)input.rows() / rows;
+
+	// Interpolate other pixels
+	Eigen::MatrixXd output(rows, cols);
+	for (size_t col = 0; col < cols; col++) {
+		double colsource = (col+0.5)*colscale - 0.5;
+		double colint, colfract;
+		colfract = std::modf(colsource, &colint);
+
+		for (size_t row = 0; row < rows; row++) {
+			double rowsource = (row+0.5)*rowscale - 0.5;
+			double rowint, rowfract;
+			rowfract = std::modf(rowsource, &rowint);
+
+			std::cout << row << "x" << col << ": " << rowsource << "x" << colsource << std::endl;
+			output(row, col) = 
+				input((size_t) rowint, (size_t) colint)*(1-rowfract)*(1-colfract) +
+				input((size_t) rowint+1, (size_t) colint)*(rowfract)*(1-colfract) +
+				input((size_t) rowint, (size_t) colint+1)*(1-rowfract)*(colfract) +
+				input((size_t) rowint+1, (size_t) colint+1)*(rowfract)*(colfract);
+		}
+	}
+
+	return output;
+}
+
+double lerp(double c1, double c2, double v1, double v2, double x)
+{
+	if (v1==v2)
+		return c1;
+	double inc = ((c2-c1)/(v2 - v1)) * (x - v1);
+	return c1 + inc;
+}
+
+
 // Write an ASCII PGM file
-void writePgm(const Eigen::MatrixXd &data, std::string filename)
+void pgmWrite(const Eigen::MatrixXd &data, std::string filename)
 {
 	std::ofstream outfile(filename);
 
@@ -127,7 +217,7 @@ void writePgm(const Eigen::MatrixXd &data, std::string filename)
 	long pos = outfile.tellp();
 	for (unsigned int row = 0; row < data.rows(); row++) {
 		for (unsigned int col = 0; col < data.cols(); col++) {
-			outfile << data(row, col);
+			outfile << (unsigned int) data(row, col);
 			if (outfile.tellp() - pos > 66) {
 				outfile << "\n";
 				pos = outfile.tellp();

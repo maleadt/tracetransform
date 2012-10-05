@@ -16,6 +16,7 @@
 #include <cv.h>
 #include <highgui.h>
 #include <Eigen/Dense>
+#include <Eigen/Geometry>
 
 // Local includes
 #include "auxiliary.h"
@@ -191,20 +192,18 @@ int main(int argc, char **argv)
 	}
 
 	// Read the image
-	Eigen::MatrixXd _input = readPgm(fn_input);
+	Eigen::MatrixXd _input = pgmRead(fn_input);
 	_input = gray2mat(_input);
-	cv::Mat input = eigen2opencv(_input);
 
 	// Orthonormal P-functionals need a stretched image in order to ensure
 	// a square sinogram
 	if (pfunctional_hermite > 0) {
 		int ndiag = (int) std::ceil(360.0/ANGLE_INTERVAL);
-		int nrows = (int) std::ceil(ndiag/std::sqrt(2));
-		cv::resize(
-			input,
-			input,
-			cv::Size(nrows, nrows));
+		int size = (int) std::ceil(ndiag/std::sqrt(2));
+		_input = stretch_rows(_input, size);
+		_input = stretch_cols(_input, size);
 	}
+	cv::Mat input = eigen2opencv(_input);
 
 	// Pad the image so we can freely rotate without losing information
 	Point origin{std::floor((input.size().width-1)/2.0), std::floor((input.size().height-1)/2.0)};
