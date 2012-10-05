@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 PROJECT(TraceTransform)
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeFiles)
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 
 set(CMAKE_BUILD_TYPE debug)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
