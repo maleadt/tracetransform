@@ -124,34 +124,40 @@ void pgmWrite(const Eigen::MatrixXd &data, std::string filename)
 }
 
 // Convert a grayscale image (range [0, 255]) to a matrix (range [0, 1]).
-Eigen::MatrixXd gray2mat(const Eigen::MatrixXd &grayscale)
+Eigen::MatrixXd gray2mat(const Eigen::MatrixXd &input)
 {
-	Eigen::MatrixXd matrix(grayscale.rows(), grayscale.cols());
-	// TODO: value scale intrinsic?
-	for (unsigned int row = 0; row < matrix.rows(); row++) {
-		for (unsigned int col = 0; col < matrix.cols(); col++) {
-			matrix(row, col) = grayscale(row, col) / 255.0;
+	// Scale
+	Eigen::MatrixXd output(input.rows(), input.cols());
+	for (unsigned int col = 0; col < output.cols(); col++) {
+		for (unsigned int row = 0; row < output.rows(); row++) {
+			output(row, col) = input(row, col) / 255.0;
 		}
 	}
-	return matrix;
+	return output;
 }
 
 // Convert a matrix (arbitrary values) to a grayscale image (range [0, 255]). This
 // involves detecting the maximum value, and clamping that to 255.
-template <typename T>
-cv::Mat mat2gray(const cv::Mat &matrix)
+Eigen::MatrixXd mat2gray(const Eigen::MatrixXd &input)
 {
-	T maximum = 0;
-	for (int i = 0; i < matrix.rows; i++) {
-		for (int j = 0; j < matrix.cols; j++) {
-			T pixel = matrix.at<T>(i, j);
+	// Detect maximum
+	double maximum = 0;
+	for (unsigned int col = 0; col < input.cols(); col++) {
+		for (unsigned int row = 0; row < input.rows(); row++) {
+			double pixel = input(row, col);
 			if (pixel > maximum)
 				maximum = pixel;
 		}
 	}
-	cv::Mat grayscale(matrix.size(), CV_8UC1);
-	matrix.convertTo(grayscale, CV_8UC1, 255.0/maximum, 0);
-	return grayscale;
+
+	// Scale
+	Eigen::MatrixXd output(input.rows(), input.cols());
+	for (unsigned int col = 0; col < output.cols(); col++) {
+		for (unsigned int row = 0; row < output.rows(); row++) {
+			output(row, col) = input(row, col) * 255.0/maximum;
+		}
+	}
+	return output;
 }
 
 inline double deg2rad(double degrees)

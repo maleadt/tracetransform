@@ -23,6 +23,21 @@
 // Main
 //
 
+cv::Mat mat2gray_opencv(const cv::Mat &matrix)
+{
+	double maximum = 0;
+	for (int i = 0; i < matrix.rows; i++) {
+		for (int j = 0; j < matrix.cols; j++) {
+			double pixel = matrix.at<double>(i, j);
+			if (pixel > maximum)
+				maximum = pixel;
+		}
+	}
+	cv::Mat grayscale(matrix.size(), CV_8UC1);
+	matrix.convertTo(grayscale, CV_8UC1, 255.0/maximum, 0);
+	return grayscale;
+}
+
 int main(int argc, char **argv) {	
 	// Check and read the parameters
 	if (argc < 1) {
@@ -41,9 +56,9 @@ int main(int argc, char **argv) {
 	int ndiag = (int) std::ceil(360.0/ANGLE_INTERVAL);
 	int size = (int) std::ceil(ndiag/std::sqrt(2));
 	input_eigen = resize(input_eigen, size, size);
-	cv::imwrite("stretched_eigen.pgm", mat2gray<double>(eigen2opencv(input_eigen)));
+	cv::imwrite("stretched_eigen.pgm", mat2gray_opencv(eigen2opencv(input_eigen)));
 	cv::resize(input_opencv, input_opencv, cv::Size(size, size));
-	cv::imwrite("stretched_opencv.pgm", mat2gray<double>(input_opencv));
+	cv::imwrite("stretched_opencv.pgm", mat2gray_opencv(input_opencv));
 
 	// Rotate the matrices
 	input_opencv = eigen2opencv(input_eigen);	// not to have other differences
@@ -51,10 +66,10 @@ int main(int argc, char **argv) {
 	cv::Mat transform_opencv = cv::getRotationMatrix2D(origin_opencv, ANGLE, 1.0);
 	cv::Mat input_rotated_opencv;
 	cv::warpAffine(input_opencv, input_rotated_opencv, transform_opencv, input_opencv.size());
-	cv::imwrite("rotated_opencv.pgm", mat2gray<double>(input_rotated_opencv));
+	cv::imwrite("rotated_opencv.pgm", mat2gray_opencv(input_rotated_opencv));
 	Point origin_eigen((input_eigen.cols()-1)/2.0, (input_eigen.rows()-1)/2.0);
 	Eigen::MatrixXd input_rotated_eigen = rotate(input_eigen, origin_eigen, deg2rad(ANGLE));
-	cv::imwrite("rotated_eigen.pgm", mat2gray<double>(eigen2opencv(input_rotated_eigen)));
+	cv::imwrite("rotated_eigen.pgm", mat2gray_opencv(eigen2opencv(input_rotated_eigen)));
 
 	return 0;
 }

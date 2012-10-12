@@ -239,20 +239,19 @@ int main(int argc, char **argv)
 		);
 		tprofiler.stop();
 		tfunctional_runtimes[t] = tprofiler.elapsed();
-		cv::Mat sinogram = eigen2opencv(_sinogram);
 
 		// Save the sinogram image
 		std::stringstream fn_trace_image;
 		fn_trace_image << "trace_" << tfunctional_names[t] << ".pgm";
-		cv::imwrite(fn_trace_image.str(), mat2gray<double>(sinogram));
+		pgmWrite(mat2gray(_sinogram), fn_trace_image.str());
 
 		// Save the sinogram data
 		std::stringstream fn_trace_data;
 		fn_trace_data << "trace_" << tfunctional_names[t] << ".dat";
 		int trace_decimals = 0;
-		for (int i = 0; i < sinogram.rows; i++) {
-			for (int j = 0; j < sinogram.cols; j++) {
-				double pixel = sinogram.at<double>(i, j);
+		for (int row = 0; row < _sinogram.rows(); row++) {
+			for (int col = 0; col < _sinogram.cols(); col++) {
+				double pixel = _sinogram(row, col);
 				trace_decimals = std::max(trace_decimals,
 					(int)std::log10(pixel)
 					+ 3);	// for comma and 2 decimals
@@ -261,9 +260,9 @@ int main(int argc, char **argv)
 		trace_decimals += 2;	// add spacing
 		std::ofstream fd_trace(fn_trace_data.str());
 		fd_trace << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-		for (int i = 0; i < sinogram.rows; i++) {
-			for (int j = 0; j < sinogram.cols; j++) {
-				double pixel = sinogram.at<double>(i, j);
+		for (int row = 0; row < _sinogram.rows(); row++) {
+			for (int col = 0; col < _sinogram.cols(); col++) {
+				double pixel = _sinogram(row, col);
 				fd_trace << std::setw(trace_decimals) << pixel;
 			}
 			fd_trace << "\n";
@@ -272,6 +271,7 @@ int main(int argc, char **argv)
 		fd_trace.close();
 
 		// Hermite functionals require the nearest orthonormal sinogram
+		cv::Mat sinogram = eigen2opencv(_sinogram);
 		unsigned int sinogram_center;
 		if (pfunctional_hermite > 0)
 			sinogram = nearest_orthonormal_sinogram(sinogram, sinogram_center);
