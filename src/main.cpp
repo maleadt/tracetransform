@@ -73,7 +73,7 @@ int main(int argc, char **argv)
 			<< " INPUT T-FUNCTIONALS [P-FUNCTIONALS]" << std::endl;
 		return 1;
 	}
-	std::string fn_input = argv[1];
+	std::string fninput = argv[1];
 
 	// Get the chosen T-functionals
 	std::vector<Functional> tfunctionals;
@@ -192,33 +192,32 @@ int main(int argc, char **argv)
 	}
 
 	// Read the image
-	Eigen::MatrixXd _input = pgmRead(fn_input);
-	_input = gray2mat(_input);
+	Eigen::MatrixXd input = pgmRead(fninput);
+	input = gray2mat(input);
 
 	// Orthonormal P-functionals need a stretched image in order to ensure
 	// a square sinogram
 	if (pfunctional_hermite > 0) {
 		int ndiag = (int) std::ceil(360.0/ANGLE_INTERVAL);
 		int size = (int) std::ceil(ndiag/std::sqrt(2));
-		_input = stretch_rows(_input, size);
-		_input = stretch_cols(_input, size);
+		input = stretch_rows(input, size);
+		input = stretch_cols(input, size);
 	}
-	cv::Mat input = eigen2opencv(_input);
 
 	// Pad the image so we can freely rotate without losing information
-	Point origin{std::floor((input.size().width-1)/2.0), std::floor((input.size().height-1)/2.0)};
-	int rLast = std::ceil(std::hypot(input.size().width - 1 - origin.x, input.size().height - 1 - origin.y));
+	Point origin{std::floor((input.cols()-1)/2.0), std::floor((input.rows()-1)/2.0)};
+	int rLast = std::ceil(std::hypot(input.cols() - 1 - origin.x, input.rows() - 1 - origin.y));
 	int rFirst = -rLast;
 	int nBins = rLast - rFirst + 1;
-	cv::Mat input_padded = cv::Mat::zeros(nBins, nBins, input.type());
-	Point origin_padded{std::floor((input_padded.size().width - 1)/2.0), std::floor((input_padded.size().height-1)/2.0)};
+	Eigen::MatrixXd _input_padded = Eigen::MatrixXd::Zero(nBins, nBins);
+	Point origin_padded{std::floor((_input_padded.cols() - 1)/2.0), std::floor((_input_padded.rows()-1)/2.0)};
 	Point df = origin_padded - origin;
-	for (int i = 0; i < input.size().height; i++) {
-		for (int j = 0; j < input.size().width; j++) {
-			input_padded.at<double>(i + df.y, j + df.x) = 
-				input.at<double>(i, j);
+	for (int col = 0; col < input.cols(); col++) {
+		for (int row = 0; row < input.rows(); row++) {
+			_input_padded(row + df.y, col + df.x) = input(row, col);
 		}
 	}
+	cv::Mat input_padded = eigen2opencv(_input_padded);
 
 	// Save profiling data
 	std::vector<double> tfunctional_runtimes(tfunctionals.size());
