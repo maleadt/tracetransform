@@ -18,7 +18,7 @@
 //
 
 cv::Mat getTraceTransform(
-	const cv::Mat &input,
+	const Eigen::MatrixXd &_input,
 	const double a_stepsize,
 	const double p_stepsize,
 	Functional tfunctional,
@@ -26,15 +26,15 @@ cv::Mat getTraceTransform(
 {
 	assert(a_stepsize > 0);
 	assert(p_stepsize > 0);
-	assert(input.size().width == input.size().height);	// padded image!
-	assert(input.type() == CV_64FC1);
+	assert(_input.rows() == _input.cols());	// padded image!
+	cv::Mat input = eigen2opencv(_input);
 
 	// Get the image origin to rotate around
-	cv::Point2d origin{(input.size().width-1)/2.0, (input.size().height-1)/2.0};
+	cv::Point2d origin{(_input.cols()-1)/2.0, (_input.rows()-1)/2.0};
 
 	// Calculate and allocate the output matrix
 	unsigned int a_steps = (unsigned int) std::floor(360 / a_stepsize);
-	unsigned int p_steps = (unsigned int) std::floor(input.size().height / p_stepsize);
+	unsigned int p_steps = (unsigned int) std::floor(_input.rows() / p_stepsize);
 	cv::Mat output = cv::Mat::zeros(
 		(int) p_steps,	// rows
 		(int) a_steps,	// columns
@@ -45,8 +45,8 @@ cv::Mat getTraceTransform(
 		// Calculate the transform matrix and rotate the image
 		double a = a_step * a_stepsize;
 		cv::Mat transform = cv::getRotationMatrix2D(origin, a+90, 1.0);
-		cv::Mat input_rotated;
-		cv::warpAffine(input, input_rotated, transform, input.size());
+		cv::Mat _input_rotated;
+		cv::warpAffine(input, _input_rotated, transform, input.size());
 
 		// Process all projection bands
 		for (unsigned int p_step = 0; p_step < p_steps; p_step++) {
@@ -54,8 +54,8 @@ cv::Mat getTraceTransform(
 				(signed) (p_steps - p_step - 1),	// row
 				(signed) a_step				// column
 			) = tfunctional(
-				input_rotated.ptr<double>((int) (p_step*p_stepsize)),
-				input.cols,
+				_input_rotated.ptr<double>((int) (p_step*p_stepsize)),
+				_input.cols(),
 				tfunctional_arguments);
 		}
 	}

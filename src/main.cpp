@@ -200,24 +200,22 @@ int main(int argc, char **argv)
 	if (pfunctional_hermite > 0) {
 		int ndiag = (int) std::ceil(360.0/ANGLE_INTERVAL);
 		int size = (int) std::ceil(ndiag/std::sqrt(2));
-		input = stretch_rows(input, size);
-		input = stretch_cols(input, size);
+		input = resize(input, size, size);
 	}
 
 	// Pad the image so we can freely rotate without losing information
 	Point origin{std::floor((input.cols()-1)/2.0), std::floor((input.rows()-1)/2.0)};
-	int rLast = std::ceil(std::hypot(input.cols() - 1 - origin.x, input.rows() - 1 - origin.y));
+	int rLast = std::ceil(std::hypot(input.cols() - 1 - origin.x(), input.rows() - 1 - origin.y()));
 	int rFirst = -rLast;
 	int nBins = rLast - rFirst + 1;
-	Eigen::MatrixXd _input_padded = Eigen::MatrixXd::Zero(nBins, nBins);
-	Point origin_padded{std::floor((_input_padded.cols() - 1)/2.0), std::floor((_input_padded.rows()-1)/2.0)};
+	Eigen::MatrixXd input_padded = Eigen::MatrixXd::Zero(nBins, nBins);
+	Point origin_padded{std::floor((input_padded.cols() - 1)/2.0), std::floor((input_padded.rows()-1)/2.0)};
 	Point df = origin_padded - origin;
 	for (int col = 0; col < input.cols(); col++) {
 		for (int row = 0; row < input.rows(); row++) {
-			_input_padded(row + df.y, col + df.x) = input(row, col);
+			input_padded(row + df.y(), col + df.x()) = input(row, col);
 		}
 	}
-	cv::Mat input_padded = eigen2opencv(_input_padded);
 
 	// Save profiling data
 	std::vector<double> tfunctional_runtimes(tfunctionals.size());
