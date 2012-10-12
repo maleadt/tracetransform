@@ -204,12 +204,12 @@ int main(int argc, char **argv)
 	}
 
 	// Pad the image so we can freely rotate without losing information
-	Point origin{std::floor((input.cols()-1)/2.0), std::floor((input.rows()-1)/2.0)};
+	Point origin(std::floor((input.cols()-1)/2.0), std::floor((input.rows()-1)/2.0));
 	int rLast = std::ceil(std::hypot(input.cols() - 1 - origin.x(), input.rows() - 1 - origin.y()));
 	int rFirst = -rLast;
 	int nBins = rLast - rFirst + 1;
 	Eigen::MatrixXd input_padded = Eigen::MatrixXd::Zero(nBins, nBins);
-	Point origin_padded{std::floor((input_padded.cols() - 1)/2.0), std::floor((input_padded.rows()-1)/2.0)};
+	Point origin_padded(std::floor((input_padded.cols() - 1)/2.0), std::floor((input_padded.rows()-1)/2.0));
 	Point df = origin_padded - origin;
 	for (int col = 0; col < input.cols(); col++) {
 		for (int row = 0; row < input.rows(); row++) {
@@ -230,7 +230,7 @@ int main(int argc, char **argv)
 		// Calculate the trace transform sinogram
 		std::cerr << " " << tfunctional_names[t] << "..." << std::flush;
 		Profiler tprofiler;
-		cv::Mat sinogram = getTraceTransform(
+		Eigen::MatrixXd _sinogram = getTraceTransform(
 			input_padded,
 			ANGLE_INTERVAL,		// angle resolution
 			DISTANCE_INTERVAL,	// distance resolution
@@ -239,6 +239,7 @@ int main(int argc, char **argv)
 		);
 		tprofiler.stop();
 		tfunctional_runtimes[t] = tprofiler.elapsed();
+		cv::Mat sinogram = eigen2opencv(_sinogram);
 
 		// Save the sinogram image
 		std::stringstream fn_trace_image;

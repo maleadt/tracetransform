@@ -202,13 +202,14 @@ Eigen::MatrixXd resize(const Eigen::MatrixXd &input, const unsigned int rows, co
 	return output;
 }
 
-Eigen::MatrixXd rotate(const Eigen::MatrixXd &input, const Point origin, const double angle)
+Eigen::MatrixXd rotate(const Eigen::MatrixXd &input, const Point &origin, const double angle)
 {	
 	// Calculate transform matrix
 	// TODO: use Eigen::Geometry
+	// TODO: -angle?
 	Eigen::Matrix2d transform;
-	transform <<	std::cos(angle), -std::sin(angle),
-			std::sin(angle), std::cos(angle);
+	transform <<	std::cos(-angle), -std::sin(-angle),
+			std::sin(-angle), std::cos(-angle);
 
 	// Allocate output matrix
 	Eigen::MatrixXd output = Eigen::MatrixXd::Zero(input.rows(), input.cols());
@@ -220,8 +221,8 @@ Eigen::MatrixXd rotate(const Eigen::MatrixXd &input, const Point origin, const d
 			p -= origin;	// TODO: why no pixel center offset?
 			p *= transform;
 			p += origin;
-			if (	p(0) >= 0 && p(0) <= input.cols()-1
-				&& p(1) >= 0 && p(1) <= input.rows()-1)
+			if (	p.x() >= 0 && p.x() < input.cols()-1
+				&& p.y() >= 0 && p.y() < input.rows()-1)
 				output(row, col) = interpolate(input, p);
 		}
 	}
