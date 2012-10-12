@@ -271,10 +271,10 @@ int main(int argc, char **argv)
 		fd_trace.close();
 
 		// Hermite functionals require the nearest orthonormal sinogram
-		cv::Mat sinogram = eigen2opencv(_sinogram);
 		unsigned int sinogram_center;
 		if (pfunctional_hermite > 0)
-			sinogram = nearest_orthonormal_sinogram(sinogram, sinogram_center);
+			_sinogram = nearest_orthonormal_sinogram(_sinogram, sinogram_center);
+		cv::Mat sinogram = eigen2opencv(_sinogram);
 
 		// Process all P-functionals
 		for (size_t p = 0; p < pfunctionals.size(); p++) {

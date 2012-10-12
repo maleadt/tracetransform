@@ -26,48 +26,46 @@ int main() {
 	// Create data
 	//
 
-	cv::Mat sinogram(
-		6,
-		4,
-		CV_64FC1
-	);
+	Eigen::MatrixXd sinogram(6, 4);
 
-	sinogram.at<double>(0, 0) = 2;
-	sinogram.at<double>(0, 1) = 1;
-	sinogram.at<double>(0, 2) = 1;
-	sinogram.at<double>(0, 3) = 8;
+	// TODO port to nice << syntax
 
-	sinogram.at<double>(1, 0) = 5;
-	sinogram.at<double>(1, 1) = 2;
-	sinogram.at<double>(1, 2) = 2;
-	sinogram.at<double>(1, 3) = 6;
+	sinogram(0, 0) = 2;
+	sinogram(0, 1) = 1;
+	sinogram(0, 2) = 1;
+	sinogram(0, 3) = 8;
 
-	sinogram.at<double>(2, 0) = 7;
-	sinogram.at<double>(2, 1) = 4;
-	sinogram.at<double>(2, 2) = 3;
-	sinogram.at<double>(2, 3) = 4;
+	sinogram(1, 0) = 5;
+	sinogram(1, 1) = 2;
+	sinogram(1, 2) = 2;
+	sinogram(1, 3) = 6;
 
-	sinogram.at<double>(3, 0) = 2;
-	sinogram.at<double>(3, 1) = 9;
-	sinogram.at<double>(3, 2) = 5;
-	sinogram.at<double>(3, 3) = 3;
+	sinogram(2, 0) = 7;
+	sinogram(2, 1) = 4;
+	sinogram(2, 2) = 3;
+	sinogram(2, 3) = 4;
 
-	sinogram.at<double>(4, 0) = 3;
-	sinogram.at<double>(4, 1) = 6;
-	sinogram.at<double>(4, 2) = 10;
-	sinogram.at<double>(4, 3) = 2;
+	sinogram(3, 0) = 2;
+	sinogram(3, 1) = 9;
+	sinogram(3, 2) = 5;
+	sinogram(3, 3) = 3;
 
-	sinogram.at<double>(5, 0) = 1;
-	sinogram.at<double>(5, 1) = 2;
-	sinogram.at<double>(5, 2) = 2;
-	sinogram.at<double>(5, 3) = 1;
+	sinogram(4, 0) = 3;
+	sinogram(4, 1) = 6;
+	sinogram(4, 2) = 10;
+	sinogram(4, 3) = 2;
+
+	sinogram(5, 0) = 1;
+	sinogram(5, 1) = 2;
+	sinogram(5, 2) = 2;
+	sinogram(5, 3) = 1;
 
 	std::cout << "Input sinogram:" << std::endl;
 
-	for (int i = 0; i < sinogram.rows; i++) {
+	for (int i = 0; i < sinogram.rows(); i++) {
 		std::cout << "\t";
-		for (int j = 0; j < sinogram.cols; j++) {
-			std::cout << sinogram.at<double>(i, j) << "\t";
+		for (int j = 0; j < sinogram.cols(); j++) {
+			std::cout << sinogram(i, j) << "\t";
 		}
 		std::cout << "\n";
 	}
@@ -83,14 +81,14 @@ int main() {
 	//         (ajust Apply_Pfunct to return NOS as well)
 
 	unsigned int center;
-	cv::Mat nos = nearest_orthonormal_sinogram(sinogram, center);
+	Eigen::MatrixXd nos = nearest_orthonormal_sinogram(sinogram, center);
 
 	std::cout << "Nearest orthonormal sinogram (centered around row " << center << "):" << std::endl;
 
-	for (int i = 0; i < nos.rows; i++) {
+	for (int i = 0; i < nos.rows(); i++) {
 		std::cout << "\t";
-		for (int j = 0; j < nos.cols; j++) {
-			std::cout << nos.at<double>(i, j) << "\t";
+		for (int j = 0; j < nos.cols(); j++) {
+			std::cout << nos(i, j) << "\t";
 		}
 		std::cout << "\n";
 	}
@@ -104,8 +102,10 @@ int main() {
 
 	// MATLAB: [Circus NOS] = Apply_Pfunct(data, 5, 1)
 
+	/*
+
 	std::cout << "Output of circus functions after Hermite P-functional (2nd order):" << std::endl;
-	cv::Mat circus = getCircusFunction(
+	Eigen::MatrixXd circus = getCircusFunction(
 		sinogram,
 		PFunctionalHermite,
 		new ArgumentsHermite{2, 2}
@@ -114,10 +114,12 @@ int main() {
 	for (int i = 0; i < circus.rows; i++) {
 		std::cout << "\t";
 		for (int j = 0; j < circus.cols; j++) {
-			std::cout << circus.at<double>(i, j) << "\t";
+			std::cout << circus(i, j) << "\t";
 		}
 		std::cout << "\n";
 	}
 	std::cout << std::flush;
+
+	*/
 }
 
