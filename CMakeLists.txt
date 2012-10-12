@@ -34,3 +34,6 @@ TARGET_LINK_LIBRARIES(transform functionals ${OpenCV_LIBS})
 
 ADD_EXECUTABLE(test_tutorial src/test_tutorial.cpp)
 TARGET_LINK_LIBRARIES(test_tutorial functionals ${OpenCV_LIBS})
+
+ADD_EXECUTABLE(test_image src/test_image.cpp)
+TARGET_LINK_LIBRARIES(test_image ${OpenCV_LIBS})
