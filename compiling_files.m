@@ -10,7 +10,3 @@ mex FunctionalT6.c
 mex FunctionalT7.c
 mex vecWMed.c
 mex vecWMfinal.c
-mex fast_rotate.cpp
-
-
-

@@ -10,7 +10,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
     mwSize M,N;   /*Variables of dimension of the input image*/ 
     
     /*mxArray variables*/
-    mxArray *Input_data[2], *Rotated_image[2], *Input_Tfunct[2], *Input_Stacking[3],*Output_Stacking[1], *StackSinog[3], *Nonorm_CircusF[1];
+    mxArray *Input_data[3], *Rotated_image[2], *Input_Tfunct[2], *Input_Stacking[3],*Output_Stacking[1], *StackSinog[3], *Nonorm_CircusF[1];
     
     /*Regular variables*/
     double *angle, *T_codes, *P_codes,*stack_idx;/* Auxiliar pointers*/
@@ -42,6 +42,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
     /*Initialization of the Array variables*/
     Input_data[0] = mxCreateDoubleMatrix(M, N, mxREAL);
     Input_data[1] = mxCreateDoubleScalar(0.0);
+    Input_data[2] = mxCreateString("crop");
     Input_Stacking[1] = mxCreateDoubleMatrix(1, 4, mxREAL);
     Input_Stacking[2] = mxCreateNumericArray(3,dims,mxDOUBLE_CLASS,mxREAL);
     Input_Tfunct[0] = mxCreateDoubleMatrix(M, N, mxREAL);
@@ -63,7 +64,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
         
         *angle = (double)(angle_intrvl*k);      /* Angle in which the image will be rotated*/
      
-        mexCallMATLAB(1, &Rotated_image[0], 2, Input_data, "fast_rotate");      /*Rotating the input image*/
+        mexCallMATLAB(1, &Rotated_image[0], 3, Input_data, "imrotate");      /*Rotating the input image*/
         mexCallMATLAB(1, &Rotated_image[1], 1, &Rotated_image[0],"rotflip")     /*Rotated, flipped, and transponsed image */;
                 
         for(n = 0; n < 2; n++){                 /*Loop to compute the vector shifts of the rotated and its transponsed*/
