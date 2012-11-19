@@ -243,32 +243,12 @@ int main(int argc, char **argv)
 		// Save the sinogram image
 		std::stringstream fn_trace_image;
 		fn_trace_image << "trace_" << tfunctional_names[t] << ".pgm";
-		pgmWrite(mat2gray(_sinogram), fn_trace_image.str());
+		pgmWrite(fn_trace_image.str(), mat2gray(_sinogram));
 
 		// Save the sinogram data
 		std::stringstream fn_trace_data;
 		fn_trace_data << "trace_" << tfunctional_names[t] << ".dat";
-		int trace_decimals = 0;
-		for (int row = 0; row < _sinogram.rows(); row++) {
-			for (int col = 0; col < _sinogram.cols(); col++) {
-				double pixel = _sinogram(row, col);
-				trace_decimals = std::max(trace_decimals,
-					(int)std::log10(pixel)
-					+ 3);	// for comma and 2 decimals
-			}
-		}
-		trace_decimals += 2;	// add spacing
-		std::ofstream fd_trace(fn_trace_data.str());
-		fd_trace << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-		for (int row = 0; row < _sinogram.rows(); row++) {
-			for (int col = 0; col < _sinogram.cols(); col++) {
-				double pixel = _sinogram(row, col);
-				fd_trace << std::setw(trace_decimals) << pixel;
-			}
-			fd_trace << "\n";
-		}
-		fd_trace << std::flush;
-		fd_trace.close();
+		dataWrite(fn_trace_data.str(), _sinogram);
 
 		// Hermite functionals require the nearest orthonormal sinogram
 		unsigned int sinogram_center;
@@ -338,38 +318,21 @@ int main(int argc, char **argv)
 	}
 
 	// Save the output data
-	if (pfunctionals.size() > 0) {
-		std::ofstream fd_data("circus.dat");
-
-		// Headers
-		if (circus_decimals < 5)
-			circus_decimals = 5;	// size of column header
-		circus_decimals += 2;		// add spacing
-		fd_data << "%  ";
-		fd_data << std::setiosflags(std::ios::fixed) << std::setprecision(0);
+	if (pfunctionals.size() > 0) {		
+		std::vector<std::string> headers;
 		for (size_t tp = 0; tp < (unsigned)data.rows; tp++) {
 			size_t t = tp / pfunctionals.size();
 			size_t p = tp % pfunctionals.size();
 			std::stringstream header;
 			header << tfunctional_names[t] << "-"
 				<< pfunctional_names[p];
-			fd_data << std::setw(circus_decimals) << header.str();
-		}
-		fd_data << "\n";
-
-		// Data
-		fd_data << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-		for (int i = 0; i < data.cols; i++) {
-			fd_data << "   ";
-			for (int tp = 0; tp < data.rows; tp++) {
-				fd_data << std::setw(circus_decimals)
-					<< data.at<double>(tp, i);
-			}
-			fd_data << "\n";
+			headers.push_back(header.str());
 		}
 
-		fd_data << std::flush;
-		fd_data.close();
+		// FIXME: remove this transpose
+		cv::Mat data_transposed(data.cols, data.rows, CV_64FC1);
+		cv::transpose(data, data_transposed);
+		dataWrite("circus.dat", opencv2eigen(data), headers);
 	}
 
 	// Generate a gnuplot script

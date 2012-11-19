@@ -38,15 +38,25 @@ std::ostream& operator<<(std::ostream &stream, const Point& point) {
 // Routines
 //
 
-// Temporary conversion routine to ease migration from OpenCV to Eigen3
-cv::Mat eigen2opencv(const Eigen::MatrixXd &eigen) {
+// Temporary conversion routines to ease migration from OpenCV to Eigen3
+cv::Mat eigen2opencv(const Eigen::MatrixXd &eigen)
+{
 	cv::Mat opencv(eigen.rows(), eigen.cols(), CV_64FC1);
-	for (size_t i = 0; i < eigen.rows(); i++) {
-		for (size_t j = 0; j < eigen.cols(); j++) {
-			opencv.at<double>(i, j) = eigen(i, j);
+	for (size_t row = 0; row < eigen.rows(); row++) {
+		for (size_t col = 0; col < eigen.cols(); col++) {
+			opencv.at<double>(row, col) = eigen(row, col);
 		}
 	}
 	return opencv;
+}
+Eigen::MatrixXd opencv2eigen(const cv::Mat &opencv)
+{
+	Eigen::MatrixXd eigen(opencv.rows, opencv.cols);
+	for (int row = 0; row < opencv.rows; row++) {
+		for (int col = 0; col < opencv.cols; col++) {
+			eigen(row, col) = opencv.at<double>(row, col);
+		}
+	}
 }
 
 // Read an ASCII PGM file
@@ -94,7 +104,7 @@ Eigen::MatrixXd pgmRead(std::string filename)
 }
 
 // Write an ASCII PGM file
-void pgmWrite(const Eigen::MatrixXd &data, std::string filename)
+void pgmWrite(std::string filename, const Eigen::MatrixXd &data)
 {
 	std::ofstream outfile(filename);
 
@@ -121,6 +131,58 @@ void pgmWrite(const Eigen::MatrixXd &data, std::string filename)
 		}
 	}
 	outfile.close();
+}
+
+// Write a MATLAB and gnuplot-compatible data file
+void dataWrite(std::string filename, const Eigen::MatrixXd &data,
+	const std::vector<std::string> &headers = std::vector<std::string>())
+{
+	assert(headers.size() == 0 || headers.size() == data.cols());
+
+	// Calculate column width
+	std::vector<unsigned int> widths(data.cols(), 0);
+	for (size_t col = 0; col < data.cols(); col++) {
+		if (headers.size() > 0)
+			widths[col] = headers[col].length();
+		for (size_t row = 0; row < data.rows(); row++) {
+			double value = data(row, col);
+			unsigned int width = (unsigned int) std::log10(value)
+				+ 3;	// for comma and 2 decimals
+			if (value < 0)	// dash for negative numbers
+				width++;
+			if (width > widths[col])
+				widths[col] = width;
+		}
+		widths[col] += 2;	// add spacing
+	}
+
+	// Open file
+	std::ofstream fd_data(filename);
+
+	// Print headers
+	if (headers.size() > 0) {
+		fd_data << "%  ";
+		fd_data << std::setiosflags(std::ios::fixed)
+			<< std::setprecision(0);
+		for (size_t col = 0; col < headers.size(); col++) {
+			fd_data << std::setw(widths[col]) << headers[col];
+		}
+		fd_data << "\n";
+	}
+
+	// Print data
+	fd_data << std::setiosflags(std::ios::fixed) << std::setprecision(2);
+	for (size_t row = 0; row < data.rows(); row++) {
+		fd_data << "   ";
+		for (size_t col = 0; col < data.cols(); col++) {
+			fd_data << std::setw(widths[col])
+				<< data(row, col);
+		}
+		fd_data << "\n";
+	}
+
+	fd_data << std::flush;
+	fd_data.close();
 }
 
 // Convert a grayscale image (range [0, 255]) to a matrix (range [0, 1]).

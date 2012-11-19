@@ -46,7 +46,7 @@ Eigen::MatrixXd getTraceTransform(
 		for (unsigned int p_step = 0; p_step < p_steps; p_step++) {
 			output(
 				(signed) p_step,	// row
-				(signed) a_step				// column
+				(signed) a_step		// column
 			) = tfunctional(
 				input_rotated.data() + ((int) p_stepsize*p_step) * input.rows(),
 				input.rows(),
