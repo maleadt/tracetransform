@@ -54,7 +54,7 @@ Eigen::MatrixXd nearest_orthonormal_sinogram(
 	Eigen::JacobiSVD<Eigen::MatrixXd, Eigen::HouseholderQRPreconditioner> svd(
 		aligned, Eigen::ComputeFullU | Eigen::ComputeFullV);
 	Eigen::MatrixXd diagonal = Eigen::MatrixXd::Identity(aligned.rows(), aligned.cols());
-	Eigen::MatrixXd nos = svd.matrixU() * diagonal * svd.matrixV();
+	Eigen::MatrixXd nos = svd.matrixU() * diagonal * svd.matrixV().transpose();
 
 	return nos;
 }
