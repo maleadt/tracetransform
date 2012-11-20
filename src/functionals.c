@@ -158,7 +158,6 @@ double TFunctional5(const double* data, const size_t length, const void* argumen
 		// From 1, since exp(i*log(0)) == 0
 		integral += cexp(factor*log(r1))
 			* (sqrt(r1)*data[r1+squaredmedian]);
-
 	}
 	return cabs(integral);
 }
