@@ -174,7 +174,7 @@ double PFunctional1(const double* data, const size_t length, const void* argumen
 	double previous = data[0];
 	for (size_t p = 1; p < length; p++) {
 		double current = data[p];
-		sum += abs(previous - current);
+		sum += fabs(previous - current);
 		previous = current;
 	}
 	return sum;
