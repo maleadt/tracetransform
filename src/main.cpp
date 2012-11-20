@@ -332,7 +332,7 @@ int main(int argc, char **argv)
 		// FIXME: remove this transpose
 		cv::Mat data_transposed(data.cols, data.rows, CV_64FC1);
 		cv::transpose(data, data_transposed);
-		dataWrite("circus.dat", opencv2eigen(data), headers);
+		dataWrite("circus.dat", opencv2eigen(data_transposed), headers);
 	}
 
 	// Generate a gnuplot script

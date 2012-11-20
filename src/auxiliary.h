@@ -57,6 +57,7 @@ Eigen::MatrixXd opencv2eigen(const cv::Mat &opencv)
 			eigen(row, col) = opencv.at<double>(row, col);
 		}
 	}
+	return eigen;
 }
 
 // Read an ASCII PGM file
@@ -146,8 +147,9 @@ void dataWrite(std::string filename, const Eigen::MatrixXd &data,
 			widths[col] = headers[col].length();
 		for (size_t row = 0; row < data.rows(); row++) {
 			double value = data(row, col);
-			unsigned int width = (unsigned int) std::log10(value)
-				+ 3;	// for comma and 2 decimals
+			unsigned int width = 3;	// decimal, comma, 2 decimals
+			if (value > 1)
+				width += std::floor(std::log10(value));
 			if (value < 0)	// dash for negative numbers
 				width++;
 			if (width > widths[col])
