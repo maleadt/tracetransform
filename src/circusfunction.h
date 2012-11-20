@@ -77,6 +77,7 @@ cv::Mat getCircusFunction(
 	);
 
 	// Trace all columns
+	#pragma omp parallel for
 	for (int p = 0; p < input.cols; p++) {
 		output.at<double>(
 			0,	// row

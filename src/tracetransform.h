@@ -37,6 +37,7 @@ Eigen::MatrixXd getTraceTransform(
 	Eigen::MatrixXd output((int) p_steps, (int) a_steps);
 
 	// Process all angles
+	#pragma omp parallel for
 	for (unsigned int a_step = 0; a_step < a_steps; a_step++) {
 		// Rotate the image
 		double a = a_step * a_stepsize;
