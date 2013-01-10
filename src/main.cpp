@@ -83,12 +83,12 @@ int main(int argc, char **argv)
 	;
 
 	// Declare positional options
-	po::positional_options_description p;
-	p.add("image", -1);
+	po::positional_options_description pod;
+	pod.add("image", -1);
 
 	po::variables_map vm;
 	po::store(po::command_line_parser(argc, argv).
-	          options(desc).positional(p).run(), vm);
+	          options(desc).positional(pod).run(), vm);
 	po::notify(vm);  
 
 	if (vm.count("help")) {
@@ -201,7 +201,9 @@ int main(int argc, char **argv)
 
 	// Pad the image so we can freely rotate without losing information
 	Point origin(std::floor((input.cols()-1)/2.0), std::floor((input.rows()-1)/2.0));
-	int rLast = std::ceil(std::hypot(input.cols() - 1 - origin.x(), input.rows() - 1 - origin.y()));
+	int rLast = (int) std::ceil(std::hypot(
+		input.cols() - 1- origin.x(),
+		input.rows() - 1 - origin.y()));
 	int rFirst = -rLast;
 	int nBins = rLast - rFirst + 1;
 	Eigen::MatrixXd input_padded = Eigen::MatrixXd::Zero(nBins, nBins);
@@ -209,7 +211,7 @@ int main(int argc, char **argv)
 	Point df = origin_padded - origin;
 	for (int col = 0; col < input.cols(); col++) {
 		for (int row = 0; row < input.rows(); row++) {
-			input_padded(row + df.y(), col + df.x()) = input(row, col);
+			input_padded(row + (int) df.y(), col + (int) df.x()) = input(row, col);
 		}
 	}
 
@@ -303,9 +305,9 @@ int main(int argc, char **argv)
 	// Save the output data
 	if (pfunctionals.size() > 0) {		
 		std::vector<std::string> headers;
-		for (size_t tp = 0; tp < output.cols(); tp++) {
-			size_t t = tp / pfunctionals.size();
-			size_t p = tp % pfunctionals.size();
+		for (int tp = 0; tp < output.cols(); tp++) {
+			size_t t = tp / (unsigned) pfunctionals.size();
+			size_t p = tp % (unsigned) pfunctionals.size();
 			std::stringstream header;
 			header << tfunctional_names[t] << "-"
 				<< pfunctional_names[p];

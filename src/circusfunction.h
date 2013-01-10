@@ -33,7 +33,7 @@ Eigen::MatrixXd nearest_orthonormal_sinogram(
 	assert(input.cols() >= 0);
 	unsigned int sinogram_center = (unsigned int) std::floor((input.rows() - 1) / 2.0);
 	std::vector<int> offset(input.cols());	// TODO: Eigen vector
-	for (unsigned int p = 0; p < input.cols(); p++) {
+	for (int p = 0; p < input.cols(); p++) {
 		size_t median = findWeighedMedian(
 			input.data() + p*input.rows(),
 			input.rows());
@@ -47,7 +47,7 @@ Eigen::MatrixXd nearest_orthonormal_sinogram(
 	new_center = sinogram_center + max;
 	Eigen::MatrixXd aligned(input.rows() + padding, input.cols());
 	for (int col = 0; col < input.cols(); col++) {
-		for (unsigned int row = 0; row < input.rows(); row++) {
+		for (int row = 0; row < input.rows(); row++) {
 			aligned(max+row-offset[col], col) = input(row, col);
 		}
 	}

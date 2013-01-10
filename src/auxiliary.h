@@ -119,10 +119,10 @@ void dataWrite(std::string filename, const Eigen::MatrixXd &data,
 
 	// Calculate column width
 	std::vector<unsigned int> widths(data.cols(), 0);
-	for (size_t col = 0; col < data.cols(); col++) {
+	for (int col = 0; col < data.cols(); col++) {
 		if (headers.size() > 0)
 			widths[col] = headers[col].length();
-		for (size_t row = 0; row < data.rows(); row++) {
+		for (int row = 0; row < data.rows(); row++) {
 			double value = data(row, col);
 			unsigned int width = 3;	// decimal, comma, 2 decimals
 			if (value > 1)
@@ -151,9 +151,9 @@ void dataWrite(std::string filename, const Eigen::MatrixXd &data,
 
 	// Print data
 	fd_data << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-	for (size_t row = 0; row < data.rows(); row++) {
+	for (int row = 0; row < data.rows(); row++) {
 		fd_data << "   ";
-		for (size_t col = 0; col < data.cols(); col++) {
+		for (int col = 0; col < data.cols(); col++) {
 			fd_data << std::setw(widths[col])
 				<< data(row, col);
 		}
