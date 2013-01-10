@@ -14,8 +14,6 @@
 #include <boost/program_options.hpp>
 
 // Library includes
-#include <cv.h>
-#include <highgui.h>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 
@@ -315,30 +313,6 @@ int main(int argc, char **argv)
 			headers.push_back(header.str());
 		}
 		dataWrite("circus.dat", output, headers);
-	}
-
-	// Generate a gnuplot script
-	if (pfunctionals.size() > 0) {
-		std::ofstream fd_gnuplot("circus.gp");
-
-		fd_gnuplot << "#!/usr/bin/gnuplot -persist\n";
-		fd_gnuplot << "set datafile commentschars '%'\n";
-
-		fd_gnuplot << "plot";
-		for (size_t tp = 0; tp < output.cols(); tp++) {
-			size_t t = tp / pfunctionals.size();
-			size_t p = tp % pfunctionals.size();
-			fd_gnuplot << "\t'circus.dat' using :" << tp+1
-				<< " with lines title '" << tfunctional_names[t] << "-"
-				<< pfunctional_names[p] << "'";
-			if (tp+1 < output.cols())
-				fd_gnuplot << ", \\";
-			fd_gnuplot << "\n";
-		}
-
-		fd_gnuplot << std::endl;
-		fd_gnuplot.close();
-		chmod("circus.gp", 0755);
 	}
 
 	return 0;

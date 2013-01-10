@@ -5,8 +5,8 @@
 // System includes
 #include <iostream>
 
-// OpenCV includes
-#include <cv.h>
+// Library includes
+#include <Eigen/Dense>
 
 // Local includes
 #include "auxiliary.h"
@@ -102,8 +102,6 @@ int main() {
 
 	// MATLAB: [Circus NOS] = Apply_Pfunct(data, 5, 1)
 
-	/*
-
 	std::cout << "Output of circus functions after Hermite P-functional (2nd order):" << std::endl;
 	Eigen::MatrixXd circus = getCircusFunction(
 		sinogram,
@@ -111,15 +109,13 @@ int main() {
 		new ArgumentsHermite{2, 2}
 	);
 
-	for (int i = 0; i < circus.rows; i++) {
+	for (int i = 0; i < circus.rows(); i++) {
 		std::cout << "\t";
-		for (int j = 0; j < circus.cols; j++) {
+		for (int j = 0; j < circus.cols(); j++) {
 			std::cout << circus(i, j) << "\t";
 		}
 		std::cout << "\n";
 	}
 	std::cout << std::flush;
-
-	*/
 }
 

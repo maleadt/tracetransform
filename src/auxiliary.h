@@ -10,9 +10,9 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
 
 // Library includes
-#include <cv.h>
 #include <Eigen/Dense>
 
 
@@ -33,32 +33,9 @@ std::ostream& operator<<(std::ostream &stream, const Point& point) {
 }
 
 
-
 //
 // Routines
 //
-
-// Temporary conversion routines to ease migration from OpenCV to Eigen3
-cv::Mat eigen2opencv(const Eigen::MatrixXd &eigen)
-{
-	cv::Mat opencv(eigen.rows(), eigen.cols(), CV_64FC1);
-	for (size_t row = 0; row < eigen.rows(); row++) {
-		for (size_t col = 0; col < eigen.cols(); col++) {
-			opencv.at<double>(row, col) = eigen(row, col);
-		}
-	}
-	return opencv;
-}
-Eigen::MatrixXd opencv2eigen(const cv::Mat &opencv)
-{
-	Eigen::MatrixXd eigen(opencv.rows, opencv.cols);
-	for (int row = 0; row < opencv.rows; row++) {
-		for (int col = 0; col < opencv.cols; col++) {
-			eigen(row, col) = opencv.at<double>(row, col);
-		}
-	}
-	return eigen;
-}
 
 // Read an ASCII PGM file
 Eigen::MatrixXd pgmRead(std::string filename)

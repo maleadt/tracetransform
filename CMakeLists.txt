@@ -23,14 +23,13 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wundef")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wvla")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunreachable-code")
 
+#SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O1 -fsanitize=address -fno-omit-frame-pointer") 
+
 FIND_PACKAGE(Boost REQUIRED COMPONENTS program_options)
 INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIR})
 
 FIND_PACKAGE(Eigen3 REQUIRED)
 INCLUDE_DIRECTORIES(SYSTEM ${EIGEN3_INCLUDE_DIR})
-
-FIND_PACKAGE(OpenCV REQUIRED core highgui imgproc)
-INCLUDE_DIRECTORIES(SYSTEM ${OpenCV_INCLUDE_DIRS})
 
 ADD_LIBRARY(functionals src/functionals.h src/functionals.c)
 ADD_EXECUTABLE(transform src/main.cpp)
@@ -38,6 +37,3 @@ TARGET_LINK_LIBRARIES(transform functionals ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 ADD_EXECUTABLE(test_tutorial src/test_tutorial.cpp)
 TARGET_LINK_LIBRARIES(test_tutorial functionals ${OpenCV_LIBS})
-
-ADD_EXECUTABLE(test_image src/test_image.cpp)
-TARGET_LINK_LIBRARIES(test_image ${OpenCV_LIBS})

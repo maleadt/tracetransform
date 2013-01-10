@@ -15,6 +15,9 @@
 
 // Local includes
 #include "auxiliary.h"
+extern "C" {
+	#include "functionals.h"
+}
 
 
 //
