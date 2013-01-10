@@ -10,7 +10,6 @@
 #include <limits>
 
 // Library includes
-#include <cv.h>
 #include <Eigen/Dense>
 #include <Eigen/SVD>
 
@@ -59,17 +58,17 @@ Eigen::MatrixXd nearest_orthonormal_sinogram(
 	return nos;
 }
 
-Eigen::MatrixXd getCircusFunction(
+Eigen::VectorXd getCircusFunction(
 	const Eigen::MatrixXd &input,
 	Functional pfunctional,
 	void* pfunctional_arguments)
 {
 	// Allocate the output matrix
-	Eigen::MatrixXd output(1, input.cols());
+	Eigen::VectorXd output(input.cols());
 
 	// Trace all columns
 	for (int p = 0; p < input.cols(); p++) {
-		output(0, p) = pfunctional(
+		output(p) = pfunctional(
 			input.data() + p*input.rows(),
 			input.rows(),
 			pfunctional_arguments);

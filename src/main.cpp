@@ -256,7 +256,7 @@ int main(int argc, char **argv)
 		// Hermite functionals require the nearest orthonormal sinogram
 		unsigned int sinogram_center;
 		if (vm.count("h-functional") > 0)
-			sinogram = nearest_orthonormalsinogram(sinogram, sinogram_center);
+			sinogram = nearest_orthonormal_sinogram(sinogram, sinogram_center);
 
 		// Process all P-functionals
 		for (size_t p = 0; p < pfunctionals.size(); p++) {
@@ -268,34 +268,33 @@ int main(int argc, char **argv)
 			if (vm.count("verbose"))
 				std::cerr << " " << pfunctional_names[p] << "..." << std::flush;
 			Profiler pprofiler;
-			Eigen::MatrixXd _circus = getCircusFunction(
+			Eigen::VectorXd circus = getCircusFunction(
 				sinogram,
 				pfunctionals[p],
 				pfunctional_arguments[p]
 			);
 			pprofiler.stop();
-			cv::Mat circus = eigen2opencv(_circus);
 			pfunctional_runtimes[p] += pprofiler.elapsed();
 
 			// Normalize
-			cv::Mat normalized = zscore<double>(circus);
+			Eigen::VectorXd normalized = zscore(circus);
 
 			// Allocate the data
 			if (data.empty()) {
 				data = cv::Mat(
 					cv::Size(
-						 normalized.cols,
+						 normalized.size(),
 						 tfunctionals.size()*pfunctionals.size()
 					),
 					CV_64FC1
 				);
 			} else {
-				assert(data.cols == normalized.cols);
+				assert(data.cols == normalized.size());
 			}
 
 			// Copy the data
-			for (int i = 0; i < normalized.cols; i++) {
-				double pixel = normalized.at<double>(0, i);
+			for (int i = 0; i < normalized.size(); i++) {
+				double pixel = normalized(i);
 				data.at<double>(
 					t*pfunctionals.size()+p,	// row
 					i				// column

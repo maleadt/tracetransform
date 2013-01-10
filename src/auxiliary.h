@@ -299,55 +299,49 @@ Eigen::MatrixXd rotate(const Eigen::MatrixXd &input, const Point &origin, const 
 	return output;
 }
 
-template <typename T>
-double arithmetic_mean(const cv::Mat &vector)
+double arithmetic_mean(const Eigen::VectorXd &input)
 {
-	assert(vector.rows == 1);
-	if (vector.cols <= 0)
+	if (input.size() == 0)
 		return NAN;
 
 	double sum = 0;
-	for (int i = 0; i < vector.cols; i++) {
-		sum += vector.at<T>(0, i);
+	for (int i = 0; i < input.size(); i++) {
+		sum += input(i);
 	}
 
-	return sum / vector.cols;
+	return sum / input.size();
 }
 
-template <typename T>
-double standard_deviation(const cv::Mat &vector)
+double standard_deviation(const Eigen::VectorXd &input)
 {
-	assert(vector.rows == 1);
-	if (vector.cols <= 0)
+	if (input.size() <= 0)
 		return NAN;
 
-	double mean = arithmetic_mean<T>(vector);
+	double mean = arithmetic_mean(input);
 	double sum = 0;
-	for (int i = 0; i < vector.cols; i++) {
-		double diff = vector.at<T>(0, i) - mean;
+	for (int i = 0; i < input.size(); i++) {
+		double diff = input(i) - mean;
 		sum += diff*diff;
 	}
 	
 	// NOTE: this is the default MATLAB interpretation, Wiki's std()
 	//       uses vector.cols
-	return std::sqrt(sum / (vector.cols-1));
+	return std::sqrt(sum / (input.size()-1));
 }
 
-template <typename T>
-cv::Mat zscore(const cv::Mat &vector)
+Eigen::VectorXd zscore(const Eigen::VectorXd &input)
 {
-	assert(vector.rows == 1);
-	if (vector.cols <= 0)
-		return cv::Mat();
+	if (input.size() == 0)
+		return Eigen::VectorXd();
 
-	double mean = arithmetic_mean<T>(vector);
-	double stdev = standard_deviation<T>(vector);
+	double mean = arithmetic_mean(input);
+	double stdev = standard_deviation(input);
 
-	cv::Mat transformed(vector.size(), vector.type());
-	for (int i = 0; i < vector.cols; i++) {
-		transformed.at<T>(0, i) = (vector.at<T>(0, i) - mean) / stdev;
+	Eigen::VectorXd transformed(input.size());
+	for (int i = 0; i < input.size(); i++) {
+		transformed(i) = (input(i) - mean) / stdev;
 	}
-
+	
 	return transformed;
 }
 
