@@ -1,0 +1,10 @@
+{
+	"folders":
+	[
+		{
+			"path": "src",
+            "name": "Source",
+            "file_exclude_patterns": [".tags*"]
+		}
+	]
+}
