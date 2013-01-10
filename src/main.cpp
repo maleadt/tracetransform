@@ -220,10 +220,11 @@ int main(int argc, char **argv)
 	std::vector<double> tfunctional_runtimes(tfunctionals.size());
 	std::vector<double> pfunctional_runtimes(pfunctionals.size(), 0);
 
+	// Allocate a matrix for all output data to reside in
+	Eigen::MatrixXd output (360 / ANGLE_INTERVAL, tfunctionals.size()*pfunctionals.size());
+
 	// Process all T-functionals
 	Profiler mainprofiler;
-	cv::Mat data;
-	int circus_decimals = 0;
 	if (vm.count("verbose"))
 		std::cerr << "Calculating";
 	for (size_t t = 0; t < tfunctionals.size(); t++) {
@@ -279,30 +280,9 @@ int main(int argc, char **argv)
 			// Normalize
 			Eigen::VectorXd normalized = zscore(circus);
 
-			// Allocate the data
-			if (data.empty()) {
-				data = cv::Mat(
-					cv::Size(
-						 normalized.size(),
-						 tfunctionals.size()*pfunctionals.size()
-					),
-					CV_64FC1
-				);
-			} else {
-				assert(data.cols == normalized.size());
-			}
-
 			// Copy the data
-			for (int i = 0; i < normalized.size(); i++) {
-				double pixel = normalized(i);
-				data.at<double>(
-					t*pfunctionals.size()+p,	// row
-					i				// column
-				) = pixel;
-				circus_decimals = std::max(circus_decimals,
-					(int)std::log10(pixel)
-					+ 3);	// for comma and 2 decimals
-			}
+			assert(normalized.size() == output.rows());
+			output.col(t*pfunctionals.size() + p) = normalized;
 		}
 	}
 	if (vm.count("verbose"))
@@ -326,7 +306,7 @@ int main(int argc, char **argv)
 	// Save the output data
 	if (pfunctionals.size() > 0) {		
 		std::vector<std::string> headers;
-		for (size_t tp = 0; tp < (unsigned)data.rows; tp++) {
+		for (size_t tp = 0; tp < output.cols(); tp++) {
 			size_t t = tp / pfunctionals.size();
 			size_t p = tp % pfunctionals.size();
 			std::stringstream header;
@@ -334,11 +314,7 @@ int main(int argc, char **argv)
 				<< pfunctional_names[p];
 			headers.push_back(header.str());
 		}
-
-		// FIXME: remove this transpose
-		cv::Mat data_transposed(data.cols, data.rows, CV_64FC1);
-		cv::transpose(data, data_transposed);
-		dataWrite("circus.dat", opencv2eigen(data_transposed), headers);
+		dataWrite("circus.dat", output, headers);
 	}
 
 	// Generate a gnuplot script
@@ -349,13 +325,13 @@ int main(int argc, char **argv)
 		fd_gnuplot << "set datafile commentschars '%'\n";
 
 		fd_gnuplot << "plot";
-		for (size_t tp = 0; tp < (unsigned)data.rows; tp++) {
+		for (size_t tp = 0; tp < output.cols(); tp++) {
 			size_t t = tp / pfunctionals.size();
 			size_t p = tp % pfunctionals.size();
 			fd_gnuplot << "\t'circus.dat' using :" << tp+1
 				<< " with lines title '" << tfunctional_names[t] << "-"
 				<< pfunctional_names[p] << "'";
-			if (tp+1 < (unsigned)data.rows)
+			if (tp+1 < output.cols())
 				fd_gnuplot << ", \\";
 			fd_gnuplot << "\n";
 		}
