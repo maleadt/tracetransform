@@ -59,31 +59,19 @@ Eigen::MatrixXd nearest_orthonormal_sinogram(
 	return nos;
 }
 
-cv::Mat getCircusFunction(
-	const cv::Mat &input,
+Eigen::MatrixXd getCircusFunction(
+	const Eigen::MatrixXd &input,
 	Functional pfunctional,
 	void* pfunctional_arguments)
 {
-	assert(input.type() == CV_64FC1);
-
-	// Transpose the input since cv::Mat is stored in row-major order
-	cv::Mat input_transposed;
-	cv::transpose(input, input_transposed);
-
 	// Allocate the output matrix
-	cv::Mat output(
-		cv::Size(input.cols, 1),
-		input.type()
-	);
+	Eigen::MatrixXd output(1, input.cols());
 
 	// Trace all columns
-	for (int p = 0; p < input.cols; p++) {
-		output.at<double>(
-			0,	// row
-			p	// column
-		) = pfunctional(
-			input_transposed.ptr<double>(p),
-			input_transposed.cols,
+	for (int p = 0; p < input.cols(); p++) {
+		output(0, p) = pfunctional(
+			input.data() + p*input.rows(),
+			input.rows(),
 			pfunctional_arguments);
 	}
 

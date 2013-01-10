@@ -231,7 +231,7 @@ int main(int argc, char **argv)
 		if (vm.count("verbose"))
 			std::cerr << " " << tfunctional_names[t] << "..." << std::flush;
 		Profiler tprofiler;
-		Eigen::MatrixXd _sinogram = getTraceTransform(
+		Eigen::MatrixXd sinogram = getTraceTransform(
 			input_padded,
 			ANGLE_INTERVAL,		// angle resolution
 			DISTANCE_INTERVAL,	// distance resolution
@@ -245,19 +245,18 @@ int main(int argc, char **argv)
 			// Save the sinogram image
 			std::stringstream fn_trace_image;
 			fn_trace_image << "trace_" << tfunctional_names[t] << ".pgm";
-			pgmWrite(fn_trace_image.str(), mat2gray(_sinogram));
+			pgmWrite(fn_trace_image.str(), mat2gray(sinogram));
 
 			// Save the sinogram data
 			std::stringstream fn_trace_data;
 			fn_trace_data << "trace_" << tfunctional_names[t] << ".dat";
-			dataWrite(fn_trace_data.str(), _sinogram);
+			dataWrite(fn_trace_data.str(), sinogram);
 		}
 
 		// Hermite functionals require the nearest orthonormal sinogram
 		unsigned int sinogram_center;
 		if (vm.count("h-functional") > 0)
-			_sinogram = nearest_orthonormal_sinogram(_sinogram, sinogram_center);
-		cv::Mat sinogram = eigen2opencv(_sinogram);
+			sinogram = nearest_orthonormalsinogram(sinogram, sinogram_center);
 
 		// Process all P-functionals
 		for (size_t p = 0; p < pfunctionals.size(); p++) {
@@ -269,12 +268,13 @@ int main(int argc, char **argv)
 			if (vm.count("verbose"))
 				std::cerr << " " << pfunctional_names[p] << "..." << std::flush;
 			Profiler pprofiler;
-			cv::Mat circus = getCircusFunction(
+			Eigen::MatrixXd _circus = getCircusFunction(
 				sinogram,
 				pfunctionals[p],
 				pfunctional_arguments[p]
 			);
 			pprofiler.stop();
+			cv::Mat circus = eigen2opencv(_circus);
 			pfunctional_runtimes[p] += pprofiler.elapsed();
 
 			// Normalize
