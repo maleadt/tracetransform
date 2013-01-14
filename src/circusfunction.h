@@ -6,15 +6,16 @@
 #ifndef CIRCUSFUNCTION_H
 #define CIRCUSFUNCTION_H
 
-// System includes
+// Standard library
 #include <limits>
 
-// Library includes
+// Eigen
 #include <Eigen/Dense>
 #include <Eigen/SVD>
 
 // Local includes
 #include "auxiliary.h"
+#include "wrapper.h"
 extern "C" {
 	#include "functionals.h"
 }
@@ -63,18 +64,16 @@ Eigen::MatrixXd nearest_orthonormal_sinogram(
 
 Eigen::VectorXd getCircusFunction(
 	const Eigen::MatrixXd &input,
-	Functional pfunctional,
-	void* pfunctional_arguments)
+	FunctionalWrapper *pfunctional)
 {
 	// Allocate the output matrix
 	Eigen::VectorXd output(input.cols());
 
 	// Trace all columns
 	for (int p = 0; p < input.cols(); p++) {
-		output(p) = pfunctional(
+		output(p) = (*pfunctional)(
 			input.data() + p*input.rows(),
-			input.rows(),
-			pfunctional_arguments);
+			input.rows());
 	}
 
 	return output;

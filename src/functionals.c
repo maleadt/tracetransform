@@ -81,7 +81,7 @@ double hermite_function(unsigned int order, double x) {
 //
 
 // T-functional for the Radon transform.
-double TFunctionalRadon(const double* data, const size_t length, const void* arguments)
+double TFunctionalRadon(const double* data, const size_t length)
 {
 	double integral = 0;
 	for (size_t t = 0; t < length; t++)
@@ -89,7 +89,7 @@ double TFunctionalRadon(const double* data, const size_t length, const void* arg
 	return integral;		
 }
 
-double TFunctional1(const double* data, const size_t length, const void* arguments)
+double TFunctional1(const double* data, const size_t length)
 {
 	// Transform the domain from t to r
 	size_t median = findWeighedMedian(data, length);
@@ -101,7 +101,7 @@ double TFunctional1(const double* data, const size_t length, const void* argumen
 	return integral;		
 }
 
-double TFunctional2(const double* data, const size_t length, const void* arguments)
+double TFunctional2(const double* data, const size_t length)
 {
 	// Transform the domain from t to r
 	size_t median = findWeighedMedian(data, length);
@@ -113,7 +113,7 @@ double TFunctional2(const double* data, const size_t length, const void* argumen
 	return integral;		
 }
 
-double TFunctional3(const double* data, const size_t length, const void* arguments)
+double TFunctional3(const double* data, const size_t length)
 {
 	// Transform the domain from t to r1
 	size_t squaredmedian = findWeighedMedianSqrt(data, length);
@@ -130,7 +130,7 @@ double TFunctional3(const double* data, const size_t length, const void* argumen
 	return cabs(integral);
 }
 
-double TFunctional4(const double* data, const size_t length, const void* arguments)
+double TFunctional4(const double* data, const size_t length)
 {
 	// Transform the domain from t to r1
 	size_t squaredmedian = findWeighedMedianSqrt(data, length);
@@ -146,7 +146,7 @@ double TFunctional4(const double* data, const size_t length, const void* argumen
 	return cabs(integral);
 }
 
-double TFunctional5(const double* data, const size_t length, const void* arguments)
+double TFunctional5(const double* data, const size_t length)
 {
 	// Transform the domain from t to r1
 	size_t squaredmedian = findWeighedMedianSqrt(data, length);
@@ -167,7 +167,7 @@ double TFunctional5(const double* data, const size_t length, const void* argumen
 // P-functionals
 //
 
-double PFunctional1(const double* data, const size_t length, const void* arguments)
+double PFunctional1(const double* data, const size_t length)
 {
 	double sum = 0;
 	double previous = data[0];
@@ -179,13 +179,13 @@ double PFunctional1(const double* data, const size_t length, const void* argumen
 	return sum;
 }
 
-double PFunctional2(const double* data, const size_t length, const void* arguments)
+double PFunctional2(const double* data, const size_t length)
 {
 	size_t median = findWeighedMedian(data, length);
 	return data[median];
 }
 
-double PFunctional3(const double* data, const size_t length, const void* arguments)
+double PFunctional3(const double* data, const size_t length)
 {
 	// Calculate the Fourier transform
 	double complex *fourier = (double complex *) malloc(length * sizeof(double complex));
@@ -208,20 +208,17 @@ double PFunctional3(const double* data, const size_t length, const void* argumen
 	return sum;
 }
 
-double PFunctionalHermite(const double* data, const size_t length, const void* _arguments)
+double PFunctionalHermite(const double* data, const size_t length, unsigned int order, unsigned int center)
 {
-	// Unpack the arguments
-	struct ArgumentsHermite *arguments = (struct ArgumentsHermite*) _arguments;
-
 	// Discretize the [-10, 10] domain to fit the column iterator
 	double z = -10;
-	double stepsize_lower = 10.0 / arguments->center;
-	double stepsize_upper = 10.0 / (length - 1 - arguments->center);
+	double stepsize_lower = 10.0 / center;
+	double stepsize_upper = 10.0 / (length - 1 - center);
 
 	// Calculate the integral
 	double integral = 0;
 	for (size_t p = 0; p < length; p++) {
-		integral += data[p] * hermite_function(arguments->order, z);
+		integral += data[p] * hermite_function(order, z);
 		if (z < 0)
 			z += stepsize_lower;
 		else

@@ -6,11 +6,14 @@
 #ifndef TRACETRANSFORM_H
 #define TRACETRANSFORM_H
 
-// System includes
+// Standard library
 #include <limits>
 
-// Library includes
+// Eigen
 #include <Eigen/Dense>
+
+// Local includes
+#include "wrapper.h"
 
 
 //
@@ -21,8 +24,7 @@ Eigen::MatrixXd getTraceTransform(
 	const Eigen::MatrixXd &input,
 	const double a_stepsize,
 	const double p_stepsize,
-	Functional tfunctional,
-	void *tfunctional_arguments)
+	FunctionalWrapper *tfunctional)
 {
 	assert(a_stepsize > 0);
 	assert(p_stepsize > 0);
@@ -47,10 +49,9 @@ Eigen::MatrixXd getTraceTransform(
 			output(
 				(signed) p_step,	// row
 				(signed) a_step		// column
-			) = tfunctional(
+			) = (*tfunctional)(
 				input_rotated.data() + ((int) p_stepsize*p_step) * input.rows(),
-				input.rows(),
-				tfunctional_arguments);
+				input.rows());
 		}
 	}
 

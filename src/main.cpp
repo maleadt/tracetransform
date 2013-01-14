@@ -11,9 +11,13 @@
 #include <ctime>
 #include <fstream>
 #include <sys/stat.h>
-#include <boost/program_options.hpp>
 
-// Library includes
+// Boost
+#include <boost/program_options.hpp>
+#include <boost/optional.hpp>
+#include <boost/format.hpp>
+
+// Eigen
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 
@@ -22,15 +26,13 @@
 extern "C" {
 	#include "functionals.h"
 }
+#include "wrapper.h"
 #include "tracetransform.h"
 #include "circusfunction.h"
 
 // Algorithm parameters
 #define ANGLE_INTERVAL		1
 #define DISTANCE_INTERVAL	1
-
-// Namespaces
-namespace po = boost::program_options;
 
 
 //
@@ -62,128 +64,166 @@ struct Profiler
 // Main
 //
 
-enum PFunctionalType {
-       REGULAR,
-       HERMITE
+struct TFunctional {
+	std::string name;
+	FunctionalWrapper *wrapper;
 };
+
+typedef std::vector<TFunctional> TFunctionalList;
+
+void validate(boost::any &v, const std::vector<std::string> &values,
+              TFunctionalList*, int)
+{
+	using namespace boost::program_options;
+	TFunctional tfunctional;
+
+    // Parse functional selector.
+    if (values.size() == 0)
+        throw boost::program_options::validation_error(validation_error::invalid_option_value, "No T-functional specified");
+    std::string functional = values.at(0);
+    if (functional == "0") {
+    	tfunctional.name = "T0";
+    	tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctionalRadon);
+	} else if (functional == "1") {
+    	tfunctional.name = "T1";
+    	tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctional1);
+	} else if (functional == "2") {
+    	tfunctional.name = "T2";
+    	tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctional2);
+	} else if (functional == "3") {
+    	tfunctional.name = "T3";
+    	tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctional3);
+	} else if (functional == "4") {
+    	tfunctional.name = "T4";
+    	tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctional4);
+	} else if (functional == "5") {
+    	tfunctional.name = "T5";
+    	tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctional5);
+	} else {
+		throw boost::program_options::validation_error(validation_error::invalid_option_value, "Unknown T-functional");
+	}
+
+	boost::any_cast<TFunctionalList>(v).push_back(tfunctional);
+}
+
+struct PFunctional {
+	std::string name;
+	FunctionalWrapper *wrapper;
+
+	bool orthonormal;
+};
+
+typedef std::vector<PFunctional> PFunctionalList;
+
+void validate(boost::any &v, const std::vector<std::string> &values,
+              PFunctionalList*, int)
+{
+	using namespace boost::program_options;
+	PFunctional pfunctional;
+
+    // Parse functional selector.
+    if (values.size() == 0)
+        throw boost::program_options::validation_error(validation_error::invalid_option_value, "No P-functional specified");
+	std::string functional = values.at(0);
+	if (functional == "1") {
+    	pfunctional.name = "P1";
+    	pfunctional.wrapper = new SimpleFunctionalWrapper(PFunctional1);
+    	pfunctional.orthonormal = false;
+	} else if (functional == "2") {
+    	pfunctional.name = "P2";
+    	pfunctional.wrapper = new SimpleFunctionalWrapper(PFunctional2);
+    	pfunctional.orthonormal = false;
+	} else if (functional == "3") {
+    	pfunctional.name = "P3";
+    	pfunctional.wrapper = new SimpleFunctionalWrapper(PFunctional3);
+    	pfunctional.orthonormal = false;
+	} else if (functional == "H") {
+		unsigned int order;
+		if (values.size() < 2)
+	        throw boost::program_options::validation_error(
+	        	validation_error::invalid_option_value,
+	        	"Missing order parameter for Hermite P-functional");
+    	try {
+        	order = boost::lexical_cast<unsigned int>(values.at(1));
+	    }
+	    catch(boost::bad_lexical_cast &) {
+	        throw boost::program_options::validation_error(
+	        	validation_error::invalid_option_value,
+	        	"Unparseable order parameter for Hermite P-functional");
+	    }
+
+		pfunctional.name = boost::str(boost::format("H%d") % order);
+		pfunctional.wrapper = new HermiteFunctionalWrapper(PFunctionalHermite, order);
+    	pfunctional.orthonormal = true;
+	} else {
+    		throw boost::program_options::validation_error(validation_error::invalid_option_value, "Unknown P-functional");
+	}
+
+	boost::any_cast<PFunctionalList>(v).push_back(pfunctional);
+}
 
 int main(int argc, char **argv)
 {
+	//
+	// Initialization
+	//
+	
+	using namespace boost::program_options;
+	
+	// List of functionals
+	TFunctionalList tfunctionals;
+	PFunctionalList pfunctionals;
+
 	// Declare named options
-	po::options_description desc("Allowed options");
+	options_description desc("Allowed options");
 	desc.add_options()
 	    ("help", "produce help message")
 	    ("debug", "write debug images and data while calculating")
 	    ("verbose", "display some more details")
 	    ("profile", "profile the different steps of the algorithm")
-	    ("image,I", po::value<std::string>(), "image to process")
-	    ("t-functional,T", po::value<std::vector<unsigned int>>(), "T-functionals")
-	    ("p-functional,P", po::value<std::vector<unsigned int>>(), "P-functionals")
-	    ("h-functional,H", po::value<std::vector<unsigned int>>(), "Hermite P-functionals")
+	    ("image,I", value<std::string>(), "image to process")
+	    ("t-functional,T", value<TFunctionalList>(&tfunctionals)->multitoken(), "T-functionals")
+	    ("p-functional,P", value<PFunctionalList>(&pfunctionals)->multitoken(), "P-functionals")
 	;
 
 	// Declare positional options
-	po::positional_options_description pod;
+	positional_options_description pod;
 	pod.add("image", -1);
 
-	po::variables_map vm;
-	po::store(po::command_line_parser(argc, argv).
+	variables_map vm;
+	store(command_line_parser(argc, argv).
 	          options(desc).positional(pod).run(), vm);
-	po::notify(vm);  
+	notify(vm);  
 
 	if (vm.count("help")) {
 		std::cout << desc << std::endl;
 		return 1;
 	}
 
-	// Get the chosen T-functionals
-	std::vector<Functional> tfunctionals;
-	std::vector<void*> tfunctional_arguments;
-	std::vector<std::string> tfunctional_names;
-	if (vm.count("t-functional") == 0) {
-		std::cerr << "Error: specify at least 1 T-functional" << std::endl;
-		std::cout << desc << std::endl;
-		return 0;
+	// Check for orthonormal P-functionals
+	size_t orthonormal_count = 0;
+	for (size_t p = 0; p < pfunctionals.size(); p++) {
+		if (pfunctionals[p].orthonormal)
+			orthonormal_count++;
 	}
-	for (unsigned int functional : vm["t-functional"].as<std::vector<unsigned int>>()) {
-		std::stringstream name;
-		switch (functional) {
-		case 0:
-			tfunctionals.push_back(TFunctionalRadon);
-			tfunctional_arguments.push_back(nullptr);
-			break;
-		case 1:
-			tfunctionals.push_back(TFunctional1);
-			tfunctional_arguments.push_back(nullptr);
-			break;
-		case 2:
-			tfunctionals.push_back(TFunctional2);
-			tfunctional_arguments.push_back(nullptr);
-			break;
-		case 3:
-			tfunctionals.push_back(TFunctional3);
-			tfunctional_arguments.push_back(nullptr);
-			break;
-		case 4:
-			tfunctionals.push_back(TFunctional4);
-			tfunctional_arguments.push_back(nullptr);
-			break;
-		case 5:
-			tfunctionals.push_back(TFunctional5);
-			tfunctional_arguments.push_back(nullptr);
-			break;
-		default:
-			std::cerr << "Error: invalid T-functional provided" << std::endl;
-			return 1;
-		}
-		name << "T" << functional;
-		tfunctional_names.push_back(name.str());
-	}
+	bool orthonormal;
+	if (orthonormal_count == 0)
+		orthonormal = false;
+	if (orthonormal_count == pfunctionals.size())
+		orthonormal = true;
+	else
+		throw boost::program_options::validation_error(
+			validation_error::invalid_option_value,
+			"Cannot mix regular and orthonormal P-functionals"); 
+	
 
-	// Get the chosen P-functional
-	std::vector<Functional> pfunctionals;
-	std::vector<void*> pfunctional_arguments;
-	std::vector<std::string> pfunctional_names;
-	if (vm.count("p-functional") > 0 && vm.count("h-functional") > 0) {
-		std::cerr << "Error: cannot mix orthonormal and regular P-functionals" << std::endl;
-		return 1;
-	}
-	if (vm.count("p-functional") > 0) {
-		for (unsigned int functional : vm["p-functional"].as<std::vector<unsigned int>>()) {
-			std::stringstream name;
-			switch (functional) {
-			case 1:
-				pfunctionals.push_back(PFunctional1);
-				pfunctional_arguments.push_back(nullptr);
-				break;
-			case 2:
-				pfunctionals.push_back(PFunctional2);
-				pfunctional_arguments.push_back(nullptr);
-				break;
-			case 3:
-				pfunctionals.push_back(PFunctional3);
-				pfunctional_arguments.push_back(nullptr);
-				break;
-			default:
-				std::cerr << "Error: invalid P-functional provided" << std::endl;
-				return 1;
-			}
-			name << "P" << functional;
-			pfunctional_names.push_back(name.str());
-		}
-	}
-	if (vm.count("h-functional") > 0) {
-		for (unsigned int functional : vm["h-functional"].as<std::vector<unsigned int>>()) {
-			std::stringstream name;
-			pfunctionals.push_back(PFunctionalHermite);
-			pfunctional_arguments.push_back(new ArgumentsHermite{functional, 0});
-			name << "H" << functional;
-			pfunctional_names.push_back(name.str());
-		}
-	}
-
+	//
+	// Main
+	//
+	
 	// Read the image
 	if (vm.count("image") == 0) {
+		// TODO: use Boost::po::->set_required
 		std::cerr << "Error: no image specified" << std::endl;
 		std::cout << desc << std::endl;
 		return 0;
@@ -193,7 +233,7 @@ int main(int argc, char **argv)
 
 	// Orthonormal P-functionals need a stretched image in order to ensure
 	// a square sinogram
-	if (vm.count("h-functional") > 0) {
+	if (orthonormal) {
 		int ndiag = (int) std::ceil(360.0/ANGLE_INTERVAL);
 		int size = (int) std::ceil(ndiag/std::sqrt(2));
 		input = resize(input, size, size);
@@ -220,7 +260,7 @@ int main(int argc, char **argv)
 	std::vector<double> pfunctional_runtimes(pfunctionals.size(), 0);
 
 	// Allocate a matrix for all output data to reside in
-	Eigen::MatrixXd output (360 / ANGLE_INTERVAL, tfunctionals.size()*pfunctionals.size());
+	Eigen::MatrixXd output(360 / ANGLE_INTERVAL, tfunctionals.size()*pfunctionals.size());
 
 	// Process all T-functionals
 	Profiler mainprofiler;
@@ -229,14 +269,13 @@ int main(int argc, char **argv)
 	for (size_t t = 0; t < tfunctionals.size(); t++) {
 		// Calculate the trace transform sinogram
 		if (vm.count("verbose"))
-			std::cerr << " " << tfunctional_names[t] << "..." << std::flush;
+			std::cerr << " " << tfunctionals[t].name << "..." << std::flush;
 		Profiler tprofiler;
 		Eigen::MatrixXd sinogram = getTraceTransform(
 			input_padded,
-			ANGLE_INTERVAL,		// angle resolution
-			DISTANCE_INTERVAL,	// distance resolution
-			tfunctionals[t],
-			tfunctional_arguments[t]
+			ANGLE_INTERVAL,
+			DISTANCE_INTERVAL,
+			tfunctionals[t].wrapper
 		);
 		tprofiler.stop();
 		tfunctional_runtimes[t] = tprofiler.elapsed();
@@ -244,34 +283,35 @@ int main(int argc, char **argv)
 		if (vm.count("debug") || pfunctionals.size() == 0) {
 			// Save the sinogram image
 			std::stringstream fn_trace_image;
-			fn_trace_image << "trace_" << tfunctional_names[t] << ".pgm";
+			fn_trace_image << "trace_" << tfunctionals[t].name << ".pgm";
 			pgmWrite(fn_trace_image.str(), mat2gray(sinogram));
 
 			// Save the sinogram data
 			std::stringstream fn_trace_data;
-			fn_trace_data << "trace_" << tfunctional_names[t] << ".dat";
+			fn_trace_data << "trace_" << tfunctionals[t].name << ".dat";
 			dataWrite(fn_trace_data.str(), sinogram);
 		}
 
-		// Hermite functionals require the nearest orthonormal sinogram
+		// Orthonormal functionals require the nearest orthonormal sinogram
 		unsigned int sinogram_center;
-		if (vm.count("h-functional") > 0)
+		if (orthonormal)
 			sinogram = nearest_orthonormal_sinogram(sinogram, sinogram_center);
 
 		// Process all P-functionals
 		for (size_t p = 0; p < pfunctionals.size(); p++) {
 			// Extra parameters to functional
-			if (vm.count("h-functional") > 0)
-				((ArgumentsHermite*)pfunctional_arguments[p])->center = sinogram_center;
+			// TODO std::bind
+			if (orthonormal)
+				dynamic_cast<HermiteFunctionalWrapper*>(pfunctionals[p].wrapper)
+					->center(sinogram_center);
 
 			// Calculate the circus function
 			if (vm.count("verbose"))
-				std::cerr << " " << pfunctional_names[p] << "..." << std::flush;
+				std::cerr << " " << pfunctionals[p].name << "..." << std::flush;
 			Profiler pprofiler;
 			Eigen::VectorXd circus = getCircusFunction(
 				sinogram,
-				pfunctionals[p],
-				pfunctional_arguments[p]
+				pfunctionals[p].wrapper
 			);
 			pprofiler.stop();
 			pfunctional_runtimes[p] += pprofiler.elapsed();
@@ -293,11 +333,11 @@ int main(int argc, char **argv)
 		std::cerr << "t(total) = " << mainprofiler.elapsed()
 			<< " s" << std::endl;
 		for (size_t t = 0; t < tfunctionals.size(); t++) {
-			std::cerr << "t(" << tfunctional_names[t] << ") = "
+			std::cerr << "t(" << tfunctionals[t].name << ") = "
 				<< tfunctional_runtimes[t] << " s\n";
 		}
 		for (size_t p = 0; p < pfunctionals.size(); p++) {
-			std::cerr << "t(" << pfunctional_names[p] << ") = "
+			std::cerr << "t(" << pfunctionals[p].name << ") = "
 				<< pfunctional_runtimes[p] / tfunctionals.size() << " s\n";
 		}
 	}
@@ -309,8 +349,8 @@ int main(int argc, char **argv)
 			size_t t = tp / (unsigned) pfunctionals.size();
 			size_t p = tp % (unsigned) pfunctionals.size();
 			std::stringstream header;
-			header << tfunctional_names[t] << "-"
-				<< pfunctional_names[p];
+			header << tfunctionals[t].name << "-"
+				<< pfunctionals[p].name;
 			headers.push_back(header.str());
 		}
 		dataWrite("circus.dat", output, headers);
