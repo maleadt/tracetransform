@@ -10,6 +10,7 @@
 
 // Local includes
 #include "auxiliary.h"
+#include "wrapper.h"
 extern "C" {
 	#include "functionals.h"
 }
@@ -103,10 +104,11 @@ int main() {
 	// MATLAB: [Circus NOS] = Apply_Pfunct(data, 5, 1)
 
 	std::cout << "Output of circus functions after Hermite P-functional (2nd order):" << std::endl;
+	auto *wrapper = new GenericFunctionalWrapper<unsigned int, unsigned int>(PFunctionalHermite);
+	wrapper->configure(2, center);
 	Eigen::MatrixXd circus = getCircusFunction(
 		sinogram,
-		PFunctionalHermite,
-		new ArgumentsHermite{2, 2}
+		wrapper
 	);
 
 	for (int i = 0; i < circus.rows(); i++) {
