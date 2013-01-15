@@ -9,9 +9,6 @@
 // System includes
 #include <string.h>
 
-// Typedefs
-typedef double(*Functional)(const double*, const size_t);
-
 
 //
 // Routines
