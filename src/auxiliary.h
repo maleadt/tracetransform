@@ -6,13 +6,13 @@
 #ifndef AUXILIARY_H
 #define AUXILIARY_H
 
-// System includes
+// Standard library
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
 
-// Library includes
+// Eigen
 #include <Eigen/Dense>
 
 

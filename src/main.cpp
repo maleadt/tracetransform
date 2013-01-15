@@ -8,7 +8,6 @@
 #include <string>
 #include <sstream>
 #include <vector>
-#include <ctime>
 #include <fstream>
 #include <sys/stat.h>
 
@@ -33,31 +32,6 @@ extern "C" {
 // Algorithm parameters
 #define ANGLE_INTERVAL		1
 #define DISTANCE_INTERVAL	1
-
-
-//
-// Auxiliary
-//
-
-struct Profiler
-{
-	Profiler()
-	{
-		t1 = clock();
-	}
-
-	void stop()
-	{
-		t2 = clock();		
-	}
-
-	double elapsed()
-	{
-		return (double)(t2-t1)/CLOCKS_PER_SEC;
-	}
-
-	time_t t1, t2;
-};
 
 
 //
@@ -175,13 +149,13 @@ int main(int argc, char **argv)
 	    	"write debug images and data while calculating")
 	    ("verbose",
 	    	"display some more details")
-	    ("profile",
-	    	"profile the different steps of the algorithm")
 	    ("image,I",
-	    	boost::program_options::value<std::string>()->required(),
+	    	boost::program_options::value<std::string>()
+	    		->required(),
 	    	"image to process")
 	    ("tfunctional,T",
-	    	boost::program_options::value<std::vector<TFunctional>>(&tfunctionals),
+	    	boost::program_options::value<std::vector<TFunctional>>(&tfunctionals)
+	    		->required(),
 	    	"T-functionals")
 	    ("pfunctional,P",
 	    	boost::program_options::value<std::vector<PFunctional>>(&pfunctionals),
@@ -191,6 +165,7 @@ int main(int argc, char **argv)
 	// Declare positional options
 	boost::program_options::positional_options_description pod;
 	pod.add("image", -1);
+
     // Parse the options
     boost::program_options::variables_map vm;
     try {
@@ -246,8 +221,8 @@ int main(int argc, char **argv)
 	Eigen::MatrixXd input = pgmRead(vm["image"].as<std::string>());
 	input = gray2mat(input);
 
-	// Orthonormal P-functionals need a stretched image in order to ensure
-	// a square sinogram
+	// Orthonormal P-functionals need a stretched image in order to ensure a
+	// square sinogram
 	if (orthonormal) {
 		int ndiag = (int) std::ceil(360.0/ANGLE_INTERVAL);
 		int size = (int) std::ceil(ndiag/std::sqrt(2));
@@ -255,45 +230,44 @@ int main(int argc, char **argv)
 	}
 
 	// Pad the image so we can freely rotate without losing information
-	Point origin(std::floor((input.cols()-1)/2.0), std::floor((input.rows()-1)/2.0));
+	Point origin(
+		std::floor((input.cols() - 1) / 2.0),
+		std::floor((input.rows() - 1) / 2.0));
 	int rLast = (int) std::ceil(std::hypot(
 		input.cols() - 1- origin.x(),
 		input.rows() - 1 - origin.y()));
 	int rFirst = -rLast;
 	int nBins = rLast - rFirst + 1;
 	Eigen::MatrixXd input_padded = Eigen::MatrixXd::Zero(nBins, nBins);
-	Point origin_padded(std::floor((input_padded.cols() - 1)/2.0), std::floor((input_padded.rows()-1)/2.0));
+	Point origin_padded(
+		std::floor((input_padded.cols() - 1) / 2.0),
+		std::floor((input_padded.rows() - 1) / 2.0));
 	Point df = origin_padded - origin;
 	for (int col = 0; col < input.cols(); col++) {
 		for (int row = 0; row < input.rows(); row++) {
-			input_padded(row + (int) df.y(), col + (int) df.x()) = input(row, col);
+			input_padded(row + (int) df.y(), col + (int) df.x())
+				= input(row, col);
 		}
 	}
 
-	// Save profiling data
-	std::vector<double> tfunctional_runtimes(tfunctionals.size());
-	std::vector<double> pfunctional_runtimes(pfunctionals.size(), 0);
-
 	// Allocate a matrix for all output data to reside in
-	Eigen::MatrixXd output(360 / ANGLE_INTERVAL, tfunctionals.size()*pfunctionals.size());
+	Eigen::MatrixXd output(
+		360 / ANGLE_INTERVAL,
+		tfunctionals.size() * pfunctionals.size());
 
 	// Process all T-functionals
-	Profiler mainprofiler;
 	if (vm.count("verbose"))
 		std::cerr << "Calculating";
 	for (size_t t = 0; t < tfunctionals.size(); t++) {
 		// Calculate the trace transform sinogram
 		if (vm.count("verbose"))
 			std::cerr << " " << tfunctionals[t].name << "..." << std::flush;
-		Profiler tprofiler;
 		Eigen::MatrixXd sinogram = getTraceTransform(
 			input_padded,
 			ANGLE_INTERVAL,
 			DISTANCE_INTERVAL,
 			tfunctionals[t].wrapper
 		);
-		tprofiler.stop();
-		tfunctional_runtimes[t] = tprofiler.elapsed();
 
 		if (vm.count("debug") || pfunctionals.size() == 0) {
 			// Save the sinogram image
@@ -314,21 +288,19 @@ int main(int argc, char **argv)
 
 		// Process all P-functionals
 		for (size_t p = 0; p < pfunctionals.size(); p++) {
-			// Extra parameters to functional
+			// Configure any extra parameters
 			if (pfunctionals[p].type == PFunctional::HERMITE)
-				dynamic_cast<GenericFunctionalWrapper<unsigned int, unsigned int>*>(pfunctionals[p].wrapper)
+				dynamic_cast<GenericFunctionalWrapper<unsigned int, unsigned int>*>
+					(pfunctionals[p].wrapper)
 					->configure(*pfunctionals[p].order, sinogram_center);
 
 			// Calculate the circus function
 			if (vm.count("verbose"))
 				std::cerr << " " << pfunctionals[p].name << "..." << std::flush;
-			Profiler pprofiler;
 			Eigen::VectorXd circus = getCircusFunction(
 				sinogram,
 				pfunctionals[p].wrapper
 			);
-			pprofiler.stop();
-			pfunctional_runtimes[p] += pprofiler.elapsed();
 
 			// Normalize
 			Eigen::VectorXd normalized = zscore(circus);
@@ -340,21 +312,6 @@ int main(int argc, char **argv)
 	}
 	if (vm.count("verbose"))
 		std::cerr << "\n";
-	mainprofiler.stop();
-
-	// Print runtime measurements	
-	if (vm.count("profile")) {
-		std::cerr << "t(total) = " << mainprofiler.elapsed()
-			<< " s" << std::endl;
-		for (size_t t = 0; t < tfunctionals.size(); t++) {
-			std::cerr << "t(" << tfunctionals[t].name << ") = "
-				<< tfunctional_runtimes[t] << " s\n";
-		}
-		for (size_t p = 0; p < pfunctionals.size(); p++) {
-			std::cerr << "t(" << pfunctionals[p].name << ") = "
-				<< pfunctional_runtimes[p] / tfunctionals.size() << " s\n";
-		}
-	}
 
 	// Save the output data
 	if (pfunctionals.size() > 0) {		

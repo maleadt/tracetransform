@@ -6,7 +6,7 @@
 #ifndef FUNCTIONALS_H
 #define FUNCTIONALS_H
 
-// System includes
+// Standard library
 #include <string.h>
 
 
