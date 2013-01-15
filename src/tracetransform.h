@@ -17,7 +17,7 @@
 
 
 //
-// Routines
+// Module definitions
 //
 
 Eigen::MatrixXd getTraceTransform(

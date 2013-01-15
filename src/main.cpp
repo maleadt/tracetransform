@@ -112,11 +112,18 @@ void validate(boost::any &v, const std::vector<std::string> &values,
 	}
 }
 
-struct PFunctional {
+struct PFunctional
+{
+	enum
+	{
+		REGULAR,
+		HERMITE
+	} type;
+
 	std::string name;
 	FunctionalWrapper *wrapper;
 
-	bool orthonormal;
+	unsigned int order;
 };
 
 typedef std::vector<PFunctional> PFunctionalList;
@@ -134,15 +141,15 @@ void validate(boost::any &v, const std::vector<std::string> &values,
 	if (functional == "1") {
     	pfunctional.name = "P1";
     	pfunctional.wrapper = new SimpleFunctionalWrapper(PFunctional1);
-    	pfunctional.orthonormal = false;
+    	pfunctional.type = PFunctional::REGULAR;
 	} else if (functional == "2") {
     	pfunctional.name = "P2";
     	pfunctional.wrapper = new SimpleFunctionalWrapper(PFunctional2);
-    	pfunctional.orthonormal = false;
+    	pfunctional.type = PFunctional::REGULAR;
 	} else if (functional == "3") {
     	pfunctional.name = "P3";
     	pfunctional.wrapper = new SimpleFunctionalWrapper(PFunctional3);
-    	pfunctional.orthonormal = false;
+    	pfunctional.type = PFunctional::REGULAR;
 	} else if (functional == "H") {
 		unsigned int order;
 		if (values.size() < 2)
@@ -159,8 +166,9 @@ void validate(boost::any &v, const std::vector<std::string> &values,
 	    }
 
 		pfunctional.name = boost::str(boost::format("H%d") % order);
-		pfunctional.wrapper = new HermiteFunctionalWrapper(PFunctionalHermite, order);
-    	pfunctional.orthonormal = true;
+		pfunctional.wrapper = new GenericFunctionalWrapper<unsigned int, unsigned int>(PFunctionalHermite);
+		pfunctional.order = order;
+    	pfunctional.type = PFunctional::HERMITE;
 	} else {
     		throw boost::program_options::validation_error(validation_error::invalid_option_value, "Unknown P-functional");
 	}
@@ -215,7 +223,7 @@ int main(int argc, char **argv)
 	// Check for orthonormal P-functionals
 	size_t orthonormal_count = 0;
 	for (size_t p = 0; p < pfunctionals.size(); p++) {
-		if (pfunctionals[p].orthonormal)
+		if (pfunctionals[p].type == PFunctional::HERMITE)
 			orthonormal_count++;
 	}
 	bool orthonormal;
@@ -230,7 +238,7 @@ int main(int argc, char **argv)
 	
 
 	//
-	// Main
+	// Image processing
 	//
 	
 	// Read the image
@@ -312,10 +320,9 @@ int main(int argc, char **argv)
 		// Process all P-functionals
 		for (size_t p = 0; p < pfunctionals.size(); p++) {
 			// Extra parameters to functional
-			// TODO std::bind
-			if (orthonormal)
-				dynamic_cast<HermiteFunctionalWrapper*>(pfunctionals[p].wrapper)
-					->center(sinogram_center);
+			if (pfunctionals[p].type == PFunctional::HERMITE)
+				dynamic_cast<GenericFunctionalWrapper<unsigned int, unsigned int>*>(pfunctionals[p].wrapper)
+					->configure(pfunctionals[p].order, sinogram_center);
 
 			// Calculate the circus function
 			if (vm.count("verbose"))

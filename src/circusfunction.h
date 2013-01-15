@@ -22,7 +22,7 @@ extern "C" {
 
 
 //
-// Routines
+// Module definitions
 //
 
 Eigen::MatrixXd nearest_orthonormal_sinogram(

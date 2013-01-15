@@ -6,8 +6,12 @@
 #ifndef WRAPPER_H
 #define WRAPPER_H
 
-// TODO: implement using variadic templates
 
+//
+// Module definitions
+//
+
+// Wrapper interface
 class FunctionalWrapper {
 public:
     FunctionalWrapper()
@@ -18,6 +22,7 @@ public:
     virtual double operator()(const double* data, const size_t length) const = 0;
 };
 
+// Simple wrapper without any additional arguments
 class SimpleFunctionalWrapper : public FunctionalWrapper {
 public:
     SimpleFunctionalWrapper(std::function<double(const double*, const size_t)> function)
@@ -33,27 +38,29 @@ private:
     std::function<double(const double*, const size_t)> _function;
 };
 
-class HermiteFunctionalWrapper : public FunctionalWrapper {
+// Generic wrapper implementation using variadic templates
+template<typename... Parameters>
+class GenericFunctionalWrapper : public FunctionalWrapper
+{
 public:
-    HermiteFunctionalWrapper(std::function<double(const double*, const size_t, unsigned int, unsigned int)> function, unsigned int order)
-        : FunctionalWrapper(), _function(function), _order(order)
+    GenericFunctionalWrapper(std::function<double(const double*, const size_t, Parameters...)> functional)
+        : FunctionalWrapper(), _functional(functional)
     { }
 
-    void center(unsigned int center)
+    // TODO: allow partial configuration
+    void configure(Parameters... parameters)
     {
-        _center = center;
+        _reduced_functional = std::bind(_functional, std::placeholders::_1, std::placeholders::_2, parameters...);
     }
 
     double operator()(const double* data, const size_t length) const
     {
-        return _function(data, length, _order, _center);
+        return _reduced_functional(data, length);
     }
 
 private:
-    std::function<double(const double*, const size_t, unsigned int, unsigned int)> _function;
-
-    unsigned int _order;
-    unsigned int _center;
+    std::function<double(const double*, const size_t, Parameters...)> _functional;
+    std::function<double(const double*, const size_t)> _reduced_functional;
 };
 
 #endif
