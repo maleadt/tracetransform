@@ -69,47 +69,34 @@ struct TFunctional {
 	FunctionalWrapper *wrapper;
 };
 
-typedef std::vector<TFunctional> TFunctionalList;
-
-void validate(boost::any &v, const std::vector<std::string> &values,
-              TFunctionalList*, int)
+std::istream& operator>>(std::istream& in, TFunctional& tfunctional)
 {
-	using namespace boost::program_options;
-	TFunctional tfunctional;
-
-    // Parse functional selector.
-    if (values.size() == 0)
-        throw boost::program_options::validation_error(validation_error::invalid_option_value, "No T-functional specified");
-    std::string functional = values.at(0);
-    if (functional == "0") {
+    std::string token;
+    in >> token;
+    if (token == "0") {
     	tfunctional.name = "T0";
     	tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctionalRadon);
-	} else if (functional == "1") {
+	} else if (token == "1") {
     	tfunctional.name = "T1";
     	tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctional1);
-	} else if (functional == "2") {
+	} else if (token == "2") {
     	tfunctional.name = "T2";
     	tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctional2);
-	} else if (functional == "3") {
+	} else if (token == "3") {
     	tfunctional.name = "T3";
     	tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctional3);
-	} else if (functional == "4") {
+	} else if (token == "4") {
     	tfunctional.name = "T4";
     	tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctional4);
-	} else if (functional == "5") {
+	} else if (token == "5") {
     	tfunctional.name = "T5";
     	tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctional5);
 	} else {
-		throw boost::program_options::validation_error(validation_error::invalid_option_value, "Unknown T-functional");
+		throw boost::program_options::validation_error(
+			boost::program_options::validation_error::invalid_option_value,
+			"Unknown T-functional");
 	}
-
-	// Manage list of options
-	// TODO: let Boost do this?
-	if (!v.empty()) {
-		boost::any_cast<TFunctionalList>(v).push_back(tfunctional);
-	} else {
-		v = boost::any(TFunctionalList({tfunctional}));
-	}
+    return in;
 }
 
 struct PFunctional
@@ -123,45 +110,37 @@ struct PFunctional
 	std::string name;
 	FunctionalWrapper *wrapper;
 
-	unsigned int order;
+	boost::optional<unsigned int> order;
 };
 
-typedef std::vector<PFunctional> PFunctionalList;
-
-void validate(boost::any &v, const std::vector<std::string> &values,
-              PFunctionalList*, int)
+std::istream& operator>>(std::istream& in, PFunctional& pfunctional)
 {
-	using namespace boost::program_options;
-	PFunctional pfunctional;
-
-    // Parse functional selector.
-    if (values.size() == 0)
-        throw boost::program_options::validation_error(validation_error::invalid_option_value, "No P-functional specified");
-	std::string functional = values.at(0);
-	if (functional == "1") {
+    std::string token;
+    in >> token;
+	if (token == "1") {
     	pfunctional.name = "P1";
     	pfunctional.wrapper = new SimpleFunctionalWrapper(PFunctional1);
     	pfunctional.type = PFunctional::REGULAR;
-	} else if (functional == "2") {
+	} else if (token == "2") {
     	pfunctional.name = "P2";
     	pfunctional.wrapper = new SimpleFunctionalWrapper(PFunctional2);
     	pfunctional.type = PFunctional::REGULAR;
-	} else if (functional == "3") {
+	} else if (token == "3") {
     	pfunctional.name = "P3";
     	pfunctional.wrapper = new SimpleFunctionalWrapper(PFunctional3);
     	pfunctional.type = PFunctional::REGULAR;
-	} else if (functional == "H") {
+	} else if (token[0] == 'H') {
 		unsigned int order;
-		if (values.size() < 2)
+		if (token.size() < 2)
 	        throw boost::program_options::validation_error(
-	        	validation_error::invalid_option_value,
+	        	boost::program_options::validation_error::invalid_option_value,
 	        	"Missing order parameter for Hermite P-functional");
     	try {
-        	order = boost::lexical_cast<unsigned int>(values.at(1));
+        	order = boost::lexical_cast<unsigned int>(token.substr(1));
 	    }
 	    catch(boost::bad_lexical_cast &) {
 	        throw boost::program_options::validation_error(
-	        	validation_error::invalid_option_value,
+	        	boost::program_options::validation_error::invalid_option_value,
 	        	"Unparseable order parameter for Hermite P-functional");
 	    }
 
@@ -170,16 +149,11 @@ void validate(boost::any &v, const std::vector<std::string> &values,
 		pfunctional.order = order;
     	pfunctional.type = PFunctional::HERMITE;
 	} else {
-    		throw boost::program_options::validation_error(validation_error::invalid_option_value, "Unknown P-functional");
+    		throw boost::program_options::validation_error(
+    			boost::program_options::validation_error::invalid_option_value,
+    			"Unknown P-functional");
 	}
-
-	// Manage list of options
-	// TODO: let Boost do this?
-	if (!v.empty()) {
-		boost::any_cast<PFunctionalList>(v).push_back(pfunctional);
-	} else {
-		v = boost::any(PFunctionalList({pfunctional}));
-	}
+    return in;
 }
 
 int main(int argc, char **argv)
@@ -188,37 +162,64 @@ int main(int argc, char **argv)
 	// Initialization
 	//
 	
-	using namespace boost::program_options;
-	
 	// List of functionals
-	TFunctionalList tfunctionals;
-	PFunctionalList pfunctionals;
+	std::vector<TFunctional> tfunctionals;
+	std::vector<PFunctional> pfunctionals;
 
 	// Declare named options
-	options_description desc("Allowed options");
+	boost::program_options::options_description desc("Allowed options");
 	desc.add_options()
-	    ("help", "produce help message")
-	    ("debug", "write debug images and data while calculating")
-	    ("verbose", "display some more details")
-	    ("profile", "profile the different steps of the algorithm")
-	    ("image,I", value<std::string>(), "image to process")
-	    ("t-functional,T", value<TFunctionalList>(&tfunctionals)->multitoken(), "T-functionals")
-	    ("p-functional,P", value<PFunctionalList>(&pfunctionals)->multitoken(), "P-functionals")
+	    ("help",
+	    	"produce help message")
+	    ("debug",
+	    	"write debug images and data while calculating")
+	    ("verbose",
+	    	"display some more details")
+	    ("profile",
+	    	"profile the different steps of the algorithm")
+	    ("image,I",
+	    	boost::program_options::value<std::string>()->required(),
+	    	"image to process")
+	    ("tfunctional,T",
+	    	boost::program_options::value<std::vector<TFunctional>>(&tfunctionals),
+	    	"T-functionals")
+	    ("pfunctional,P",
+	    	boost::program_options::value<std::vector<PFunctional>>(&pfunctionals),
+	    	"P-functionals")
 	;
 
 	// Declare positional options
-	positional_options_description pod;
+	boost::program_options::positional_options_description pod;
 	pod.add("image", -1);
+    // Parse the options
+    boost::program_options::variables_map vm;
+    try {
+        store(boost::program_options::command_line_parser(argc, argv)
+            .options(desc).positional(pod).run(), vm);
+    }
+    catch (const std::exception &e) {
+        std::cerr << "Error " << e.what() << std::endl;
 
-	variables_map vm;
-	store(command_line_parser(argc, argv).
-	          options(desc).positional(pod).run(), vm);
-	notify(vm);  
+        std::cout << desc << std::endl;
+        return 1;
+    }
 
-	if (vm.count("help")) {
-		std::cout << desc << std::endl;
-		return 1;
-	}
+    // Notify the user of errors
+    try {
+        notify(vm);
+    }
+    catch (const std::exception &e) {
+        std::cerr << "Invalid usage: " << e.what() << std::endl;
+
+        std::cout << desc << std::endl;
+        return 1;
+    }
+
+    // Display help
+    if (vm.count("help")) {
+        std::cout << desc << std::endl;
+        return 0;
+    }
 
 	// Check for orthonormal P-functionals
 	size_t orthonormal_count = 0;
@@ -233,7 +234,7 @@ int main(int argc, char **argv)
 		orthonormal = true;
 	else
 		throw boost::program_options::validation_error(
-			validation_error::invalid_option_value,
+			boost::program_options::validation_error::invalid_option_value,
 			"Cannot mix regular and orthonormal P-functionals"); 
 	
 
@@ -242,12 +243,6 @@ int main(int argc, char **argv)
 	//
 	
 	// Read the image
-	if (vm.count("image") == 0) {
-		// TODO: use Boost::po::->set_required
-		std::cerr << "Error: no image specified" << std::endl;
-		std::cout << desc << std::endl;
-		return 0;
-	}
 	Eigen::MatrixXd input = pgmRead(vm["image"].as<std::string>());
 	input = gray2mat(input);
 
@@ -322,7 +317,7 @@ int main(int argc, char **argv)
 			// Extra parameters to functional
 			if (pfunctionals[p].type == PFunctional::HERMITE)
 				dynamic_cast<GenericFunctionalWrapper<unsigned int, unsigned int>*>(pfunctionals[p].wrapper)
-					->configure(pfunctionals[p].order, sinogram_center);
+					->configure(*pfunctionals[p].order, sinogram_center);
 
 			// Calculate the circus function
 			if (vm.count("verbose"))
