@@ -6,6 +6,8 @@
 #ifndef WRAPPER_H
 #define WRAPPER_H
 
+// TODO: implement using variadic templates
+
 class FunctionalWrapper {
 public:
     FunctionalWrapper()

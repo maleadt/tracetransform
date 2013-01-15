@@ -103,7 +103,13 @@ void validate(boost::any &v, const std::vector<std::string> &values,
 		throw boost::program_options::validation_error(validation_error::invalid_option_value, "Unknown T-functional");
 	}
 
-	boost::any_cast<TFunctionalList>(v).push_back(tfunctional);
+	// Manage list of options
+	// TODO: let Boost do this?
+	if (!v.empty()) {
+		boost::any_cast<TFunctionalList>(v).push_back(tfunctional);
+	} else {
+		v = boost::any(TFunctionalList({tfunctional}));
+	}
 }
 
 struct PFunctional {
@@ -159,7 +165,13 @@ void validate(boost::any &v, const std::vector<std::string> &values,
     		throw boost::program_options::validation_error(validation_error::invalid_option_value, "Unknown P-functional");
 	}
 
-	boost::any_cast<PFunctionalList>(v).push_back(pfunctional);
+	// Manage list of options
+	// TODO: let Boost do this?
+	if (!v.empty()) {
+		boost::any_cast<PFunctionalList>(v).push_back(pfunctional);
+	} else {
+		v = boost::any(PFunctionalList({pfunctional}));
+	}
 }
 
 int main(int argc, char **argv)
@@ -209,7 +221,7 @@ int main(int argc, char **argv)
 	bool orthonormal;
 	if (orthonormal_count == 0)
 		orthonormal = false;
-	if (orthonormal_count == pfunctionals.size())
+	else if (orthonormal_count == pfunctionals.size())
 		orthonormal = true;
 	else
 		throw boost::program_options::validation_error(
