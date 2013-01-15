@@ -35,7 +35,7 @@ extern "C" {
 
 
 //
-// Main
+// Program option parsers
 //
 
 struct TFunctional {
@@ -130,6 +130,11 @@ std::istream& operator>>(std::istream& in, PFunctional& pfunctional)
     return in;
 }
 
+
+//
+// Main application
+//
+
 int main(int argc, char **argv)
 {
 	//
@@ -145,26 +150,28 @@ int main(int argc, char **argv)
 	desc.add_options()
 	    ("help",
 	    	"produce help message")
-	    ("debug",
-	    	"write debug images and data while calculating")
 	    ("verbose",
 	    	"display some more details")
-	    ("image,I",
+	    ("input,i",
 	    	boost::program_options::value<std::string>()
 	    		->required(),
 	    	"image to process")
-	    ("tfunctional,T",
+	    ("output,o",
+	    	boost::program_options::value<std::string>()
+	    		->default_value("circus.dat"),
+	    	"where to write the output circus data")
+	    ("t-functional,T",
 	    	boost::program_options::value<std::vector<TFunctional>>(&tfunctionals)
 	    		->required(),
 	    	"T-functionals")
-	    ("pfunctional,P",
+	    ("p-functional,P",
 	    	boost::program_options::value<std::vector<PFunctional>>(&pfunctionals),
 	    	"P-functionals")
 	;
 
 	// Declare positional options
 	boost::program_options::positional_options_description pod;
-	pod.add("image", -1);
+	pod.add("input", -1);
 
     // Parse the options
     boost::program_options::variables_map vm;
@@ -179,6 +186,12 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    // Display help
+    if (vm.count("help")) {
+        std::cout << desc << std::endl;
+        return 0;
+    }
+
     // Notify the user of errors
     try {
         notify(vm);
@@ -188,12 +201,6 @@ int main(int argc, char **argv)
 
         std::cout << desc << std::endl;
         return 1;
-    }
-
-    // Display help
-    if (vm.count("help")) {
-        std::cout << desc << std::endl;
-        return 0;
     }
 
 	// Check for orthonormal P-functionals
@@ -218,7 +225,7 @@ int main(int argc, char **argv)
 	//
 	
 	// Read the image
-	Eigen::MatrixXd input = pgmRead(vm["image"].as<std::string>());
+	Eigen::MatrixXd input = pgmRead(vm["input"].as<std::string>());
 	input = gray2mat(input);
 
 	// Orthonormal P-functionals need a stretched image in order to ensure a
@@ -269,17 +276,17 @@ int main(int argc, char **argv)
 			tfunctionals[t].wrapper
 		);
 
-		if (vm.count("debug") || pfunctionals.size() == 0) {
-			// Save the sinogram image
-			std::stringstream fn_trace_image;
-			fn_trace_image << "trace_" << tfunctionals[t].name << ".pgm";
-			pgmWrite(fn_trace_image.str(), mat2gray(sinogram));
+#ifndef NDEBUG
+		// Save the sinogram image
+		std::stringstream fn_trace_image;
+		fn_trace_image << "trace_" << tfunctionals[t].name << ".pgm";
+		pgmWrite(fn_trace_image.str(), mat2gray(sinogram));
 
-			// Save the sinogram data
-			std::stringstream fn_trace_data;
-			fn_trace_data << "trace_" << tfunctionals[t].name << ".dat";
-			dataWrite(fn_trace_data.str(), sinogram);
-		}
+		// Save the sinogram data
+		std::stringstream fn_trace_data;
+		fn_trace_data << "trace_" << tfunctionals[t].name << ".dat";
+		dataWrite(fn_trace_data.str(), sinogram);
+#endif
 
 		// Orthonormal functionals require the nearest orthonormal sinogram
 		unsigned int sinogram_center;
@@ -324,7 +331,7 @@ int main(int argc, char **argv)
 				<< pfunctionals[p].name;
 			headers.push_back(header.str());
 		}
-		dataWrite("circus.dat", output, headers);
+		dataWrite(vm["output"].as<std::string>(), output, headers);
 	}
 
 	return 0;
