@@ -12,14 +12,11 @@ convert{T}(::Type{AbstractVector{T}}, p::Point2D{T}) =
         [p.x p.y]
 
 function interpolate(input::Matrix, p::Vector)
-        @assert 1 <= p[1] <= size(input, 2)
-        @assert 1 <= p[2] <= size(input, 1)
-
         # Get fractional and integral part of the coordinates
-        # TODO: why can't this be UInt?
         integral::Vector = itrunc(p)
         fractional::Vector = p - integral
 
+        # Bilinear interpolation
         return    input[integral[2],   integral[1]]   * (1-fractional[1]) * (1-fractional[2]) + 
                   input[integral[2],   integral[1]+1] * fractional[1]     * (1-fractional[2]) + 
                   input[integral[2]+1, integral[1]]   * (1-fractional[1]) * fractional[2] + 
@@ -50,8 +47,9 @@ function rotate(input::Matrix, origin::Vector, angle)
                         p *= transform
                         p += origin'
 
+                        # FIXME: this discards edge pixels
                         if 1 <= p[1] < cols && 1 <= p[2] < rows
-                                output[row, col] = interpolate(input, squeeze(p))
+                                output[row, col] = interpolate(input, vec(p))
                         end
                 end
         end
