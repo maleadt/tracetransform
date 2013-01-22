@@ -42,3 +42,15 @@ function datawrite(file::String, data::Matrix, headers::Vector)
 
         close(s)
 end
+
+function zscore(input::Vector)
+        local _mean = mean(input)
+        local _std = std(input)
+
+        output::Vector = similar(input)
+        for i in 1:length(input)
+                output[i] = (input[i] - _mean) / _std
+        end
+
+        return output
+end

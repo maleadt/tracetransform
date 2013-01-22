@@ -1,21 +1,20 @@
 require("image")
 require("geometry")
 require("tracetransform")
+require("circusfunction")
 require("auxiliary")
+require("functionals")
 
 using ArgParse
 
-abstract Functional
-
-type TFunctional <: Functional
-        functional::Function
-end
-
-type PFunctional <: Functional
-        functional::Function
-end
+ANGLE_INTERVAL = 3
+DISTANCE_INTERVAL = 1
 
 function main(args)
+        #
+        # Initialization
+        #
+        
         # Parse the command arguments
         s = ArgParseSettings("Allowed options")
         @add_arg_table s begin
@@ -44,21 +43,55 @@ function main(args)
         parsed_args = parse_args(args, s)
 
         # Parse the functionals
-        tfunctionals::Vector = TFunctional[]
+        tfunctionals::Vector = Functional[]
         for functional in parsed_args["t-functional"]
                 if functional == "0"
-                        push!(tfunctionals, TFunctional(t_radon))
+                        push!(tfunctionals, SimpleFunctional(t_radon, "T0"))
+                elseif functional == "1"
+                        push!(tfunctionals, SimpleFunctional(t_1, "T1"))
                 else
                         error("unknown T-functional")
                 end
         end
-        pfunctionals::Vector = PFunctional[]
+        pfunctionals::Vector = Functional[]
         for functional in parsed_args["p-functional"]
-                error("unknown P-functional")
+                if functional == "1"
+                        push!(pfunctionals, SimpleFunctional(p_1, "P1"))
+                else
+                        error("unknown P-functional")
+                end
         end
 
+        # Check for orthonormal P-functionals
+        orthonormal_count = 0
+        for functional in pfunctionals
+                if isa(functional, HermiteFunctional)
+                        orthonormal_count += 1
+                end
+        end
+        if orthonormal_count == 0
+                orthonormal = false
+        elseif orthonormal_count == length(pfunctionals)
+                orthonormal = true
+        else
+                error("cannot mix regular and orthonormal P-functionals")
+        end
+
+
+        #
+        # Image processing
+        #
+
         # Read the image
-        const input = imread(parsed_args["input"])
+        input = imread(parsed_args["input"])
+
+        # Orthonormal P-functionals need a stretched image in order to ensure a
+        # square sinogram
+        if orthonormal
+                ndiag = iceil(360.0 / ANGLE_INTERVAL)
+                nsize = iceil(ndiag / sqrt(2))
+                input = resize(input, nsize, nsize)
+        end
 
         # Pad the image so we can freely rotate without losing information
         origin::Vector = ifloor(flipud([size(input)...] .+ 1) ./ 2)
@@ -72,28 +105,66 @@ function main(args)
         input_padded[1+offset[2]:endpoint[2], 1+offset[1]:endpoint[1]] = input
 
         # Calculate the sampling resolution
-        angles::Vector = [0:1:360]
+        angles::Vector = [0:ANGLE_INTERVAL:360] # FIXME: itrunc vs iceil?
         diagonal = hypot(size(input)...)
-        distances::Vector = [1:1:itrunc(diagonal)]
+        distances::Vector = [1:DISTANCE_INTERVAL:itrunc(diagonal)]
+
+        # Allocate a matrix for all output data to reside in
+        output::Matrix = Array(
+                eltype(input),
+                length(angles),
+                length(tfunctionals) * length(pfunctionals))
 
         # Process all T-functionals
+        t_i = 0
+        print("Calculating")
         for tfunctional in tfunctionals
                 # Calculate the trace transform sinogram
+                print(" $(tfunctional.name)...")
                 const sinogram = getTraceTransform(
                         input_padded,
                         angles,
                         distances,
-                        tfunctional.functional
+                        tfunctional
                 )
 
                 if parsed_args["debug"]
                         # Save the sinogram image
-                        imwrite("$tfunctional.pgm", sinogram)
+                        ppmwrite(sinogram, "trace_$(tfunctional.name).pgm")
 
                         # Save the sinogram data
-                        dataWrite("$tfunctional.dat", sinogram);
+                        datawrite("trace_$(tfunctional.name).dat", sinogram);
                 end
 
+                # Orthonormal functionals require the nearest orthonormal sinogram
+                if orthonormal
+                        (sinogram_center, sinogram) = nearest_orthonormal_sinogram(sinogram)
+                end
+
+                # Process all P-functionals
+                p_i = 1
+                for pfunctional in pfunctionals
+                        # Configure any extra parameters
+                        if isa(pfunctional, HermiteFunctional)
+                                pfunctional.center = sinogram_center
+                        end
+
+                        # Calculate the circus function
+                        print(" $(pfunctional.name)...")
+                        circus::Vector = getCircusFunction(
+                                sinogram,
+                                pfunctional
+                        )
+
+                        # Normalize
+                        normalized = zscore(circus)
+
+                        # Copy the data
+                        @assert length(normalized) == rows(output)
+                        output[:, t_i*length(tfunctionals) + p_i] = normalized
+                        p_i += 1
+                end
+                t_i += 1
         end
 end
 
