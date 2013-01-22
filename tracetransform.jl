@@ -3,11 +3,12 @@ require("functionals.jl")
 function getTraceTransform(
 	input::Matrix,
 	angles::Vector,
-	distances::Vector)
+	distances::Vector,
+	functional::Function)
 	@assert size(input, 1) == size(input, 2)	# Padded image!
 
 	# Get the image origin to rotate around
-        origin::Vector = ifloor(([size(input)...] .+ 1) ./ 2)
+    origin::Vector = ifloor(flipud([size(input)...] .+ 1) ./ 2)
 
 	# Allocate the output matrix
 	output::Matrix = Array(
@@ -19,7 +20,7 @@ function getTraceTransform(
 	# Process all angles
 	a_i = 1
 	for a in angles
-		println("Angle ", a)
+		print("Angle: ", a, "\r")
 
 		# Rotate the image
 		input_rotated::Matrix = rotate(input, origin, a)
@@ -27,7 +28,7 @@ function getTraceTransform(
 		# Process all projection bands
 		p_i = 1
 		for p in distances
-			output[p_i, a_i] = t_radon(squeeze(input_rotated[p, :]))
+			output[p_i, a_i] = functional(vec(input_rotated[p, :]))
 			p_i += 1
 		end	
 		a_i += 1
