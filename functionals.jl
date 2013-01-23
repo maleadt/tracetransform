@@ -54,10 +54,59 @@ function t_1(data::Vector)
         median = find_weighted_median(data)
 
         integral = 0
-        for r in 1:length(data)-median
-                integral += data[r+median] * r
+        for r in median:length(data)
+                integral += data[r] * (r-median)
         end
         return integral
+end
+
+function t_2(data::Vector)
+        median = find_weighted_median(data)
+
+        integral = 0
+        for r in median:length(data)
+                integral += data[r] * (r-median)*(r-median)
+        end
+        return integral
+end
+
+function t_3(data::Vector)
+        squaredmedian = find_weighted_median(sqrt(data))
+
+        integral = 0 + 0im
+        factor = 0 + 5im
+        for r1 in squaredmedian+1:length(data)
+                # From +1, since exp(i*log(0)) == 0
+                integral += exp(factor*log(r1-squaredmedian)) *
+                        data[r1] * (r1-squaredmedian)
+        end
+        return abs(integral)
+end
+
+function t_4(data::Vector)
+        squaredmedian = find_weighted_median(sqrt(data))
+
+        integral = 0 + 0im
+        factor = 0 + 3im
+        for r1 in squaredmedian+1:length(data)
+                # From +1, since exp(i*log(0)) == 0
+                integral += exp(factor*log(r1-squaredmedian)) *
+                        data[r1]
+        end
+        return abs(integral)
+end
+
+function t_5(data::Vector)
+        squaredmedian = find_weighted_median(sqrt(data))
+
+        integral = 0 + 0im
+        factor = 0 + 4im
+        for r1 in squaredmedian+1:length(data)
+                # From +1, since exp(i*log(0)) == 0
+                integral += exp(factor*log(r1-squaredmedian)) *
+                        data[r1] * sqrt(r1-squaredmedian)
+        end
+        return abs(integral)
 end
 
 

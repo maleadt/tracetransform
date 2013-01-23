@@ -7,7 +7,7 @@ require("functionals")
 
 using ArgParse
 
-ANGLE_INTERVAL = 3
+ANGLE_INTERVAL = 1
 DISTANCE_INTERVAL = 1
 
 function main(args)
@@ -49,6 +49,14 @@ function main(args)
                         push!(tfunctionals, SimpleFunctional(t_radon, "T0"))
                 elseif functional == "1"
                         push!(tfunctionals, SimpleFunctional(t_1, "T1"))
+                elseif functional == "2"
+                        push!(tfunctionals, SimpleFunctional(t_2, "T2"))
+                elseif functional == "3"
+                        push!(tfunctionals, SimpleFunctional(t_3, "T3"))
+                elseif functional == "4"
+                        push!(tfunctionals, SimpleFunctional(t_4, "T4"))
+                elseif functional == "5"
+                        push!(tfunctionals, SimpleFunctional(t_5, "T5"))
                 else
                         error("unknown T-functional")
                 end
@@ -98,6 +106,7 @@ function main(args)
         rLast::Int = iceil(hypot(([size(input)...] .- 1 - origin)...)) + 1
         rFirst::Int = -rLast
         nBins::Int = rLast - rFirst + 1
+        println("Nbins: $nBins")
         input_padded::Array = zeros(eltype(input), nBins, nBins)
         origin_padded::Vector = ifloor(flipud([size(input_padded)...] .+ 1) ./ 2)
         offset::Vector = origin_padded - origin
@@ -105,9 +114,10 @@ function main(args)
         input_padded[1+offset[2]:endpoint[2], 1+offset[1]:endpoint[1]] = input
 
         # Calculate the sampling resolution
-        angles::Vector = [0:ANGLE_INTERVAL:360] # FIXME: itrunc vs iceil?
+        angles::Vector = vec(Range(0.0, ANGLE_INTERVAL, 360))
         diagonal = hypot(size(input)...)
-        distances::Vector = [1:DISTANCE_INTERVAL:itrunc(diagonal)]
+        println("diagonal: $diagonal")
+        distances::Vector = iround([1:DISTANCE_INTERVAL:diagonal])
 
         # Allocate a matrix for all output data to reside in
         output::Matrix = Array(
