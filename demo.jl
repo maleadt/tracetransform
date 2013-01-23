@@ -127,7 +127,7 @@ function main(args)
                         distances,
                         tfunctional
                 )
-                
+
                 if parsed_args["debug"]
                         # Save the sinogram image
                         ppmwrite(mat2gray(sinogram), "trace_$(tfunctional.name).pgm")
@@ -165,6 +165,15 @@ function main(args)
                         p_i += 1
                 end
                 t_i += 1
+        end
+
+        # Save the output data
+        if length(pfunctionals) > 0
+                headers::Vector = String[]
+                for tfunctional in tfunctionals, pfunctional in pfunctionals
+                        push!(headers, "$(tfunctional.name)-$(pfunctional.name)")
+                end
+                datawrite(parsed_args["output"], output, headers)
         end
 end
 
