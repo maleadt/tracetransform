@@ -54,3 +54,5 @@ function zscore(input::Vector)
 
         return output
 end
+
+mat2gray(input::Matrix) = uint8(clamp(input * 255 / max(input), 0, 255))

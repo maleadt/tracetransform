@@ -127,10 +127,10 @@ function main(args)
                         distances,
                         tfunctional
                 )
-
+                
                 if parsed_args["debug"]
                         # Save the sinogram image
-                        ppmwrite(sinogram, "trace_$(tfunctional.name).pgm")
+                        ppmwrite(mat2gray(sinogram), "trace_$(tfunctional.name).pgm")
 
                         # Save the sinogram data
                         datawrite("trace_$(tfunctional.name).dat", sinogram);
