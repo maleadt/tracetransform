@@ -240,12 +240,10 @@ int main(int argc, char **argv)
         Point origin(
                 std::floor((input.cols() - 1) / 2.0),
                 std::floor((input.rows() - 1) / 2.0));
-        int rLast = (int) std::ceil(std::hypot(
-                input.cols() - 1- origin.x(),
-                input.rows() - 1 - origin.y()));
-        int rFirst = -rLast;
-        int nBins = rLast - rFirst + 1;
-        Eigen::MatrixXd input_padded = Eigen::MatrixXd::Zero(nBins, nBins);
+        int diagonal = (int) std::ceil(std::hypot(
+                input.cols(),           // 2 pixel border since we use
+                input.rows())) + 2;     // bilinear interpolation
+        Eigen::MatrixXd input_padded = Eigen::MatrixXd::Zero(diagonal, diagonal);
         Point origin_padded(
                 std::floor((input_padded.cols() - 1) / 2.0),
                 std::floor((input_padded.rows() - 1) / 2.0));
