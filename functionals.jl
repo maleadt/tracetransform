@@ -117,3 +117,12 @@ end
 function p_1(data::Vector)
         return mean(abs(diff(data)))
 end
+
+function p_2(data::Vector)
+        median = find_weighted_median(data)
+        return data[median]
+end
+
+function p_3(data::Vector)
+        return sum(abs(fft(data)).^4)
+end

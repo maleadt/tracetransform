@@ -67,6 +67,10 @@ function main(args)
         for functional in parsed_args["p-functional"]
                 if functional == "1"
                         push!(pfunctionals, SimpleFunctional(p_1, "P1"))
+                elseif functional == "2"
+                        push!(pfunctionals, SimpleFunctional(p_2, "P2"))
+                elseif functional == "3"
+                        push!(pfunctionals, SimpleFunctional(p_3, "P3"))
                 else
                         error("unknown P-functional")
                 end
@@ -184,7 +188,7 @@ function main(args)
                                         @assert size(reference, 2)  == 1
                                         @assert size(reference, 1) == length(normalized)
                                         nmrse = sqrt(sum((normalized - reference).^2)./length(normalized)) ./ (max(reference) - min(reference))
-                                        print(" ($(round(100*nmrse, 2)))")
+                                        print(" ($(round(100*nmrse, 2))% diff)")
                                 end
                         end
 
