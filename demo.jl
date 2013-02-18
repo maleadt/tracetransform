@@ -33,6 +33,8 @@ function main(args)
                         action = :append_arg
                         help = "P-functionals"
                         # TODO: arg_type = PFunctional
+                "--reference", "-r"
+                        help = "directory with reference traces"
                 "input"
                         help = "image to process"
                         required = true
@@ -106,7 +108,6 @@ function main(args)
         rLast::Int = iceil(hypot(([size(input)...] .- 1 - origin)...)) + 1
         rFirst::Int = -rLast
         nBins::Int = rLast - rFirst + 1
-        println("Nbins: $nBins")
         input_padded::Array = zeros(eltype(input), nBins, nBins)
         origin_padded::Vector = ifloor(flipud([size(input_padded)...] .+ 1) ./ 2)
         offset::Vector = origin_padded - origin
@@ -116,7 +117,6 @@ function main(args)
         # Calculate the sampling resolution
         angles::Vector = vec(Range(0.0, ANGLE_INTERVAL, 360))
         diagonal = hypot(size(input)...)
-        println("diagonal: $diagonal")
         distances::Vector = iround([1:DISTANCE_INTERVAL:diagonal])
 
         # Allocate a matrix for all output data to reside in
@@ -168,6 +168,25 @@ function main(args)
 
                         # Normalize
                         normalized = zscore(circus)
+
+                        if parsed_args["debug"]
+                                # Save the circus data
+                                datawrite("trace_$(tfunctional.name)-$(pfunctional.name).dat", normalized);
+
+                                # Compare against reference data, if any
+                                if parsed_args["reference"] != nothing
+                                        reference_fn = string(parsed_args["reference"], "/trace_$(tfunctional.name)-$(pfunctional.name).dat")
+                                        if !isfile(reference_fn)
+                                                error("could not find reference file $(reference_fn)")
+                                        end
+                                        reference = dataread(reference_fn)
+                                        reference = map((str) -> parse_float(str), reference)
+                                        @assert size(reference, 2)  == 1
+                                        @assert size(reference, 1) == length(normalized)
+                                        nmrse = sqrt(sum((normalized - reference).^2)./length(normalized)) ./ (max(reference) - min(reference))
+                                        print(" ($(round(100*nmrse, 2)))")
+                                end
+                        end
 
                         # Copy the data
                         @assert length(normalized) == rows(output)
