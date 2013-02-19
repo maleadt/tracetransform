@@ -69,6 +69,9 @@ function main(args)
                         push!(pfunctionals, SimpleFunctional(p_2, "P2"))
                 elseif functional == "3"
                         push!(pfunctionals, SimpleFunctional(p_3, "P3"))
+                elseif functional[1] == 'H'
+                        order::Uint = parse_int(functional[2:])
+                        push!(pfunctionals, HermiteFunctional("H$(int(order))", order))
                 else
                         error("unknown P-functional")
                 end

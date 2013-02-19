@@ -36,7 +36,7 @@ function resize(input::Matrix, new_rows, new_cols)
         # FIXME: zeros not necessary if we properly handle borders
         output::Matrix = zeros(
                 eltype(input),
-                rows, cols)
+                new_rows, new_cols)
         
         # Process all points
         # FIXME: borders are wrong (but this doesn't matter here since we
@@ -48,7 +48,11 @@ function resize(input::Matrix, new_rows, new_cols)
                         p += [0.5 0.5]
                         p *= transform
                         p -= [0.5 0.5]
-                        output[row, col] = interpolate(input, vec(p))
+
+                        # FIXME: this discards edge pixels
+                        if 1 <= p[1] < cols(input) && 1 <= p[2] < rows(input)
+                            output[row, col] = interpolate(input, vec(p))
+                        end
                 end
         end
 

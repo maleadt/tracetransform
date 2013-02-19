@@ -19,8 +19,10 @@ type HermiteFunctional <: Functional
         center::Uint
 end
 
+HermiteFunctional(name::String, order::Uint) = HermiteFunctional(name, order, unsigned(0))
+
 function call(f::HermiteFunctional, data::Vector)
-        return p_hermite(datam, order, center)
+        return p_hermite(data, f.order, f.center)
 end
 
 
@@ -40,6 +42,24 @@ function find_weighted_median(data::Vector)
         end
 
         return length(data)
+end
+
+function hermite_polynomial(order::Uint, x::Number)
+        if order == 0
+                return 1;
+        elseif order == 1
+                return 2.0*x;
+        else
+                return 2*x*hermite_polynomial(order-1, x) -
+                        2*(order-1)*hermite_polynomial(order-2, x);
+        end
+end
+
+function hermite_function(order::Uint, x::Number)
+        return hermite_polynomial(order, x) / (
+                        sqrt(2^order * factorial(order) * sqrt(pi))
+                        * exp(x*x/2)
+                )
 end
 
 #
@@ -125,4 +145,23 @@ end
 
 function p_3(data::Vector)
         return sum(abs(fft(data)).^4)
+end
+
+function p_hermite(data::Vector, order::Uint, center::Uint)
+        # Discretize the [-10, 10] domain to fit the column iterator
+        z = -10
+        stepsize_lower = 10 / center
+        stepsize_upper = 10 / (length(data) - 1 - center)
+
+        # Calculate the integral
+        integral = 0
+        for p in 1:length(data)
+                integral += data[p] * hermite_function(order, z)
+                if z < 0
+                        z += stepsize_lower
+                else
+                        z += stepsize_upper
+                end
+        end
+        return integral
 end
