@@ -328,6 +328,13 @@ int main(int argc, char **argv)
                         header << tfunctionals[t].name << "-"
                                 << pfunctionals[p].name;
                         headers.push_back(header.str());
+
+#ifndef NDEBUG
+                        // Save individual traces as well
+                        std::stringstream fn_trace_data;
+                        fn_trace_data << "trace_" << header.str() << ".dat";
+                        dataWrite(fn_trace_data.str(), output.col(tp));
+#endif
                 }
                 dataWrite(vm["output"].as<std::string>(), output, headers);
         }
