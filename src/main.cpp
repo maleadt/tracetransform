@@ -238,17 +238,17 @@ int main(int argc, char **argv)
 
         // Pad the image so we can freely rotate without losing information
         Point origin(
-                std::floor((input.cols() - 1) / 2.0),
-                std::floor((input.rows() - 1) / 2.0));
+                std::floor((input.cols() + 1) / 2.0) - 1,
+                std::floor((input.rows() + 1) / 2.0) - 1);
         int rLast = (int) std::ceil(std::hypot(
-                input.cols() - 1- origin.x(),
-                input.rows() - 1 - origin.y()));
+                input.cols() - 1 - origin.x(),
+                input.rows() - 1 - origin.y())) - 1;
         int rFirst = -rLast;
         int nBins = rLast - rFirst + 1;
         Eigen::MatrixXd input_padded = Eigen::MatrixXd::Zero(nBins, nBins);
         Point origin_padded(
-                std::floor((input_padded.cols() - 1) / 2.0),
-                std::floor((input_padded.rows() - 1) / 2.0));
+                std::floor((input_padded.cols() + 1) / 2.0) - 1,
+                std::floor((input_padded.rows() + 1) / 2.0) - 1);
         Point df = origin_padded - origin;
         for (int col = 0; col < input.cols(); col++) {
                 for (int row = 0; row < input.rows(); row++) {
