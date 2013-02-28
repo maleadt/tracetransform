@@ -232,8 +232,8 @@ int main(int argc, char **argv)
         // square sinogram
         if (orthonormal) {
                 int ndiag = (int) std::ceil(360.0/ANGLE_INTERVAL);
-                int size = (int) std::ceil(ndiag/std::sqrt(2));
-                input = resize(input, size, size);
+                int nsize = (int) std::ceil(ndiag/std::sqrt(2));
+                input = resize(input, nsize, nsize);
         }
 
         // Pad the image so we can freely rotate without losing information
@@ -241,8 +241,8 @@ int main(int argc, char **argv)
                 std::floor((input.cols() + 1) / 2.0) - 1,
                 std::floor((input.rows() + 1) / 2.0) - 1);
         int rLast = (int) std::ceil(std::hypot(
-                input.cols() - 1 - origin.x(),
-                input.rows() - 1 - origin.y())) - 1;
+                input.cols() - 1 - origin.x() - 1,
+                input.rows() - 1 - origin.y() - 1)) + 1;
         int rFirst = -rLast;
         int nBins = rLast - rFirst + 1;
         Eigen::MatrixXd input_padded = Eigen::MatrixXd::Zero(nBins, nBins);
