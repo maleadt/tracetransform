@@ -177,22 +177,6 @@ int main(int argc, char **argv)
                 std::cout << desc << std::endl;
                 return 1;
         }
-
-        // Check for orthonormal P-functionals
-        unsigned int orthonormal_count = 0;
-        for (size_t p = 0; p < pfunctionals.size(); p++) {
-                if (pfunctionals[p].type == PFunctional::HERMITE)
-                        orthonormal_count++;
-        }
-        bool orthonormal;
-        if (orthonormal_count == 0)
-                orthonormal = false;
-        else if (orthonormal_count == pfunctionals.size())
-                orthonormal = true;
-        else
-                throw boost::program_options::validation_error(
-                        boost::program_options::validation_error::invalid_option_value,
-                        "Cannot mix regular and orthonormal P-functionals"); 
         
 
         //
@@ -205,7 +189,7 @@ int main(int argc, char **argv)
 
         // Transform the image
         Eigen::MatrixXd output = getTransform(input, tfunctionals, pfunctionals,
-                        orthonormal, vm.count("verbose"));
+                        vm.count("verbose"));
 
         // Save the output data
         if (pfunctionals.size() > 0) {          

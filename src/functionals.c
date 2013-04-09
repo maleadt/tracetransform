@@ -47,6 +47,8 @@ size_t findWeighedMedianSqrt(const double* data, const size_t length)
                 if (2*integral >= sum)
                         return i;
         }
+
+        return length-1;
 }
 
 double hermite_polynomial(unsigned int order, double x) {

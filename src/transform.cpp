@@ -9,6 +9,7 @@
 #include <cmath>
 #include <vector>
 #include <ostream>
+#include <stdexcept>
 
 // Local
 #include "wrapper.hpp"
@@ -28,9 +29,23 @@
 Eigen::MatrixXd getTransform(/*const*/ Eigen::MatrixXd &input,
                 const std::vector<TFunctional> &tfunctionals,
                 const std::vector<PFunctional> &pfunctionals,
-                bool orthonormal,
                 bool verbose)
 {
+        // Check for orthonormal P-functionals
+        unsigned int orthonormal_count = 0;
+        for (size_t p = 0; p < pfunctionals.size(); p++) {
+                if (pfunctionals[p].type == PFunctional::HERMITE)
+                        orthonormal_count++;
+        }
+        bool orthonormal;
+        if (orthonormal_count == 0)
+                orthonormal = false;
+        else if (orthonormal_count == pfunctionals.size())
+                orthonormal = true;
+        else
+                throw std::runtime_error(
+                        "Cannot mix regular and orthonormal P-functionals");
+
         // Orthonormal P-functionals need a stretched image in order to ensure a
         // square sinogram
         if (orthonormal) {
