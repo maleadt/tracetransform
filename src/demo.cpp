@@ -3,6 +3,8 @@
 //
 
 // Standard library
+#include <cstddef>
+#include <exception>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -11,7 +13,6 @@
 
 // Boost
 #include <boost/program_options.hpp>
-#include <boost/optional.hpp>
 #include <boost/format.hpp>
 
 // Eigen
@@ -19,13 +20,13 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 
-// Local includes
+// Local
 #include "auxiliary.hpp"
 extern "C" {
         #include "functionals.h"
 }
 #include "wrapper.hpp"
-#include "improc.hpp"
+#include "transform.hpp"
 
 
 //
@@ -203,16 +204,8 @@ int main(int argc, char **argv)
         Eigen::MatrixXd input = pgmRead(vm["input"].as<std::string>());
         input = gray2mat(input);
 
-        // Orthonormal P-functionals need a stretched image in order to ensure a
-        // square sinogram
-        if (orthonormal) {
-                int ndiag = (int) std::ceil(360.0/ANGLE_INTERVAL);
-                int nsize = (int) std::ceil(ndiag/std::sqrt(2));
-                input = resize(input, nsize, nsize);
-        }
-
-        // Process the image
-        Eigen::MatrixXd output = processImage(input, tfunctionals, pfunctionals,
+        // Transform the image
+        Eigen::MatrixXd output = getTransform(input, tfunctionals, pfunctionals,
                         orthonormal, vm.count("verbose"));
 
         // Save the output data

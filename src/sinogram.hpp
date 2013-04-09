@@ -3,8 +3,8 @@
 //
 
 // Include guard
-#ifndef TRACETRANSFORM_CIRCUS_HPP
-#define TRACETRANSFORM_CIRCUS_HPP
+#ifndef TRACETRANSFORM_SINOGRAM_HPP
+#define TRACETRANSFORM_SINOGRAM_HPP
 
 // Standard library
 #include <cstddef>
@@ -21,12 +21,10 @@
 // Module definitions
 //
 
-Eigen::MatrixXd nearest_orthonormal_sinogram(
+Eigen::MatrixXd getSinogram(
         const Eigen::MatrixXd &input,
-        unsigned int& new_center);
-
-Eigen::VectorXd getCircusFunction(
-        const Eigen::MatrixXd &input,
-        FunctionalWrapper *pfunctional);
+        const double a_stepsize,
+        const double p_stepsize,
+        FunctionalWrapper *tfunctional);
 
 #endif

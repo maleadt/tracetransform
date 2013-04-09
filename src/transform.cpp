@@ -2,21 +2,19 @@
 // Configuration
 //
 
-// Include guard
-#ifndef TRACETRANSFORM_IMPROC_HPP
-#define TRACETRANSFORM_IMPROC_HPP
+// Header include
+#include "transform.hpp"
 
 // Standard library
 #include <cmath>
 #include <vector>
+#include <ostream>
 
-// Eigen
-#include <Eigen/Dense>
-
-// Local includes
+// Local
 #include "wrapper.hpp"
-#include "transform.hpp"
+#include "sinogram.hpp"
 #include "circus.hpp"
+#include "auxiliary.hpp"
 
 // Algorithm parameters
 #define ANGLE_INTERVAL          1
@@ -24,39 +22,23 @@
 
 
 //
-// Structs
-//
-
-struct TFunctional {
-        std::string name;
-        FunctionalWrapper *wrapper;
-};
-
-struct PFunctional
-{
-        enum
-        {
-                REGULAR,
-                HERMITE
-        } type;
-
-        std::string name;
-        FunctionalWrapper *wrapper;
-
-        boost::optional<unsigned int> order;
-};
-
-
-//
 // Module definitions
 //
 
-Eigen::MatrixXd processImage(const Eigen::MatrixXd &input,
+Eigen::MatrixXd getTransform(/*const*/ Eigen::MatrixXd &input,
                 const std::vector<TFunctional> &tfunctionals,
                 const std::vector<PFunctional> &pfunctionals,
                 bool orthonormal,
                 bool verbose)
 {
+        // Orthonormal P-functionals need a stretched image in order to ensure a
+        // square sinogram
+        if (orthonormal) {
+                int ndiag = (int) std::ceil(360.0/ANGLE_INTERVAL);
+                int nsize = (int) std::ceil(ndiag/std::sqrt(2));
+                input = resize(input, nsize, nsize);
+        }
+
         // Pad the image so we can freely rotate without losing information
         Point origin(
                 std::floor((input.cols() + 1) / 2.0) - 1,
@@ -90,7 +72,7 @@ Eigen::MatrixXd processImage(const Eigen::MatrixXd &input,
                 // Calculate the trace transform sinogram
                 if (verbose)
                         std::cerr << " " << tfunctionals[t].name << "..." << std::flush;
-                Eigen::MatrixXd sinogram = getTraceTransform(
+                Eigen::MatrixXd sinogram = getSinogram(
                         input_padded,
                         ANGLE_INTERVAL,
                         DISTANCE_INTERVAL,
@@ -143,5 +125,3 @@ Eigen::MatrixXd processImage(const Eigen::MatrixXd &input,
 
         return output;
 }
-
-#endif

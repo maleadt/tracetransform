@@ -5,7 +5,7 @@
 // Header include
 #include "functionals.h"
 
-// System includes
+// Standard library
 #include <complex.h>
 #include <math.h>
 #include <stdlib.h>
