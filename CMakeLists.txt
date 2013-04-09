@@ -1,36 +1,62 @@
-cmake_minimum_required(VERSION 2.8)
+#
+# Configuration
+#
+
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.7)
 PROJECT(TraceTransform)
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
+# Local modules
+SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++0x")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra")
+# Standard libraries
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wcast-align")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wcast-qual")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-sign-conversion")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wfloat-equal")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Winit-self")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wlogical-op")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wnormalized=nfc")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wredundant-decls")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wshadow")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wtrampolines")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wundef")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wvla")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunreachable-code")
+# Extra warnings
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 
+# Add address sanitizer to debug build
+IF (${CMAKE_C_COMPILER_ID} MATCHES "Clang" AND NOT ${CMAKE_C_COMPILER_VERSION} LESS "3.2")
+    SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O1 -fsanitize=address -fno-omit-frame-pointer") 
+ENDIF()
+IF (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang" AND NOT ${CMAKE_CXX_COMPILER_VERSION} LESS "3.2")
+    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O1 -fsanitize=address -fno-omit-frame-pointer") 
+ENDIF()
+
+# Test execution string
+SEPARATE_ARGUMENTS(TEST_EXECUTION UNIX_COMMAND "-T 1 -P H1 ../res/Cam1_V1.pgm")
+
+# Profile build
+SET(CMAKE_CXX_FLAGS_PROFILE "-O2 -g -DNDEBUG")
+SET(CMAKE_C_FLAGS_PROFILE "-O2 -g -DNDEBUG")
+
+# Profile target
+ADD_CUSTOM_TARGET(profile
+    COMMAND valgrind --tool=callgrind ./transform ${TEST_EXECUTION}
+    DEPENDS transform)
+
+
+#
+# Dependencies
+#
+
+# Boost
 FIND_PACKAGE(Boost REQUIRED COMPONENTS program_options)
 INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIR})
 
+# Eigen
 FIND_PACKAGE(Eigen3 REQUIRED)
 INCLUDE_DIRECTORIES(SYSTEM ${EIGEN3_INCLUDE_DIR})
 
-FIND_PACKAGE(OpenCV REQUIRED core highgui imgproc)
-INCLUDE_DIRECTORIES(SYSTEM ${OpenCV_INCLUDE_DIRS})
+
+#
+# Libraries
+#
+
+ADD_LIBRARY(auxiliary src/auxiliary.hpp src/auxiliary.cpp)
+ADD_LIBRARY(logger src/logger.hpp src/logger.cpp)
+SET(COMMON_LIBRARIES auxiliary logger)
 
 FIND_PACKAGE(OpenMP REQUIRED)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -38,11 +64,20 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 
 ADD_LIBRARY(functionals src/functionals.h src/functionals.c)
-ADD_EXECUTABLE(transform src/main.cpp)
-TARGET_LINK_LIBRARIES(transform functionals ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
-ADD_EXECUTABLE(test_tutorial src/test_tutorial.cpp)
-TARGET_LINK_LIBRARIES(test_tutorial functionals ${OpenCV_LIBS})
+ADD_LIBRARY(sinogram src/sinogram.hpp src/sinogram.cpp)
+TARGET_LINK_LIBRARIES(sinogram ${COMMON_LIBRARIES})
 
-ADD_EXECUTABLE(test_image src/test_image.cpp)
-TARGET_LINK_LIBRARIES(test_image ${OpenCV_LIBS})
+ADD_LIBRARY(circus src/circus.hpp src/circus.cpp)
+TARGET_LINK_LIBRARIES(circus ${COMMON_LIBRARIES})
+
+ADD_LIBRARY(transform src/transform.hpp src/transform.cpp)
+TARGET_LINK_LIBRARIES(transform ${COMMON_LIBRARIES} sinogram circus)
+
+
+#
+# Executables
+#
+
+ADD_EXECUTABLE(demo src/demo.cpp)
+TARGET_LINK_LIBRARIES(demo functionals ${COMMON_LIBRARIES} transform ${Boost_LIBRARIES})
