@@ -30,8 +30,7 @@ Eigen::MatrixXd nearest_orthonormal_sinogram(
         unsigned int& new_center)
 {
         // Detect the offset of each column to the sinogram center
-        assert(input.rows() > 0);
-        assert(input.cols() >= 0);
+        assert(input.rows() > 0 && input.cols() > 0);
         unsigned int sinogram_center = (unsigned int) std::floor((input.rows() - 1) / 2.0);
         std::vector<int> offset(input.cols());  // TODO: Eigen vector
         for (size_t p = 0; p < input.cols(); p++) {
