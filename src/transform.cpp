@@ -81,12 +81,10 @@ Eigen::MatrixXd getTransform(/*const*/ Eigen::MatrixXd &input,
                 tfunctionals.size() * pfunctionals.size());
 
         // Process all T-functionals
-        if (clog(debug))
-                std::cerr << "Calculating";
+        clog(debug) << "Calculating";
         for (size_t t = 0; t < tfunctionals.size(); t++) {
                 // Calculate the trace transform sinogram
-                if (clog(debug))
-                        std::cerr << " " << tfunctionals[t].name << "..." << std::flush;
+                clog(debug) << " " << tfunctionals[t].name << "..." << std::flush;
                 Eigen::MatrixXd sinogram = getSinogram(
                         input_padded,
                         ANGLE_INTERVAL,
@@ -120,8 +118,7 @@ Eigen::MatrixXd getTransform(/*const*/ Eigen::MatrixXd &input,
                                         ->configure(*pfunctionals[p].order, sinogram_center);
 
                         // Calculate the circus function
-                        if (clog(debug))
-                                std::cerr << " " << pfunctionals[p].name << "..." << std::flush;
+                        clog(debug) << " " << pfunctionals[p].name << "..." << std::flush;
                         Eigen::VectorXd circus = getCircusFunction(
                                 sinogram,
                                 pfunctionals[p].wrapper
@@ -135,8 +132,7 @@ Eigen::MatrixXd getTransform(/*const*/ Eigen::MatrixXd &input,
                         output.col(t*pfunctionals.size() + p) = normalized;
                 }
         }
-        if (clog(debug))
-                std::cerr << "\n";
+        clog(debug) << "\n";
 
         return output;
 }
