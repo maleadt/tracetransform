@@ -10,8 +10,9 @@
 #include <cmath>
 
 // Local
-#include "wrapper.hpp"
+#include "logger.hpp"
 #include "auxiliary.hpp"
+#include "wrapper.hpp"
 
 
 //

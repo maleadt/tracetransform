@@ -15,6 +15,7 @@
 #include <Eigen/SVD>
 
 // Local
+#include "logger.hpp"
 extern "C" {
         #include "functionals.h"
 }

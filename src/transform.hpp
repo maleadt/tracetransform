@@ -50,7 +50,6 @@ struct PFunctional
 
 Eigen::MatrixXd getTransform(/*const*/ Eigen::MatrixXd &input,
                 const std::vector<TFunctional> &tfunctionals,
-                const std::vector<PFunctional> &pfunctionals,
-                bool verbose);
+                const std::vector<PFunctional> &pfunctionals);
 
 #endif

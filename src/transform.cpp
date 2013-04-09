@@ -12,10 +12,11 @@
 #include <stdexcept>
 
 // Local
+#include "logger.hpp"
+#include "auxiliary.hpp"
 #include "wrapper.hpp"
 #include "sinogram.hpp"
 #include "circus.hpp"
-#include "auxiliary.hpp"
 
 // Algorithm parameters
 #define ANGLE_INTERVAL          1
@@ -28,8 +29,7 @@
 
 Eigen::MatrixXd getTransform(/*const*/ Eigen::MatrixXd &input,
                 const std::vector<TFunctional> &tfunctionals,
-                const std::vector<PFunctional> &pfunctionals,
-                bool verbose)
+                const std::vector<PFunctional> &pfunctionals)
 {
         // Check for orthonormal P-functionals
         unsigned int orthonormal_count = 0;
@@ -81,11 +81,11 @@ Eigen::MatrixXd getTransform(/*const*/ Eigen::MatrixXd &input,
                 tfunctionals.size() * pfunctionals.size());
 
         // Process all T-functionals
-        if (verbose)
+        if (clog(debug))
                 std::cerr << "Calculating";
         for (size_t t = 0; t < tfunctionals.size(); t++) {
                 // Calculate the trace transform sinogram
-                if (verbose)
+                if (clog(debug))
                         std::cerr << " " << tfunctionals[t].name << "..." << std::flush;
                 Eigen::MatrixXd sinogram = getSinogram(
                         input_padded,
@@ -120,7 +120,7 @@ Eigen::MatrixXd getTransform(/*const*/ Eigen::MatrixXd &input,
                                         ->configure(*pfunctionals[p].order, sinogram_center);
 
                         // Calculate the circus function
-                        if (verbose)
+                        if (clog(debug))
                                 std::cerr << " " << pfunctionals[p].name << "..." << std::flush;
                         Eigen::VectorXd circus = getCircusFunction(
                                 sinogram,
@@ -135,7 +135,7 @@ Eigen::MatrixXd getTransform(/*const*/ Eigen::MatrixXd &input,
                         output.col(t*pfunctionals.size() + p) = normalized;
                 }
         }
-        if (verbose)
+        if (clog(debug))
                 std::cerr << "\n";
 
         return output;
