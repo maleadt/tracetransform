@@ -2,19 +2,19 @@
 # Configuration
 #
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.10)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.7)
 PROJECT(TraceTransform)
-
-# Standard libraries
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
 # Local modules
 SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 
+# Standard libraries
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
 # Extra warnings
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 
 # Add address sanitizer to debug build
 IF (${CMAKE_C_COMPILER_ID} MATCHES "Clang" AND NOT ${CMAKE_C_COMPILER_VERSION} LESS "3.2")
@@ -64,5 +64,3 @@ ADD_LIBRARY(functionals src/functionals.h src/functionals.c)
 ADD_EXECUTABLE(transform src/main.cpp)
 TARGET_LINK_LIBRARIES(transform functionals ${Boost_LIBRARIES})
 
-ADD_EXECUTABLE(test_tutorial src/test_tutorial.cpp)
-TARGET_LINK_LIBRARIES(test_tutorial functionals)

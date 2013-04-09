@@ -3,8 +3,8 @@
 //
 
 // Include guard
-#ifndef WRAPPER_H
-#define WRAPPER_H
+#ifndef TRACETRANSFORM_WRAPPER_HPP
+#define TRACETRANSFORM_WRAPPER_HPP
 
 // Standard library
 #include <functional>

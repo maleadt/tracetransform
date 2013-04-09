@@ -2,14 +2,12 @@
 // Configuration
 //
 
-// System includes
+// Standard library
 #include <iostream>
-#include <iomanip>
 #include <string>
 #include <sstream>
 #include <vector>
-#include <fstream>
-#include <sys/stat.h>
+#include <cmath>
 
 // Boost
 #include <boost/program_options.hpp>
@@ -17,39 +15,30 @@
 #include <boost/format.hpp>
 
 // Eigen
+#define EIGEN_DEFAULT_DENSE_INDEX_TYPE std::size_t
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 
 // Local includes
-#include "auxiliary.h"
+#include "auxiliary.hpp"
 extern "C" {
         #include "functionals.h"
 }
-#include "wrapper.h"
-#include "tracetransform.h"
-#include "circusfunction.h"
-
-// Algorithm parameters
-#define ANGLE_INTERVAL          1
-#define DISTANCE_INTERVAL       1
+#include "wrapper.hpp"
+#include "improc.hpp"
 
 
 //
 // Program option parsers
 //
 
-struct TFunctional {
-        std::string name;
-        FunctionalWrapper *wrapper;
-};
-
 std::istream& operator>>(std::istream& in, TFunctional& tfunctional)
 {
-    std::string token;
-    in >> token;
-    if (token == "0") {
-        tfunctional.name = "T0";
-        tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctionalRadon);
+        std::string token;
+        in >> token;
+        if (token == "0") {
+                tfunctional.name = "T0";
+                tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctionalRadon);
         } else if (token == "1") {
                 tfunctional.name = "T1";
                 tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctional1);
@@ -70,22 +59,8 @@ std::istream& operator>>(std::istream& in, TFunctional& tfunctional)
                         boost::program_options::validation_error::invalid_option_value,
                         "Unknown T-functional");
         }
-    return in;
+        return in;
 }
-
-struct PFunctional
-{
-        enum
-        {
-                REGULAR,
-                HERMITE
-        } type;
-
-        std::string name;
-        FunctionalWrapper *wrapper;
-
-        boost::optional<unsigned int> order;
-};
 
 std::istream& operator>>(std::istream& in, PFunctional& pfunctional)
 {
@@ -204,7 +179,7 @@ int main(int argc, char **argv)
         }
 
         // Check for orthonormal P-functionals
-        size_t orthonormal_count = 0;
+        unsigned int orthonormal_count = 0;
         for (size_t p = 0; p < pfunctionals.size(); p++) {
                 if (pfunctionals[p].type == PFunctional::HERMITE)
                         orthonormal_count++;
@@ -236,96 +211,16 @@ int main(int argc, char **argv)
                 input = resize(input, nsize, nsize);
         }
 
-        // Pad the image so we can freely rotate without losing information
-        Point origin(
-                std::floor((input.cols() + 1) / 2.0) - 1,
-                std::floor((input.rows() + 1) / 2.0) - 1);
-        int rLast = (int) std::ceil(std::hypot(
-                input.cols() - 1 - origin.x() - 1,
-                input.rows() - 1 - origin.y() - 1)) + 1;
-        int rFirst = -rLast;
-        int nBins = rLast - rFirst + 1;
-        Eigen::MatrixXd input_padded = Eigen::MatrixXd::Zero(nBins, nBins);
-        Point origin_padded(
-                std::floor((input_padded.cols() + 1) / 2.0) - 1,
-                std::floor((input_padded.rows() + 1) / 2.0) - 1);
-        Point df = origin_padded - origin;
-        for (int col = 0; col < input.cols(); col++) {
-                for (int row = 0; row < input.rows(); row++) {
-                        input_padded(row + (int) df.y(), col + (int) df.x())
-                                = input(row, col);
-                }
-        }
-
-        // Allocate a matrix for all output data to reside in
-        Eigen::MatrixXd output(
-                360 / ANGLE_INTERVAL,
-                tfunctionals.size() * pfunctionals.size());
-
-        // Process all T-functionals
-        if (vm.count("verbose"))
-                std::cerr << "Calculating";
-        for (size_t t = 0; t < tfunctionals.size(); t++) {
-                // Calculate the trace transform sinogram
-                if (vm.count("verbose"))
-                        std::cerr << " " << tfunctionals[t].name << "..." << std::flush;
-                Eigen::MatrixXd sinogram = getTraceTransform(
-                        input_padded,
-                        ANGLE_INTERVAL,
-                        DISTANCE_INTERVAL,
-                        tfunctionals[t].wrapper
-                );
-
-#ifndef NDEBUG
-                // Save the sinogram image
-                std::stringstream fn_trace_image;
-                fn_trace_image << "trace_" << tfunctionals[t].name << ".pgm";
-                pgmWrite(fn_trace_image.str(), mat2gray(sinogram));
-
-                // Save the sinogram data
-                std::stringstream fn_trace_data;
-                fn_trace_data << "trace_" << tfunctionals[t].name << ".dat";
-                dataWrite(fn_trace_data.str(), sinogram);
-#endif
-
-                // Orthonormal functionals require the nearest orthonormal sinogram
-                unsigned int sinogram_center;
-                if (orthonormal)
-                        sinogram = nearest_orthonormal_sinogram(sinogram, sinogram_center);
-
-                // Process all P-functionals
-                for (size_t p = 0; p < pfunctionals.size(); p++) {
-                        // Configure any extra parameters
-                        if (pfunctionals[p].type == PFunctional::HERMITE)
-                                dynamic_cast<GenericFunctionalWrapper<unsigned int, unsigned int>*>
-                                        (pfunctionals[p].wrapper)
-                                        ->configure(*pfunctionals[p].order, sinogram_center);
-
-                        // Calculate the circus function
-                        if (vm.count("verbose"))
-                                std::cerr << " " << pfunctionals[p].name << "..." << std::flush;
-                        Eigen::VectorXd circus = getCircusFunction(
-                                sinogram,
-                                pfunctionals[p].wrapper
-                        );
-
-                        // Normalize
-                        Eigen::VectorXd normalized = zscore(circus);
-
-                        // Copy the data
-                        assert(normalized.size() == output.rows());
-                        output.col(t*pfunctionals.size() + p) = normalized;
-                }
-        }
-        if (vm.count("verbose"))
-                std::cerr << "\n";
+        // Process the image
+        Eigen::MatrixXd output = processImage(input, tfunctionals, pfunctionals,
+                        orthonormal, vm.count("verbose"));
 
         // Save the output data
         if (pfunctionals.size() > 0) {          
                 std::vector<std::string> headers;
-                for (int tp = 0; tp < output.cols(); tp++) {
-                        size_t t = tp / (unsigned) pfunctionals.size();
-                        size_t p = tp % (unsigned) pfunctionals.size();
+                for (size_t tp = 0; tp < output.cols(); tp++) {
+                        size_t t = tp / pfunctionals.size();
+                        size_t p = tp % pfunctionals.size();
                         std::stringstream header;
                         header << tfunctionals[t].name << "-"
                                 << pfunctionals[p].name;

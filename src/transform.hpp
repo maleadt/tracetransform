@@ -3,8 +3,8 @@
 //
 
 // Include guard
-#ifndef TRACETRANSFORM_H
-#define TRACETRANSFORM_H
+#ifndef TRACETRANSFORM_TRANSFORM_HPP
+#define TRACETRANSFORM_TRANSFORM_HPP
 
 // Standard library
 #include <limits>
@@ -13,7 +13,7 @@
 #include <Eigen/Dense>
 
 // Local includes
-#include "wrapper.h"
+#include "wrapper.hpp"
 
 
 //

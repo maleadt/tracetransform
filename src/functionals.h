@@ -3,8 +3,8 @@
 //
 
 // Include guard
-#ifndef FUNCTIONALS_H
-#define FUNCTIONALS_H
+#ifndef TRACETRANSFORM_FUNCTIONALS_H
+#define TRACETRANSFORM_FUNCTIONALS_H
 
 // Standard library
 #include <string.h>

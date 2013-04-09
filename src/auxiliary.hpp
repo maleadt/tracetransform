@@ -3,8 +3,8 @@
 //
 
 // Include guard
-#ifndef AUXILIARY_H
-#define AUXILIARY_H
+#ifndef TRACETRANSFORM_AUXILIARY_HPP
+#define TRACETRANSFORM_AUXILIARY_HPP
 
 // Standard library
 #include <iostream>
@@ -14,11 +14,6 @@
 
 // Eigen
 #include <Eigen/Dense>
-
-
-//
-// Data
-//
 
 
 //
@@ -119,10 +114,10 @@ void dataWrite(std::string filename, const Eigen::MatrixXd &data,
 
         // Calculate column width
         std::vector<unsigned int> widths(data.cols(), 0);
-        for (int col = 0; col < data.cols(); col++) {
+        for (size_t col = 0; col < data.cols(); col++) {
                 if (headers.size() > 0)
                         widths[col] = headers[col].length();
-                for (int row = 0; row < data.rows(); row++) {
+                for (size_t row = 0; row < data.rows(); row++) {
                         double value = data(row, col);
                         unsigned int width = 3; // decimal, comma, 2 decimals
                         if (value > 1)
@@ -151,9 +146,9 @@ void dataWrite(std::string filename, const Eigen::MatrixXd &data,
 
         // Print data
         fd_data << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-        for (int row = 0; row < data.rows(); row++) {
+        for (size_t row = 0; row < data.rows(); row++) {
                 fd_data << "   ";
-                for (int col = 0; col < data.cols(); col++) {
+                for (size_t col = 0; col < data.cols(); col++) {
                         fd_data << std::setw(widths[col])
                                 << data(row, col);
                 }
@@ -282,7 +277,7 @@ double arithmetic_mean(const Eigen::VectorXd &input)
                 return NAN;
 
         double sum = 0;
-        for (int i = 0; i < input.size(); i++) {
+        for (size_t i = 0; i < input.size(); i++) {
                 sum += input(i);
         }
 
@@ -296,7 +291,7 @@ double standard_deviation(const Eigen::VectorXd &input)
 
         double mean = arithmetic_mean(input);
         double sum = 0;
-        for (int i = 0; i < input.size(); i++) {
+        for (size_t i = 0; i < input.size(); i++) {
                 double diff = input(i) - mean;
                 sum += diff*diff;
         }
@@ -315,7 +310,7 @@ Eigen::VectorXd zscore(const Eigen::VectorXd &input)
         double stdev = standard_deviation(input);
 
         Eigen::VectorXd transformed(input.size());
-        for (int i = 0; i < input.size(); i++) {
+        for (size_t i = 0; i < input.size(); i++) {
                 transformed(i) = (input(i) - mean) / stdev;
         }
         

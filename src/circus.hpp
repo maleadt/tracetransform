@@ -3,8 +3,8 @@
 //
 
 // Include guard
-#ifndef CIRCUSFUNCTION_H
-#define CIRCUSFUNCTION_H
+#ifndef TRACETRANSFORM_CIRCUS_HPP
+#define TRACETRANSFORM_CIRCUS_HPP
 
 // Standard library
 #include <limits>
@@ -14,8 +14,8 @@
 #include <Eigen/SVD>
 
 // Local includes
-#include "auxiliary.h"
-#include "wrapper.h"
+#include "auxiliary.hpp"
+#include "wrapper.hpp"
 extern "C" {
         #include "functionals.h"
 }
@@ -34,7 +34,7 @@ Eigen::MatrixXd nearest_orthonormal_sinogram(
         assert(input.cols() >= 0);
         unsigned int sinogram_center = (unsigned int) std::floor((input.rows() - 1) / 2.0);
         std::vector<int> offset(input.cols());  // TODO: Eigen vector
-        for (int p = 0; p < input.cols(); p++) {
+        for (size_t p = 0; p < input.cols(); p++) {
                 size_t median = findWeighedMedian(
                         input.data() + p*input.rows(),
                         input.rows());
@@ -48,8 +48,8 @@ Eigen::MatrixXd nearest_orthonormal_sinogram(
         new_center = sinogram_center + max;
         // TODO: zeros?
         Eigen::MatrixXd aligned(input.rows() + padding, input.cols());
-        for (int col = 0; col < input.cols(); col++) {
-                for (int row = 0; row < input.rows(); row++) {
+        for (size_t col = 0; col < input.cols(); col++) {
+                for (size_t row = 0; row < input.rows(); row++) {
                         aligned(max+row-offset[col], col) = input(row, col);
                 }
         }
@@ -71,7 +71,7 @@ Eigen::VectorXd getCircusFunction(
         Eigen::VectorXd output(input.cols());
 
         // Trace all columns
-        for (int p = 0; p < input.cols(); p++) {
+        for (size_t p = 0; p < input.cols(); p++) {
                 output(p) = (*pfunctional)(
                         input.data() + p*input.rows(),
                         input.rows());
