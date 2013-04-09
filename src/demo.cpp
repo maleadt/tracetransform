@@ -123,9 +123,9 @@ int main(int argc, char **argv)
         // Declare named options
         boost::program_options::options_description desc("Allowed options");
         desc.add_options()
-                ("help",
+                ("help,h",
                 "       produce help message")
-                ("verbose",
+                ("verbose,v",
                         "display some more details")
                 ("input,i",
                         boost::program_options::value<std::string>()
