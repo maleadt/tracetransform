@@ -18,7 +18,6 @@
 // Eigen
 #define EIGEN_DEFAULT_DENSE_INDEX_TYPE std::size_t
 #include <Eigen/Dense>
-#include <Eigen/Geometry>
 
 // Local
 #include "auxiliary.hpp"
@@ -223,7 +222,7 @@ int main(int argc, char **argv)
                         // Save individual traces as well
                         std::stringstream fn_trace_data;
                         fn_trace_data << "trace_" << header.str() << ".dat";
-                        dataWrite(fn_trace_data.str(), output.col(tp));
+                        dataWrite(fn_trace_data.str(), (Eigen::MatrixXd) output.col(tp));
 #endif
                 }
                 dataWrite(vm["output"].as<std::string>(), output, headers);
