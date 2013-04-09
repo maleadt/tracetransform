@@ -3,8 +3,8 @@
 //
 
 // Include guard
-#ifndef _TRACETRANSFORM_LOGGER_HPP
-#define _TRACETRANSFORM_LOGGER_HPP
+#ifndef _TRACETRANSFORM_LOGGER_
+#define _TRACETRANSFORM_LOGGER_
 
 // Standard library
 #include <iostream>

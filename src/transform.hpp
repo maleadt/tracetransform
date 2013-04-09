@@ -3,8 +3,8 @@
 //
 
 // Include guard
-#ifndef TRACETRANSFORM_TRANSFORM_HPP
-#define TRACETRANSFORM_TRANSFORM_HPP
+#ifndef _TRACETRANSFORM_TRANSFORM_
+#define _TRACETRANSFORM_TRANSFORM_
 
 // Standard library
 #include <vector>

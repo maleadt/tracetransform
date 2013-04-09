@@ -3,8 +3,8 @@
 //
 
 // Include guard
-#ifndef TRACETRANSFORM_AUXILIARY_HPP
-#define TRACETRANSFORM_AUXILIARY_HPP
+#ifndef _TRACETRANSFORM_AUXILIARY_
+#define _TRACETRANSFORM_AUXILIARY_
 
 // Standard library
 #include <iostream>

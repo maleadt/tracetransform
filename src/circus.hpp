@@ -3,8 +3,8 @@
 //
 
 // Include guard
-#ifndef TRACETRANSFORM_CIRCUS_HPP
-#define TRACETRANSFORM_CIRCUS_HPP
+#ifndef _TRACETRANSFORM_CIRCUS_
+#define _TRACETRANSFORM_CIRCUS_
 
 // Standard library
 #include <cstddef>

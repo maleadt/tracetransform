@@ -3,8 +3,8 @@
 //
 
 // Include guard
-#ifndef TRACETRANSFORM_SINOGRAM_HPP
-#define TRACETRANSFORM_SINOGRAM_HPP
+#ifndef _TRACETRANSFORM_SINOGRAM_
+#define _TRACETRANSFORM_SINOGRAM_
 
 // Standard library
 #include <cstddef>

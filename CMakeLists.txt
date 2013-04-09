@@ -54,18 +54,20 @@ INCLUDE_DIRECTORIES(SYSTEM ${EIGEN3_INCLUDE_DIR})
 # Libraries
 #
 
+ADD_LIBRARY(auxiliary src/auxiliary.hpp src/auxiliary.cpp)
+ADD_LIBRARY(logger src/logger.hpp src/logger.cpp)
+SET(COMMON_LIBRARIES auxiliary logger)
+
 ADD_LIBRARY(functionals src/functionals.h src/functionals.c)
 
-ADD_LIBRARY(auxiliary src/auxiliary.hpp src/auxiliary.cpp)
-
 ADD_LIBRARY(sinogram src/sinogram.hpp src/sinogram.cpp)
-TARGET_LINK_LIBRARIES(sinogram auxiliary)
+TARGET_LINK_LIBRARIES(sinogram ${COMMON_LIBRARIES})
 
 ADD_LIBRARY(circus src/circus.hpp src/circus.cpp)
-TARGET_LINK_LIBRARIES(circus auxiliary)
+TARGET_LINK_LIBRARIES(circus ${COMMON_LIBRARIES})
 
 ADD_LIBRARY(transform src/transform.hpp src/transform.cpp)
-TARGET_LINK_LIBRARIES(transform auxiliary sinogram circus)
+TARGET_LINK_LIBRARIES(transform ${COMMON_LIBRARIES} sinogram circus)
 
 
 #
@@ -73,5 +75,4 @@ TARGET_LINK_LIBRARIES(transform auxiliary sinogram circus)
 #
 
 ADD_EXECUTABLE(demo src/demo.cpp)
-TARGET_LINK_LIBRARIES(demo functionals auxiliary transform ${Boost_LIBRARIES})
-
+TARGET_LINK_LIBRARIES(demo functionals ${COMMON_LIBRARIES} transform ${Boost_LIBRARIES})
