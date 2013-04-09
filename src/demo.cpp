@@ -226,5 +226,6 @@ int main(int argc, char **argv)
                 dataWrite(vm["output"].as<std::string>(), output, headers);
         }
 
+        clog(debug) << "Exiting" << std::endl;
         return 0;
 }
