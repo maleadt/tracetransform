@@ -20,6 +20,7 @@
 #include <Eigen/Dense>
 
 // Local
+#include "logger.hpp"
 #include "auxiliary.hpp"
 extern "C" {
         #include "functionals.h"
@@ -123,10 +124,14 @@ int main(int argc, char **argv)
         // Declare named options
         boost::program_options::options_description desc("Allowed options");
         desc.add_options()
-                ("help",
-                "       produce help message")
-                ("verbose",
+                ("help,h",
+                        "produce help message")
+                ("quiet,q",
+                        "only display errors and warnings")
+                ("verbose,v",
                         "display some more details")
+                ("debug,d",
+                        "display even more details")
                 ("input,i",
                         boost::program_options::value<std::string>()
                         ->required(),
@@ -178,6 +183,16 @@ int main(int argc, char **argv)
                 return 1;
         }
         
+        // Configure logging
+        if (vm.count("debug")) {
+                logger.settings.threshold = trace;
+                logger.settings.prefix_timestamp = true;
+                logger.settings.prefix_level = true;
+        } else if (vm.count("verbose"))
+                logger.settings.threshold = debug;
+        else if (vm.count("quiet"))
+                logger.settings.threshold = warning;
+
 
         //
         // Image processing
@@ -188,8 +203,7 @@ int main(int argc, char **argv)
         input = gray2mat(input);
 
         // Transform the image
-        Eigen::MatrixXd output = getTransform(input, tfunctionals, pfunctionals,
-                        vm.count("verbose"));
+        Eigen::MatrixXd output = getTransform(input, tfunctionals, pfunctionals);
 
         // Save the output data
         if (pfunctionals.size() > 0) {          
@@ -212,5 +226,6 @@ int main(int argc, char **argv)
                 dataWrite(vm["output"].as<std::string>(), output, headers);
         }
 
+        clog(debug) << "Exiting" << std::endl;
         return 0;
 }
