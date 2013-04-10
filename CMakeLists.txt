@@ -76,3 +76,6 @@ TARGET_LINK_LIBRARIES(transform ${COMMON_LIBRARIES} sinogram circus)
 
 ADD_EXECUTABLE(demo src/demo.cpp)
 TARGET_LINK_LIBRARIES(demo functionals ${COMMON_LIBRARIES} transform ${Boost_LIBRARIES})
+
+ADD_EXECUTABLE(benchmark src/benchmark.cpp)
+TARGET_LINK_LIBRARIES(benchmark functionals ${COMMON_LIBRARIES} transform ${Boost_LIBRARIES})

@@ -203,7 +203,8 @@ int main(int argc, char **argv)
         input = gray2mat(input);
 
         // Transform the image
-        Eigen::MatrixXd output = getTransform(input, tfunctionals, pfunctionals);
+        Transformer transformer(input, tfunctionals, pfunctionals);
+        Eigen::MatrixXd output = transformer.getTransform();
 
         // Save the output data
         if (pfunctionals.size() > 0) {          

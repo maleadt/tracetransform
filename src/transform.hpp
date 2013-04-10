@@ -48,8 +48,20 @@ struct PFunctional
 // Module definitions
 //
 
-Eigen::MatrixXd getTransform(const Eigen::MatrixXd &input,
+class Transformer
+{
+public:
+        Transformer(const Eigen::MatrixXd &image,
                 const std::vector<TFunctional> &tfunctionals,
                 const std::vector<PFunctional> &pfunctionals);
+
+        Eigen::MatrixXd getTransform() const;
+
+private:
+        const std::vector<TFunctional> &_tfunctionals;
+        const std::vector<PFunctional> &_pfunctionals;
+        Eigen::MatrixXd _image;
+        bool _orthonormal;
+};
 
 #endif
