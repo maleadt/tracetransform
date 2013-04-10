@@ -35,7 +35,7 @@ Transformer::Transformer(const Eigen::MatrixXd &image,
         // Check for orthonormal P-functionals
         unsigned int orthonormal_count = 0;
         for (size_t p = 0; p < _pfunctionals.size(); p++) {
-                if (_pfunctionals[p].type == PFunctional::HERMITE)
+                if (_pfunctionals[p].type == PFunctional::Type::HERMITE)
                         orthonormal_count++;
         }
         if (orthonormal_count == 0)
@@ -117,7 +117,7 @@ Eigen::MatrixXd Transformer::getTransform() const
                 // Process all P-functionals
                 for (size_t p = 0; p < _pfunctionals.size(); p++) {
                         // Configure any extra parameters
-                        if (_pfunctionals[p].type == PFunctional::HERMITE)
+                        if (_pfunctionals[p].type == PFunctional::Type::HERMITE)
                                 dynamic_cast<GenericFunctionalWrapper<unsigned int, unsigned int>*>
                                         (_pfunctionals[p].wrapper)
                                         ->configure(*_pfunctionals[p].order, sinogram_center);

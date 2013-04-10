@@ -38,23 +38,23 @@ std::istream& operator>>(std::istream& in, TFunctional& tfunctional)
         std::string token;
         in >> token;
         if (token == "0") {
-                tfunctional.name = "T0";
-                tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctionalRadon);
+                tfunctional = TFunctional("T0",
+                                new SimpleFunctionalWrapper(TFunctionalRadon));
         } else if (token == "1") {
-                tfunctional.name = "T1";
-                tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctional1);
+                tfunctional = TFunctional("T1",
+                                new SimpleFunctionalWrapper(TFunctional1));
         } else if (token == "2") {
-                tfunctional.name = "T2";
-                tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctional2);
+                tfunctional = TFunctional("T2",
+                                new SimpleFunctionalWrapper(TFunctional2));
         } else if (token == "3") {
-                tfunctional.name = "T3";
-                tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctional3);
+                tfunctional = TFunctional("T3",
+                                new SimpleFunctionalWrapper(TFunctional3));
         } else if (token == "4") {
-                tfunctional.name = "T4";
-                tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctional4);
+                tfunctional = TFunctional("T4",
+                                new SimpleFunctionalWrapper(TFunctional4));
         } else if (token == "5") {
-                tfunctional.name = "T5";
-                tfunctional.wrapper = new SimpleFunctionalWrapper(TFunctional5);
+                tfunctional = TFunctional("T5",
+                                new SimpleFunctionalWrapper(TFunctional5));
         } else {
                 throw boost::program_options::validation_error(
                         boost::program_options::validation_error::invalid_option_value,
@@ -68,17 +68,14 @@ std::istream& operator>>(std::istream& in, PFunctional& pfunctional)
         std::string token;
         in >> token;
         if (token == "1") {
-                pfunctional.name = "P1";
-                pfunctional.wrapper = new SimpleFunctionalWrapper(PFunctional1);
-                pfunctional.type = PFunctional::REGULAR;
+                pfunctional = PFunctional("P1",
+                                new SimpleFunctionalWrapper(PFunctional1));
         } else if (token == "2") {
-                pfunctional.name = "P2";
-                pfunctional.wrapper = new SimpleFunctionalWrapper(PFunctional2);
-                pfunctional.type = PFunctional::REGULAR;
+                pfunctional = PFunctional("P2",
+                                new SimpleFunctionalWrapper(PFunctional2));
         } else if (token == "3") {
-                pfunctional.name = "P3";
-                pfunctional.wrapper = new SimpleFunctionalWrapper(PFunctional3);
-                pfunctional.type = PFunctional::REGULAR;
+                pfunctional = PFunctional("P3",
+                                new SimpleFunctionalWrapper(PFunctional3));
         } else if (token[0] == 'H') {
                 unsigned int order;
                 if (token.size() < 2)
@@ -93,11 +90,10 @@ std::istream& operator>>(std::istream& in, PFunctional& pfunctional)
                                 boost::program_options::validation_error::invalid_option_value,
                                 "Unparseable order parameter for Hermite P-functional");
                 }
-
-                pfunctional.name = boost::str(boost::format("H%d") % order);
-                pfunctional.wrapper = new GenericFunctionalWrapper<unsigned int, unsigned int>(PFunctionalHermite);
-                pfunctional.order = order;
-                pfunctional.type = PFunctional::HERMITE;
+                pfunctional = PFunctional(boost::str(boost::format("H%d") % order),
+                                new GenericFunctionalWrapper<unsigned int, unsigned int>(PFunctionalHermite),
+                                PFunctional::Type::HERMITE,
+                                order);
         } else {
                 throw boost::program_options::validation_error(
                         boost::program_options::validation_error::invalid_option_value,
