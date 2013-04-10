@@ -72,17 +72,13 @@ struct PFunctional
 class Transformer
 {
 public:
-        Transformer(const Eigen::MatrixXd &image,
-                const std::vector<TFunctional> &tfunctionals,
-                const std::vector<PFunctional> &pfunctionals);
+        Transformer(const Eigen::MatrixXd &image);
 
-        Eigen::MatrixXd getTransform() const;
+        Eigen::MatrixXd getTransform(const std::vector<TFunctional> &tfunctionals,
+                        const std::vector<PFunctional> &pfunctionals) const;
 
 private:
-        const std::vector<TFunctional> &_tfunctionals;
-        const std::vector<PFunctional> &_pfunctionals;
-        Eigen::MatrixXd _image;
-        bool _orthonormal;
+        Eigen::MatrixXd _image, _image_orthonormal;
 };
 
 #endif

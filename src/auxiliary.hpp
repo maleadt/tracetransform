@@ -54,6 +54,8 @@ Eigen::MatrixXd resize(const Eigen::MatrixXd &input, const unsigned int rows, co
 
 Eigen::MatrixXd rotate(const Eigen::MatrixXd &input, const Point &origin, const double angle);
 
+Eigen::MatrixXd pad(const Eigen::MatrixXd &image);
+
 double arithmetic_mean(const Eigen::VectorXd &input);
 
 double standard_deviation(const Eigen::VectorXd &input);
