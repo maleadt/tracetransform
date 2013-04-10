@@ -18,6 +18,13 @@ namespace Hayai
     class Test
     {
     public:
+        /// Virtual destructor to prevent undefined behaviour
+        virtual ~Test()
+        {
+
+        }
+
+
         /// Set up the testing fixture for execution of a run.
         virtual void SetUp()
         {
