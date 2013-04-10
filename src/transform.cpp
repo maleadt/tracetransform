@@ -34,7 +34,7 @@ Transformer::Transformer(const Eigen::MatrixXd &image)
         // square sinogram
         int ndiag = (int) std::ceil(360.0/ANGLE_INTERVAL);
         int nsize = (int) std::ceil(ndiag/std::sqrt(2));
-        _image_orthonormal = resize(image, nsize, nsize);
+        _image_orthonormal = resize(_image, nsize, nsize);
 
         // Pad the images so we can freely rotate without losing information
         _image = pad(_image);
@@ -74,7 +74,7 @@ Eigen::MatrixXd Transformer::getTransform(const std::vector<TFunctional> &tfunct
         // Process all T-functionals
         for (size_t t = 0; t < tfunctionals.size(); t++) {
                 // Calculate the trace transform sinogram
-                clog(debug) << "Calculating sinogram " << tfunctionals[t].name << std::endl;
+                clog(debug) << "Calculating " << tfunctionals[t].name << " sinogram" << std::endl;
                 Eigen::MatrixXd sinogram = getSinogram(
                         *image_selected,
                         ANGLE_INTERVAL,
@@ -96,8 +96,10 @@ Eigen::MatrixXd Transformer::getTransform(const std::vector<TFunctional> &tfunct
 
                 // Orthonormal functionals require the nearest orthonormal sinogram
                 unsigned int sinogram_center;
-                if (orthonormal)
+                if (orthonormal) {
+                        clog(trace) << "Orthonormalizing sinogram" << std::endl;
                         sinogram = nearest_orthonormal_sinogram(sinogram, sinogram_center);
+                }
 
                 // Process all P-functionals
                 for (size_t p = 0; p < pfunctionals.size(); p++) {
@@ -108,7 +110,10 @@ Eigen::MatrixXd Transformer::getTransform(const std::vector<TFunctional> &tfunct
                                         ->configure(*pfunctionals[p].order, sinogram_center);
 
                         // Calculate the circus function
-                        clog(debug) << "Calculating circus function" << tfunctionals[t].name << "-" << pfunctionals[p].name << std::endl;
+                        clog(debug) << "Calculating " << pfunctionals[p].name
+                                        << " circus function for "
+                                        << tfunctionals[t].name
+                                        << " sinogram" << std::endl;
                         Eigen::VectorXd circus = getCircusFunction(
                                 sinogram,
                                 pfunctionals[p].wrapper

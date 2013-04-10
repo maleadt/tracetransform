@@ -38,7 +38,7 @@ std::istream& operator>>(std::istream& in, TFunctional& tfunctional)
         std::string token;
         in >> token;
         if (token == "0") {
-                tfunctional = TFunctional("T0",
+                tfunctional = TFunctional("Radon",
                                 new SimpleFunctionalWrapper(TFunctionalRadon));
         } else if (token == "1") {
                 tfunctional = TFunctional("T1",
