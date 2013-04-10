@@ -25,21 +25,42 @@
 //
 
 struct TFunctional {
+        TFunctional()
+                : wrapper(nullptr)
+        {
+        }
+
+        TFunctional(std::string name, FunctionalWrapper *wrapper)
+                : name(name), wrapper(wrapper)
+        {
+        }
+
         std::string name;
         FunctionalWrapper *wrapper;
 };
 
 struct PFunctional
 {
-        enum
+        enum class Type
         {
                 REGULAR,
                 HERMITE
-        } type;
+        };
+
+        PFunctional()
+                : wrapper(nullptr)
+        {
+        }
+
+        PFunctional(std::string name, FunctionalWrapper *wrapper,
+                        Type type = Type::REGULAR, boost::optional<unsigned int> order = boost::none)
+                : name(name), wrapper(wrapper), type(type), order(order)
+        {
+        }
 
         std::string name;
         FunctionalWrapper *wrapper;
-
+        Type type;
         boost::optional<unsigned int> order;
 };
 
@@ -48,8 +69,16 @@ struct PFunctional
 // Module definitions
 //
 
-Eigen::MatrixXd getTransform(/*const*/ Eigen::MatrixXd &input,
-                const std::vector<TFunctional> &tfunctionals,
-                const std::vector<PFunctional> &pfunctionals);
+class Transformer
+{
+public:
+        Transformer(const Eigen::MatrixXd &image);
+
+        Eigen::MatrixXd getTransform(const std::vector<TFunctional> &tfunctionals,
+                        const std::vector<PFunctional> &pfunctionals) const;
+
+private:
+        Eigen::MatrixXd _image, _image_orthonormal;
+};
 
 #endif

@@ -260,6 +260,32 @@ Eigen::MatrixXd rotate(const Eigen::MatrixXd &input, const Point &origin, const 
         return output;
 }
 
+Eigen::MatrixXd pad(const Eigen::MatrixXd &image)
+{
+        // Pad the images so we can freely rotate without losing information
+        Point origin(
+                std::floor((image.cols() + 1) / 2.0) - 1,
+                std::floor((image.rows() + 1) / 2.0) - 1);
+        int rLast = (int) std::ceil(std::hypot(
+                        image.cols() - 1 - origin.x() - 1,
+                        image.rows() - 1 - origin.y() - 1)) + 1;
+        int rFirst = -rLast;
+        int nBins = rLast - rFirst + 1;
+        Eigen::MatrixXd image_padded = Eigen::MatrixXd::Zero(nBins, nBins);
+        Point origin_padded(
+                std::floor((image_padded.cols() + 1) / 2.0) - 1,
+                std::floor((image_padded.rows() + 1) / 2.0) - 1);
+        Point df = origin_padded - origin;
+        for (size_t col = 0; col < image.cols(); col++) {
+                for (size_t row = 0; row < image.rows(); row++) {
+                        image_padded(row + (int) df.y(), col + (int) df.x())
+                                = image(row, col);
+                }
+        }
+
+        return image_padded;
+}
+
 double arithmetic_mean(const Eigen::VectorXd &input)
 {
         if (input.size() == 0)
