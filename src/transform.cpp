@@ -27,7 +27,7 @@
 // Module definitions
 //
 
-Eigen::MatrixXd getTransform(/*const*/ Eigen::MatrixXd &input,
+Eigen::MatrixXd getTransform(const Eigen::MatrixXd &input,
                 const std::vector<TFunctional> &tfunctionals,
                 const std::vector<PFunctional> &pfunctionals)
 {
@@ -48,19 +48,22 @@ Eigen::MatrixXd getTransform(/*const*/ Eigen::MatrixXd &input,
 
         // Orthonormal P-functionals need a stretched image in order to ensure a
         // square sinogram
+        const Eigen::MatrixXd *input_preprocessed = &input;
+        Eigen::MatrixXd input_stretched;
         if (orthonormal) {
                 int ndiag = (int) std::ceil(360.0/ANGLE_INTERVAL);
                 int nsize = (int) std::ceil(ndiag/std::sqrt(2));
-                input = resize(input, nsize, nsize);
+                input_stretched = resize(input, nsize, nsize);
+                input_preprocessed = &input_stretched;
         }
 
         // Pad the image so we can freely rotate without losing information
         Point origin(
-                std::floor((input.cols() + 1) / 2.0) - 1,
-                std::floor((input.rows() + 1) / 2.0) - 1);
+                std::floor((input_preprocessed->cols() + 1) / 2.0) - 1,
+                std::floor((input_preprocessed->rows() + 1) / 2.0) - 1);
         int rLast = (int) std::ceil(std::hypot(
-                input.cols() - 1 - origin.x() - 1,
-                input.rows() - 1 - origin.y() - 1)) + 1;
+                input_preprocessed->cols() - 1 - origin.x() - 1,
+                input_preprocessed->rows() - 1 - origin.y() - 1)) + 1;
         int rFirst = -rLast;
         int nBins = rLast - rFirst + 1;
         Eigen::MatrixXd input_padded = Eigen::MatrixXd::Zero(nBins, nBins);
@@ -68,10 +71,10 @@ Eigen::MatrixXd getTransform(/*const*/ Eigen::MatrixXd &input,
                 std::floor((input_padded.cols() + 1) / 2.0) - 1,
                 std::floor((input_padded.rows() + 1) / 2.0) - 1);
         Point df = origin_padded - origin;
-        for (size_t col = 0; col < input.cols(); col++) {
-                for (size_t row = 0; row < input.rows(); row++) {
+        for (size_t col = 0; col < input_preprocessed->cols(); col++) {
+                for (size_t row = 0; row < input_preprocessed->rows(); row++) {
                         input_padded(row + (int) df.y(), col + (int) df.x())
-                                = input(row, col);
+                                = (*input_preprocessed)(row, col);
                 }
         }
 
