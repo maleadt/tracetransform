@@ -91,17 +91,17 @@ Eigen::MatrixXd getTransform(/*const*/ Eigen::MatrixXd &input,
                         tfunctionals[t].wrapper
                 );
 
-#ifndef NDEBUG
-                // Save the sinogram image
-                std::stringstream fn_trace_image;
-                fn_trace_image << "trace_" << tfunctionals[t].name << ".pgm";
-                pgmWrite(fn_trace_image.str(), mat2gray(sinogram));
+                if (clog(debug)) {
+                        // Save the sinogram image
+                        std::stringstream fn_trace_image;
+                        fn_trace_image << "trace_" << tfunctionals[t].name << ".pgm";
+                        pgmWrite(fn_trace_image.str(), mat2gray(sinogram));
 
-                // Save the sinogram data
-                std::stringstream fn_trace_data;
-                fn_trace_data << "trace_" << tfunctionals[t].name << ".dat";
-                dataWrite(fn_trace_data.str(), sinogram);
-#endif
+                        // Save the sinogram data
+                        std::stringstream fn_trace_data;
+                        fn_trace_data << "trace_" << tfunctionals[t].name << ".dat";
+                        dataWrite(fn_trace_data.str(), sinogram);
+                }
 
                 // Orthonormal functionals require the nearest orthonormal sinogram
                 unsigned int sinogram_center;

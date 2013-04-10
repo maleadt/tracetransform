@@ -216,12 +216,12 @@ int main(int argc, char **argv)
                                 << pfunctionals[p].name;
                         headers.push_back(header.str());
 
-#ifndef NDEBUG
-                        // Save individual traces as well
-                        std::stringstream fn_trace_data;
-                        fn_trace_data << "trace_" << header.str() << ".dat";
-                        dataWrite(fn_trace_data.str(), (Eigen::MatrixXd) output.col(tp));
-#endif
+                        if (clog(debug)) {
+                                // Save individual traces as well
+                                std::stringstream fn_trace_data;
+                                fn_trace_data << "trace_" << header.str() << ".dat";
+                                dataWrite(fn_trace_data.str(), (Eigen::MatrixXd) output.col(tp));
+                        }
                 }
                 dataWrite(vm["output"].as<std::string>(), output, headers);
         }
