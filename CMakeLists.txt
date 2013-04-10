@@ -49,10 +49,20 @@ INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIR})
 FIND_PACKAGE(Eigen3 REQUIRED)
 INCLUDE_DIRECTORIES(SYSTEM ${EIGEN3_INCLUDE_DIR})
 
+# Elfutils
+FIND_PACKAGE(Elfutils)
+IF (Elfutils_FOUND)
+	ADD_DEFINITIONS(-DBACKWARD_HAS_DW=1)
+ENDIF (Elfutils_FOUND)
+
 
 #
 # Libraries
 #
+
+ADD_LIBRARY(backward lib/backward/backward.hpp lib/backward/backward.cpp)
+TARGET_LINK_LIBRARIES(backward ${DW_LIBRARY})
+SET(BACKWARD -Wl,--whole-archive backward -Wl,--no-whole-archive)
 
 ADD_LIBRARY(auxiliary src/auxiliary.hpp src/auxiliary.cpp)
 ADD_LIBRARY(logger src/logger.hpp src/logger.cpp)
@@ -76,6 +86,7 @@ TARGET_LINK_LIBRARIES(transform ${COMMON_LIBRARIES} sinogram circus)
 
 ADD_EXECUTABLE(demo src/demo.cpp)
 TARGET_LINK_LIBRARIES(demo functionals ${COMMON_LIBRARIES} transform ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(demo debug ${BACKWARD})
 
 ADD_EXECUTABLE(benchmark src/benchmark.cpp)
 TARGET_LINK_LIBRARIES(benchmark functionals ${COMMON_LIBRARIES} transform ${Boost_LIBRARIES})
