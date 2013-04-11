@@ -54,9 +54,7 @@ Eigen::MatrixXd nearest_orthonormal_sinogram(
         }
 
         // Compute the nearest orthonormal sinogram
-        // NOTE: by not using a QR preconditioner the sinogram HAS to be square
-        assert(aligned.rows() == aligned.cols());
-        Eigen::JacobiSVD<Eigen::MatrixXd, Eigen::NoQRPreconditioner> svd(
+        Eigen::JacobiSVD<Eigen::MatrixXd, Eigen::ColPivHouseholderQRPreconditioner> svd(
                 aligned, Eigen::ComputeFullU | Eigen::ComputeFullV);
         Eigen::MatrixXd diagonal = Eigen::MatrixXd::Identity(aligned.rows(), aligned.cols());
         Eigen::MatrixXd nos = svd.matrixU() * diagonal * svd.matrixV().transpose();

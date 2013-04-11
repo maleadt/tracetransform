@@ -16,7 +16,6 @@
 #include <boost/format.hpp>
 
 // Eigen
-#define EIGEN_DEFAULT_DENSE_INDEX_TYPE std::size_t
 #include <Eigen/Dense>
 
 // Local
