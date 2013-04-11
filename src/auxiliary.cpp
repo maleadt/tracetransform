@@ -48,19 +48,19 @@ Eigen::MatrixXd pgmRead(std::string filename)
         ss << infile.rdbuf();
 
         // Size
-        unsigned int numrows = 0, numcols = 0;
+        size_t numrows = 0, numcols = 0;
         ss >> numcols >> numrows;
         Eigen::MatrixXd data(numrows, numcols);
 
         // Maxval
-        unsigned int maxval;
+        size_t maxval;
         ss >> maxval;
         assert(maxval == 255);
 
         // Data
         double value;
-        for (unsigned int row = 0; row < numrows; row++) {
-                for (unsigned int col = 0; col < numcols; col++) {
+        for (size_t row = 0; row < numrows; row++) {
+                for (size_t col = 0; col < numcols; col++) {
                         ss >> value;
                         data(row, col) = value;
                 }
@@ -85,9 +85,9 @@ void pgmWrite(std::string filename, const Eigen::MatrixXd &data)
 
         // Data
         long pos = outfile.tellp();
-        for (unsigned int row = 0; row < data.rows(); row++) {
-                for (unsigned int col = 0; col < data.cols(); col++) {
-                        outfile << (unsigned int) data(row, col);
+        for (size_t row = 0; row < data.rows(); row++) {
+                for (size_t col = 0; col < data.cols(); col++) {
+                        outfile << data(row, col);
                         if (outfile.tellp() - pos > 66) {
                                 outfile << "\n";
                                 pos = outfile.tellp();
@@ -105,13 +105,13 @@ void dataWrite(std::string filename, const Eigen::MatrixXd &data,
         assert(headers.size() == 0 || headers.size() == data.cols());
 
         // Calculate column width
-        std::vector<unsigned int> widths(data.cols(), 0);
+        std::vector<size_t> widths(data.cols(), 0);
         for (size_t col = 0; col < data.cols(); col++) {
                 if (headers.size() > 0)
                         widths[col] = headers[col].length();
                 for (size_t row = 0; row < data.rows(); row++) {
                         double value = data(row, col);
-                        unsigned int width = 3; // decimal, comma, 2 decimals
+                        size_t width = 3; // decimal, comma, 2 decimals
                         if (value > 1)
                                 width += std::floor(std::log10(value));
                         if (value < 0)  // dash for negative numbers
@@ -155,8 +155,8 @@ Eigen::MatrixXd gray2mat(const Eigen::MatrixXd &input)
 {
         // Scale
         Eigen::MatrixXd output(input.rows(), input.cols());
-        for (unsigned int col = 0; col < output.cols(); col++) {
-                for (unsigned int row = 0; row < output.rows(); row++) {
+        for (size_t col = 0; col < output.cols(); col++) {
+                for (size_t row = 0; row < output.rows(); row++) {
                         output(row, col) = input(row, col) / 255.0;
                 }
         }
@@ -167,8 +167,8 @@ Eigen::MatrixXd mat2gray(const Eigen::MatrixXd &input)
 {
         // Detect maximum
         double maximum = 0;
-        for (unsigned int col = 0; col < input.cols(); col++) {
-                for (unsigned int row = 0; row < input.rows(); row++) {
+        for (size_t col = 0; col < input.cols(); col++) {
+                for (size_t row = 0; row < input.rows(); row++) {
                         double pixel = input(row, col);
                         if (pixel > maximum)
                                 maximum = pixel;
@@ -177,8 +177,8 @@ Eigen::MatrixXd mat2gray(const Eigen::MatrixXd &input)
 
         // Scale
         Eigen::MatrixXd output(input.rows(), input.cols());
-        for (unsigned int col = 0; col < output.cols(); col++) {
-                for (unsigned int row = 0; row < output.rows(); row++) {
+        for (size_t col = 0; col < output.cols(); col++) {
+                for (size_t row = 0; row < output.rows(); row++) {
                         output(row, col) = input(row, col) * 255.0/maximum;
                 }
         }
@@ -200,14 +200,14 @@ double interpolate(const Eigen::MatrixXd &source, const Point &p)
         double x_fract = std::modf(p.x(), &x_int);
         double y_fract = std::modf(p.y(), &y_int);
 
-        return    source((int)y_int, (int)x_int)*(1-x_fract)*(1-y_fract)
-                + source((int)y_int, (int)x_int+1)*x_fract*(1-y_fract)
-                + source((int)y_int+1, (int)x_int)*(1-x_fract)*y_fract
-                + source((int)y_int+1, (int)x_int+1)*x_fract*y_fract;
+        return    source((size_t)y_int, (size_t)x_int)*(1-x_fract)*(1-y_fract)
+                + source((size_t)y_int, (size_t)x_int+1)*x_fract*(1-y_fract)
+                + source((size_t)y_int+1, (size_t)x_int)*(1-x_fract)*y_fract
+                + source((size_t)y_int+1, (size_t)x_int+1)*x_fract*y_fract;
 
 }
 
-Eigen::MatrixXd resize(const Eigen::MatrixXd &input, const unsigned int rows, const unsigned int cols)
+Eigen::MatrixXd resize(const Eigen::MatrixXd &input, const size_t rows, const size_t cols)
 {
         // Calculate transform matrix
         // TODO: use Eigen::Geometry
@@ -221,8 +221,8 @@ Eigen::MatrixXd resize(const Eigen::MatrixXd &input, const unsigned int rows, co
         // Process all points
         // FIXME: borders are wrong (but this doesn't matter here since we
         //        only handle padded images)
-        for (unsigned int col = 1; col < cols-1; col++) {
-                for (unsigned int row = 1; row < rows-1; row++) {
+        for (size_t col = 1; col < cols-1; col++) {
+                for (size_t row = 1; row < rows-1; row++) {
                         Point p(col, row);
                         p += Eigen::RowVector2d(0.5, 0.5);
                         p *= transform;
@@ -246,8 +246,8 @@ Eigen::MatrixXd rotate(const Eigen::MatrixXd &input, const Point &origin, const 
         Eigen::MatrixXd output = Eigen::MatrixXd::Zero(input.rows(), input.cols());
 
         // Process all points
-        for (unsigned int col = 0; col < input.cols(); col++) {
-                for (unsigned int row = 0; row < input.rows(); row++) {
+        for (size_t col = 0; col < input.cols(); col++) {
+                for (size_t row = 0; row < input.rows(); row++) {
                         Point p(col, row);
                         p -= origin;    // TODO: why no pixel center offset?
                         p *= transform;
@@ -270,7 +270,7 @@ Eigen::MatrixXd pad(const Eigen::MatrixXd &image)
                         image.cols() - 1 - origin.x() - 1,
                         image.rows() - 1 - origin.y() - 1)) + 1;
         int rFirst = -rLast;
-        int nBins = rLast - rFirst + 1;
+        size_t nBins = (unsigned) (rLast - rFirst + 1);
         Eigen::MatrixXd image_padded = Eigen::MatrixXd::Zero(nBins, nBins);
         Point origin_padded(
                 std::floor((image_padded.cols() + 1) / 2.0) - 1,
@@ -278,7 +278,7 @@ Eigen::MatrixXd pad(const Eigen::MatrixXd &image)
         Point df = origin_padded - origin;
         for (size_t col = 0; col < image.cols(); col++) {
                 for (size_t row = 0; row < image.rows(); row++) {
-                        image_padded(row + (int) df.y(), col + (int) df.x())
+                        image_padded(row + (size_t) df.y(), col + (size_t) df.x())
                                 = image(row, col);
                 }
         }

@@ -19,7 +19,7 @@
 class FunctionalWrapper {
 public:
         virtual ~FunctionalWrapper()
-        { };
+        { }
 
         virtual double operator()(const double* data, const size_t length) const = 0;
 };

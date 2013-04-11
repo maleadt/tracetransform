@@ -32,8 +32,8 @@ Transformer::Transformer(const Eigen::MatrixXd &image)
 {
         // Orthonormal P-functionals need a stretched image in order to ensure a
         // square sinogram
-        int ndiag = (int) std::ceil(360.0/ANGLE_INTERVAL);
-        int nsize = (int) std::ceil(ndiag/std::sqrt(2));
+        size_t ndiag = (int) std::ceil(360.0/ANGLE_INTERVAL);
+        size_t nsize = (int) std::ceil(ndiag/std::sqrt(2));
         _image_orthonormal = resize(_image, nsize, nsize);
 
         // Pad the images so we can freely rotate without losing information
@@ -95,7 +95,7 @@ Eigen::MatrixXd Transformer::getTransform(const std::vector<TFunctional> &tfunct
                 }
 
                 // Orthonormal functionals require the nearest orthonormal sinogram
-                unsigned int sinogram_center;
+                size_t sinogram_center;
                 if (orthonormal) {
                         clog(trace) << "Orthonormalizing sinogram" << std::endl;
                         sinogram = nearest_orthonormal_sinogram(sinogram, sinogram_center);
@@ -105,7 +105,7 @@ Eigen::MatrixXd Transformer::getTransform(const std::vector<TFunctional> &tfunct
                 for (size_t p = 0; p < pfunctionals.size(); p++) {
                         // Configure any extra parameters
                         if (pfunctionals[p].type == PFunctional::Type::HERMITE)
-                                dynamic_cast<GenericFunctionalWrapper<unsigned int, unsigned int>*>
+                                dynamic_cast<GenericFunctionalWrapper<unsigned int, size_t>*>
                                         (pfunctionals[p].wrapper)
                                         ->configure(*pfunctionals[p].order, sinogram_center);
 

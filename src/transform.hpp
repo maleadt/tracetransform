@@ -29,8 +29,8 @@ struct TFunctional {
         {
         }
 
-        TFunctional(std::string name, FunctionalWrapper *wrapper)
-                : name(name), wrapper(wrapper)
+        TFunctional(std::string name_, FunctionalWrapper *wrapper_)
+                : name(name_), wrapper(wrapper_)
         {
         }
 
@@ -51,9 +51,9 @@ struct PFunctional
         {
         }
 
-        PFunctional(std::string name, FunctionalWrapper *wrapper,
-                        Type type = Type::REGULAR, boost::optional<unsigned int> order = boost::none)
-                : name(name), wrapper(wrapper), type(type), order(order)
+        PFunctional(std::string name_, FunctionalWrapper *wrapper_,
+                        Type type_ = Type::REGULAR, boost::optional<unsigned int> order_ = boost::none)
+                : name(name_), wrapper(wrapper_), type(type_), order(order_)
         {
         }
 

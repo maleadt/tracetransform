@@ -30,6 +30,6 @@ double TFunctional5(const double* data, const size_t length);
 double PFunctional1(const double* data, const size_t length);
 double PFunctional2(const double* data, const size_t length);
 double PFunctional3(const double* data, const size_t length);
-double PFunctionalHermite(const double* data, const size_t length, unsigned int order, unsigned int center);
+double PFunctionalHermite(const double* data, const size_t length, unsigned int order, size_t center);
 
 #endif

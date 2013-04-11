@@ -210,7 +210,7 @@ double PFunctional3(const double* data, const size_t length)
         return sum;
 }
 
-double PFunctionalHermite(const double* data, const size_t length, unsigned int order, unsigned int center)
+double PFunctionalHermite(const double* data, const size_t length, unsigned int order, size_t center)
 {
         // Discretize the [-10, 10] domain to fit the column iterator
         double z = -10;

@@ -22,7 +22,7 @@
 
 Eigen::MatrixXd nearest_orthonormal_sinogram(
         const Eigen::MatrixXd &input,
-        unsigned int& new_center);
+        size_t& new_center);
 
 Eigen::VectorXd getCircusFunction(
         const Eigen::MatrixXd &input,

@@ -90,7 +90,7 @@ std::istream& operator>>(std::istream& in, PFunctional& pfunctional)
                                 "Unparseable order parameter for Hermite P-functional");
                 }
                 pfunctional = PFunctional(boost::str(boost::format("H%d") % order),
-                                new GenericFunctionalWrapper<unsigned int, unsigned int>(PFunctionalHermite),
+                                new GenericFunctionalWrapper<unsigned int, size_t>(PFunctionalHermite),
                                 PFunctional::Type::HERMITE,
                                 order);
         } else {
