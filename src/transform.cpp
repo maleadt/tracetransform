@@ -104,10 +104,14 @@ Eigen::MatrixXd Transformer::getTransform(const std::vector<TFunctional> &tfunct
                 // Process all P-functionals
                 for (size_t p = 0; p < pfunctionals.size(); p++) {
                         // Configure any extra parameters
-                        if (pfunctionals[p].type == PFunctional::Type::HERMITE)
-                                dynamic_cast<GenericFunctionalWrapper<unsigned int, size_t>*>
-                                        (pfunctionals[p].wrapper)
-                                        ->configure(*pfunctionals[p].order, sinogram_center);
+                        if (pfunctionals[p].type == PFunctional::Type::HERMITE) {
+                                GenericFunctionalWrapper<unsigned int, size_t>* hermite_functional =
+                                                dynamic_cast<GenericFunctionalWrapper<
+                                                                unsigned int,
+                                                                size_t>*>(pfunctionals[p].wrapper);
+                                assert(hermite_functional);
+                                hermite_functional->configure(*pfunctionals[p].order, sinogram_center);
+                        }
 
                         // Calculate the circus function
                         clog(debug) << "Calculating " << pfunctionals[p].name
