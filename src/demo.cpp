@@ -16,7 +16,6 @@
 #include <boost/format.hpp>
 
 // Eigen
-#define EIGEN_DEFAULT_DENSE_INDEX_TYPE std::size_t
 #include <Eigen/Dense>
 
 // Local
@@ -91,7 +90,7 @@ std::istream& operator>>(std::istream& in, PFunctional& pfunctional)
                                 "Unparseable order parameter for Hermite P-functional");
                 }
                 pfunctional = PFunctional(boost::str(boost::format("H%d") % order),
-                                new GenericFunctionalWrapper<unsigned int, unsigned int>(PFunctionalHermite),
+                                new GenericFunctionalWrapper<unsigned int, size_t>(PFunctionalHermite),
                                 PFunctional::Type::HERMITE,
                                 order);
         } else {

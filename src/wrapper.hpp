@@ -19,7 +19,7 @@
 class FunctionalWrapper {
 public:
         virtual ~FunctionalWrapper()
-        { };
+        { }
 
         virtual double operator()(const double* data, const size_t length) const = 0;
 };
@@ -47,7 +47,9 @@ class GenericFunctionalWrapper : public FunctionalWrapper
 public:
         GenericFunctionalWrapper(std::function<double(const double*, const size_t, Parameters...)> functional)
                 : _functional(functional)
-        { }
+        {
+                // FIXME: it is possible to pass an invalid functional not matching Parameters...
+        }
 
         // TODO: allow partial configuration
         void configure(Parameters... parameters)

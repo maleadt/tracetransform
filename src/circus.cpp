@@ -16,6 +16,7 @@
 
 // Local
 #include "logger.hpp"
+#include "auxiliary.hpp"
 extern "C" {
         #include "functionals.h"
 }
@@ -27,11 +28,11 @@ extern "C" {
 
 Eigen::MatrixXd nearest_orthonormal_sinogram(
         const Eigen::MatrixXd &input,
-        unsigned int& new_center)
+        size_t& new_center)
 {
         // Detect the offset of each column to the sinogram center
         assert(input.rows() > 0 && input.cols() > 0);
-        unsigned int sinogram_center = (unsigned int) std::floor((input.rows() - 1) / 2.0);
+        size_t sinogram_center = (size_t) std::floor((input.rows() - 1) / 2.0);
         std::vector<int> offset(input.cols());  // TODO: Eigen vector
         for (size_t p = 0; p < input.cols(); p++) {
                 size_t median = findWeighedMedian(
@@ -43,7 +44,8 @@ Eigen::MatrixXd nearest_orthonormal_sinogram(
         // Align each column to the sinogram center
         int min = *(std::min_element(offset.begin(), offset.end()));
         int max = *(std::max_element(offset.begin(), offset.end()));
-        unsigned int padding = max + std::abs(min);
+        assert(sgn(min) != sgn(max));
+        size_t padding = (size_t) (std::abs(max) + std::abs(min));
         new_center = sinogram_center + max;
         // TODO: zeros?
         Eigen::MatrixXd aligned(input.rows() + padding, input.cols());
@@ -54,9 +56,7 @@ Eigen::MatrixXd nearest_orthonormal_sinogram(
         }
 
         // Compute the nearest orthonormal sinogram
-        // NOTE: by not using a QR preconditioner the sinogram HAS to be square
-        assert(aligned.rows() == aligned.cols());
-        Eigen::JacobiSVD<Eigen::MatrixXd, Eigen::NoQRPreconditioner> svd(
+        Eigen::JacobiSVD<Eigen::MatrixXd, Eigen::ColPivHouseholderQRPreconditioner> svd(
                 aligned, Eigen::ComputeFullU | Eigen::ComputeFullV);
         Eigen::MatrixXd diagonal = Eigen::MatrixXd::Identity(aligned.rows(), aligned.cols());
         Eigen::MatrixXd nos = svd.matrixU() * diagonal * svd.matrixV().transpose();

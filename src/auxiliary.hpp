@@ -12,7 +12,6 @@
 #include <vector>
 
 // Eigen
-#define EIGEN_DEFAULT_DENSE_INDEX_TYPE std::size_t
 #include <Eigen/Dense>
 
 
@@ -50,7 +49,7 @@ double deg2rad(double degrees);
 
 double interpolate(const Eigen::MatrixXd &source, const Point &p);
 
-Eigen::MatrixXd resize(const Eigen::MatrixXd &input, const unsigned int rows, const unsigned int cols);
+Eigen::MatrixXd resize(const Eigen::MatrixXd &input, const size_t rows, const size_t cols);
 
 Eigen::MatrixXd rotate(const Eigen::MatrixXd &input, const Point &origin, const double angle);
 
@@ -61,5 +60,10 @@ double arithmetic_mean(const Eigen::VectorXd &input);
 double standard_deviation(const Eigen::VectorXd &input);
 
 Eigen::VectorXd zscore(const Eigen::VectorXd &input);
+
+template<typename T> int sgn(T val)
+{
+        return (T(0) < val) - (val < T(0));
+}
 
 #endif
