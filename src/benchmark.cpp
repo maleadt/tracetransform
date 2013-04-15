@@ -7,7 +7,7 @@
 #include <exception>
 
 // Hayai
-#include "../lib/hayai/hayai.hpp"
+#include "../lib/hayai/src/hayai.hpp"
 
 // Boost
 #include <boost/program_options.hpp>
