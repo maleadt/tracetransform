@@ -11,7 +11,7 @@
 #include <cuda_runtime_api.h>
 
 // Local
-#include "error.h"
+#include "error.hpp"
 
 
 //

@@ -29,7 +29,7 @@ extern "C" {
 }
 #include "wrapper.hpp"
 #include "transform.hpp"
-#include "cudahelper/errorhandling.h"
+#include "cudahelper/errorhandling.hpp"
 
 
 //

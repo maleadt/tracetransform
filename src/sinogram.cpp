@@ -13,7 +13,7 @@
 #include "logger.hpp"
 #include "auxiliary.hpp"
 #include "wrapper.hpp"
-#include "kernels/hello.h"
+#include "kernels/hello.hpp"
 
 
 //

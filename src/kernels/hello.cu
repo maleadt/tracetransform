@@ -8,10 +8,11 @@
 //
 
 // Standard library
-#include <stdio.h>
+#include <iostream>
 
 // Local
-#include "../cudahelper/memory.h"
+#include "../logger.hpp"
+#include "../cudahelper/memory.hpp"
 
 // Static parameters
 const int N = 16; 
@@ -36,7 +37,7 @@ void hello()
 {
         char a[N] = "Hello \0\0\0\0\0\0";
         int b[N] = {15, 10, 6, 0, -11, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-        printf("%s", a);
+        clog(info) << a << std::endl;
 
         CUDAHelper::Memory<char> ad(N);
         ad.transferFrom(a);
@@ -49,5 +50,5 @@ void hello()
         hello_kernel<<<dimGrid, dimBlock>>>(ad.get(), bd.get());
 
         ad.transferTo(a);
-        printf("%s\n", a);
+        clog(info) << a << std::endl;
 }

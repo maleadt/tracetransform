@@ -15,7 +15,7 @@
 #include <device_launch_parameters.h>
 
 // Local
-#include "errorhandling.h"
+#include "errorhandling.hpp"
 
 
 //
