@@ -10,6 +10,9 @@
 // Standard library
 #include <stdio.h>
 
+// Local
+#include "../cudahelper/memory.h"
+
 // Static parameters
 const int N = 16; 
 const int blocksize = 16;
@@ -33,25 +36,18 @@ void hello()
 {
         char a[N] = "Hello \0\0\0\0\0\0";
         int b[N] = {15, 10, 6, 0, -11, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-        char *ad;
-        int *bd;
-        const int csize = N*sizeof(char);
-        const int isize = N*sizeof(int);
-
         printf("%s", a);
 
-        cudaMalloc((void**)&ad, csize);
-        cudaMalloc((void**)&bd, isize);
-        cudaMemcpy(ad, a, csize, cudaMemcpyHostToDevice);
-        cudaMemcpy(bd, b, isize, cudaMemcpyHostToDevice);
+        CUDAHelper::Memory<char> ad(N);
+        ad.transferFrom(a);
+
+        CUDAHelper::Memory<int> bd(N);
+        bd.transferFrom(b);
 
         dim3 dimBlock(blocksize, 1);
         dim3 dimGrid(1, 1);
-        hello_kernel<<<dimGrid, dimBlock>>>(ad, bd);
-        cudaMemcpy(a, ad, csize, cudaMemcpyDeviceToHost);
-        cudaFree(ad);
-        cudaFree(bd);
+        hello_kernel<<<dimGrid, dimBlock>>>(ad.get(), bd.get());
 
+        ad.transferTo(a);
         printf("%s\n", a);
 }

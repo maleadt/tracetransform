@@ -331,3 +331,29 @@ Eigen::VectorXd zscore(const Eigen::VectorXd &input)
 
         return transformed;
 }
+
+std::string readable_si(double number, const std::string unit, double base)
+{
+        const std::vector<std::string> dimensions = {"", "K", "M", "G", "T", "P", "E", "Z", "Y"};
+
+        int i = 0;
+        while (number >= base) {
+                number /= base;
+                i++;
+        }
+
+        std::stringstream ss;
+        ss << std::setiosflags(std::ios::fixed) << std::setprecision(2) << number << " " << dimensions[i] << unit;
+        return ss.str();
+}
+
+std::string readable_size(double size)
+{
+        return readable_si(size, "iB", 1024);
+}
+
+std::string readable_frequency(double frequency)
+{
+        return readable_si(frequency, "Hz");
+}
+

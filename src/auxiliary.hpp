@@ -66,4 +66,8 @@ template<typename T> int sgn(T val)
         return (T(0) < val) - (val < T(0));
 }
 
+std::string readable_si(double number, const std::string unit, double base = 1000);
+std::string readable_size(double size);
+std::string readable_frequency(double frequency);
+
 #endif

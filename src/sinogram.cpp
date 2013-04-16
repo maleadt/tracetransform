@@ -13,6 +13,7 @@
 #include "logger.hpp"
 #include "auxiliary.hpp"
 #include "wrapper.hpp"
+#include "kernels/hello.h"
 
 
 //
@@ -28,6 +29,8 @@ Eigen::MatrixXd getSinogram(
         assert(a_stepsize > 0);
         assert(p_stepsize > 0);
         assert(input.rows() == input.cols());   // padded image!
+
+        hello();
 
         // Get the image origin to rotate around
         Point origin((input.cols()-1)/2.0, (input.rows()-1)/2.0);

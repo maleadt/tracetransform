@@ -18,6 +18,9 @@
 // Eigen
 #include <Eigen/Dense>
 
+// CUDA
+#include <cuda_runtime.h>
+
 // Local
 #include "logger.hpp"
 #include "auxiliary.hpp"
@@ -26,6 +29,7 @@ extern "C" {
 }
 #include "wrapper.hpp"
 #include "transform.hpp"
+#include "cudahelper/errorhandling.h"
 
 
 //
@@ -177,7 +181,7 @@ int main(int argc, char **argv)
                 std::cout << desc << std::endl;
                 return 1;
         }
-        
+
         // Configure logging
         if (vm.count("debug")) {
                 logger.settings.threshold = trace;
@@ -193,6 +197,42 @@ int main(int argc, char **argv)
         // Image processing
         //
         
+        // Check for CUDA devices
+        int count;
+        cudaGetDeviceCount(&count);
+        clog(debug) << "Found " << count << " CUDA device(s)." << std::endl;
+        if (count < 1) {
+                std::cerr << "No CUDA-capable devices found." << std::endl;
+                return 1;
+        } else {
+                for (int i = 0; i < count; i++) {
+                        cudaDeviceProp prop;
+                        CUDAHelper::checkError(cudaGetDeviceProperties(&prop, i));
+
+                        clog(trace) << " --- General Information for device " << i << " --- " << std::endl;
+                        clog(trace) << "     Name: " << prop.name << std::endl;
+                        clog(trace) << "     Compute capability: " << prop.major << "." << prop.minor << std::endl;
+                        clog(trace) << "     Clock rate: " << readable_frequency(prop.clockRate*1024) << std::endl;
+                        clog(trace) << "     Device copy overlap: " << (prop.deviceOverlap ? "enabled" : "disabled") << std::endl;
+                        clog(trace) << "     Kernel execution timeout: " << (prop.kernelExecTimeoutEnabled ? "enabled" : "disabled") << std::endl;
+
+                        clog(trace) << " --- Memory Information for device " << i << " --- " << std::endl;
+                        clog(trace) << "     Total global memory: " << readable_size(prop.totalGlobalMem) << std::endl;
+                        clog(trace) << "     Total constant memory: " << readable_size(prop.totalConstMem) << std::endl;
+                        clog(trace) << "     Total memory pitch: " << readable_size(prop.memPitch) << std::endl;
+                        clog(trace) << "     Texture alignment: " << prop.textureAlignment << std::endl;
+
+                        clog(trace) << " --- Multiprocessing Information for device " << i << " --- " << std::endl;
+                        clog(trace) << "     Multiprocessor count: " << prop.multiProcessorCount << std::endl;
+                        clog(trace) << "     Shared memory per processor: " << readable_size(prop.sharedMemPerBlock) << std::endl;
+                        clog(trace) << "     Registers per processor: " << prop.regsPerBlock << std::endl;
+                        clog(trace) << "     Threads in warp: " << prop.warpSize << std::endl;
+                        clog(trace) << "     Maximum threads per block: " << prop.maxThreadsPerBlock << std::endl;
+                        clog(trace) << "     Maximum thread dimensions: (" << prop.maxThreadsDim[0] << ", " << prop.maxThreadsDim[1] << ", " << prop.maxThreadsDim[2] << ")" << std::endl;
+                        clog(trace) << "     Maximum grid dimensions: (" << prop.maxGridSize[0] << ", " << prop.maxGridSize[1] << ", " << prop.maxGridSize[2] << ")" << std::endl;
+                }
+        }
+
         // Read the image
         Eigen::MatrixXd input = pgmRead(vm["input"].as<std::string>());
         input = gray2mat(input);

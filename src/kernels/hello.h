@@ -9,5 +9,4 @@
 // Kernel declarations
 extern void hello();
 
-// Include guard
 #endif
