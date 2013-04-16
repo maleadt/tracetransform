@@ -1,0 +1,9 @@
+//
+// Configuration
+//
+
+// Include guard
+#ifndef _TRACETRANSFORM_KERNELS_COMMON_H__
+#define _TRACETRANSFORM_KERNELS_COMMON_H__
+
+#endif

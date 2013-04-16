@@ -10,19 +10,12 @@ SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 
 # Standard libraries
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
 # Extra warnings
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-
-# Add address sanitizer to debug build
-IF (${CMAKE_C_COMPILER_ID} MATCHES "Clang" AND NOT ${CMAKE_C_COMPILER_VERSION} LESS "3.2")
-    SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O1 -fsanitize=address -fno-omit-frame-pointer") 
-ENDIF()
-IF (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang" AND NOT ${CMAKE_CXX_COMPILER_VERSION} LESS "3.2")
-    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O1 -fsanitize=address -fno-omit-frame-pointer") 
-ENDIF()
+SET(CUDA_NVCC_FLAGS "-Xcompiler -Wall,-Wextra")
 
 # Test execution string
 SEPARATE_ARGUMENTS(TEST_EXECUTION UNIX_COMMAND "-T 1 -P H1 ../res/Cam1_V1.pgm")
@@ -41,6 +34,11 @@ ADD_CUSTOM_TARGET(profile
 # Dependencies
 #
 
+# C-compiler
+IF (NOT ${CMAKE_C_COMPILER_ID} MATCHES "GNU" OR NOT ${CMAKE_C_COMPILER_VERSION} VERSION_LESS "4.7")
+    MESSAGE(FATAL_ERROR "CUDA requires GCC <= 4.6")
+ENDIF()
+
 # Boost
 FIND_PACKAGE(Boost REQUIRED COMPONENTS program_options)
 INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIR})
@@ -57,10 +55,17 @@ IF (Elfutils_FOUND)
 	ADD_DEFINITIONS(-DBACKWARD_HAS_DW=1)
 ENDIF (Elfutils_FOUND)
 
+# CUDA
+SET(CUDA_PROPAGATE_HOST_FLAGS FALSE)
+FIND_PACKAGE(CUDA)
+INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
+
 
 #
 # Libraries
 #
+
+ADD_SUBDIRECTORY(src/kernels)
 
 ADD_LIBRARY(backward lib/backward/backward.hpp lib/backward/backward.cpp)
 TARGET_LINK_LIBRARIES(backward ${DW_LIBRARY})
@@ -73,10 +78,10 @@ SET(COMMON_LIBRARIES auxiliary logger)
 ADD_LIBRARY(functionals src/functionals.h src/functionals.c)
 
 ADD_LIBRARY(sinogram src/sinogram.hpp src/sinogram.cpp)
-TARGET_LINK_LIBRARIES(sinogram ${COMMON_LIBRARIES})
+TARGET_LINK_LIBRARIES(sinogram ${KERNELS} ${COMMON_LIBRARIES})
 
 ADD_LIBRARY(circus src/circus.hpp src/circus.cpp)
-TARGET_LINK_LIBRARIES(circus ${COMMON_LIBRARIES})
+TARGET_LINK_LIBRARIES(circus ${KERNELS} ${COMMON_LIBRARIES})
 
 ADD_LIBRARY(transform src/transform.hpp src/transform.cpp)
 TARGET_LINK_LIBRARIES(transform ${COMMON_LIBRARIES} sinogram circus)
