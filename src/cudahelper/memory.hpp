@@ -150,7 +150,7 @@ namespace CUDAHelper
         class ConstantMemory: public Memory<MemType>
         {
         public:
-                ConstantMemory(const char* symbol, std::size_t size)
+                ConstantMemory(const void* symbol, std::size_t size)
                                 : _symbol(symbol), Memory<MemType>(size)
                 {
                 }
@@ -167,12 +167,12 @@ namespace CUDAHelper
                 {
                         checkError(
                                         cudaMemcpyToSymbol(_symbol, hostPtr,
-                                                        this->bytes(),
+                                                        this->bytes(), 0,
                                                         cudaMemcpyHostToDevice));
                 }
 
         private:
-                const char *_symbol;
+                const void *_symbol;
         };
 }
 

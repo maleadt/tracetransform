@@ -23,7 +23,8 @@ const int blocksize = 16;
 // Kernels
 //
 
-__global__ void hello_kernel(char *a, int *b) 
+__constant__ int b[N];
+__global__ void hello_kernel(char *a)
 {
         a[threadIdx.x] += b[threadIdx.x];
 }
@@ -35,20 +36,21 @@ __global__ void hello_kernel(char *a, int *b)
 
 void hello()
 {
-        char a[N] = "Hello \0\0\0\0\0\0";
-        int b[N] = {15, 10, 6, 0, -11, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-        clog(info) << a << std::endl;
+        char a_data[N] = "Hello \0\0\0\0\0\0";
+        int b_data[N] = {15, 10, 6, 0, -11, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        clog(info) << a_data << std::endl;
 
-        CUDAHelper::GlobalMemory<char> ad(N);
-        ad.upload(a);
+        CUDAHelper::GlobalMemory<char> a_mem(N);
+        a_mem.upload(a_data);
 
-        CUDAHelper::GlobalMemory<int> bd(N);
-        bd.upload(b);
+        CUDAHelper::ConstantMemory<int> b_mem(b, N);
+        b_mem.upload(b_data);
 
         dim3 dimBlock(blocksize, 1);
         dim3 dimGrid(1, 1);
-        hello_kernel<<<dimGrid, dimBlock>>>(ad, bd);
+        hello_kernel<<<dimGrid, dimBlock>>>(a_mem);
 
-        ad.download(a);
-        clog(info) << a << std::endl;
+        a_mem.download(a_data);
+        // TODO: download to internal state?
+        clog(info) << a_data << std::endl;
 }
