@@ -47,7 +47,7 @@ void hello()
 
         dim3 dimBlock(blocksize, 1);
         dim3 dimGrid(1, 1);
-        hello_kernel<<<dimGrid, dimBlock>>>(ad.data(), bd.data());
+        hello_kernel<<<dimGrid, dimBlock>>>(ad, bd);
 
         ad.download(a);
         clog(info) << a << std::endl;

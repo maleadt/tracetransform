@@ -75,7 +75,7 @@ namespace CUDAHelper
 
                 ~HostMemory()
                 {
-                        checkError(cudaFreeHost(this->data()));
+                        checkError(cudaFreeHost(_hostPtr));
                 }
 
                 operator MemType*()
@@ -113,15 +113,15 @@ namespace CUDAHelper
 
                 ~GlobalMemory()
                 {
-                        checkError(cudaFree(this->data()));
+                        checkError(cudaFree(_devicePtr));
                 }
 
-                const MemType* data() const
+                operator MemType*()
                 {
                         return _devicePtr;
                 }
 
-                MemType* data()
+                operator const MemType*() const
                 {
                         return _devicePtr;
                 }
