@@ -51,6 +51,5 @@ void hello()
         hello_kernel<<<dimGrid, dimBlock>>>(a_mem);
 
         a_mem.download(a_data);
-        // TODO: download to internal state?
         clog(info) << a_data << std::endl;
 }

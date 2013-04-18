@@ -62,7 +62,7 @@ namespace CUDAHelper
                 HostMemory(std::size_t size)
                                 : Memory<MemType>(size)
                 {
-                        checkError(cudaHostAlloc(&_hostPtr, this->bytes()));
+                        checkError(cudaHostAlloc(&_hostPtr, this->bytes(), cudaHostAllocDefault));
                 }
 
                 HostMemory(const HostMemory<MemType>& other)
