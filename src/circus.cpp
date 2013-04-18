@@ -26,8 +26,8 @@ extern "C" {
 // Module definitions
 //
 
-Eigen::MatrixXd nearest_orthonormal_sinogram(
-        const Eigen::MatrixXd &input,
+Eigen::MatrixXf nearest_orthonormal_sinogram(
+        const Eigen::MatrixXf &input,
         size_t& new_center)
 {
         // Detect the offset of each column to the sinogram center
@@ -48,7 +48,7 @@ Eigen::MatrixXd nearest_orthonormal_sinogram(
         size_t padding = (size_t) (std::abs(max) + std::abs(min));
         new_center = sinogram_center + max;
         // TODO: zeros?
-        Eigen::MatrixXd aligned(input.rows() + padding, input.cols());
+        Eigen::MatrixXf aligned(input.rows() + padding, input.cols());
         for (size_t col = 0; col < input.cols(); col++) {
                 for (size_t row = 0; row < input.rows(); row++) {
                         aligned(max+row-offset[col], col) = input(row, col);
@@ -56,20 +56,20 @@ Eigen::MatrixXd nearest_orthonormal_sinogram(
         }
 
         // Compute the nearest orthonormal sinogram
-        Eigen::JacobiSVD<Eigen::MatrixXd, Eigen::ColPivHouseholderQRPreconditioner> svd(
+        Eigen::JacobiSVD<Eigen::MatrixXf, Eigen::ColPivHouseholderQRPreconditioner> svd(
                 aligned, Eigen::ComputeFullU | Eigen::ComputeFullV);
-        Eigen::MatrixXd diagonal = Eigen::MatrixXd::Identity(aligned.rows(), aligned.cols());
-        Eigen::MatrixXd nos = svd.matrixU() * diagonal * svd.matrixV().transpose();
+        Eigen::MatrixXf diagonal = Eigen::MatrixXf::Identity(aligned.rows(), aligned.cols());
+        Eigen::MatrixXf nos = svd.matrixU() * diagonal * svd.matrixV().transpose();
 
         return nos;
 }
 
-Eigen::VectorXd getCircusFunction(
-        const Eigen::MatrixXd &input,
+Eigen::VectorXf getCircusFunction(
+        const Eigen::MatrixXf &input,
         FunctionalWrapper *pfunctional)
 {
         // Allocate the output matrix
-        Eigen::VectorXd output(input.cols());
+        Eigen::VectorXf output(input.cols());
 
         // Trace all columns
         for (size_t p = 0; p < input.cols(); p++) {

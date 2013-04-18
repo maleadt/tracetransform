@@ -20,12 +20,12 @@
 // Module definitions
 //
 
-Eigen::MatrixXd nearest_orthonormal_sinogram(
-        const Eigen::MatrixXd &input,
+Eigen::MatrixXf nearest_orthonormal_sinogram(
+        const Eigen::MatrixXf &input,
         size_t& new_center);
 
-Eigen::VectorXd getCircusFunction(
-        const Eigen::MatrixXd &input,
+Eigen::VectorXf getCircusFunction(
+        const Eigen::MatrixXf &input,
         FunctionalWrapper *pfunctional);
 
 #endif

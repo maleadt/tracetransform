@@ -15,21 +15,21 @@
 //
 
 // Auxiliary
-size_t findWeighedMedian(const double* data, const size_t length);
-size_t findWeighedMedianSquared(const double* data, const size_t length);
+size_t findWeighedMedian(const float* data, const size_t length);
+size_t findWeighedMedianSquared(const float* data, const size_t length);
 
 // T functionals
-double TFunctionalRadon(const double* data, const size_t length);
-double TFunctional1(const double* data, const size_t length);
-double TFunctional2(const double* data, const size_t length);
-double TFunctional3(const double* data, const size_t length);
-double TFunctional4(const double* data, const size_t length);
-double TFunctional5(const double* data, const size_t length);
+float TFunctionalRadon(const float* data, const size_t length);
+float TFunctional1(const float* data, const size_t length);
+float TFunctional2(const float* data, const size_t length);
+float TFunctional3(const float* data, const size_t length);
+float TFunctional4(const float* data, const size_t length);
+float TFunctional5(const float* data, const size_t length);
 
 // P-functionals
-double PFunctional1(const double* data, const size_t length);
-double PFunctional2(const double* data, const size_t length);
-double PFunctional3(const double* data, const size_t length);
-double PFunctionalHermite(const double* data, const size_t length, unsigned int order, size_t center);
+float PFunctional1(const float* data, const size_t length);
+float PFunctional2(const float* data, const size_t length);
+float PFunctional3(const float* data, const size_t length);
+float PFunctionalHermite(const float* data, const size_t length, unsigned int order, size_t center);
 
 #endif

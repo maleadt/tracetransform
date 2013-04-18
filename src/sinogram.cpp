@@ -20,10 +20,10 @@
 // Module definitions
 //
 
-Eigen::MatrixXd getSinogram(
-        const Eigen::MatrixXd &input,
-        const double a_stepsize,
-        const double p_stepsize,
+Eigen::MatrixXf getSinogram(
+        const Eigen::MatrixXf &input,
+        const float a_stepsize,
+        const float p_stepsize,
         FunctionalWrapper *tfunctional)
 {
         assert(a_stepsize > 0);
@@ -38,17 +38,17 @@ Eigen::MatrixXd getSinogram(
         // Calculate and allocate the output matrix
         size_t a_steps = (size_t) std::floor(360 / a_stepsize);
         size_t p_steps = (size_t) std::floor(input.rows() / p_stepsize);
-        Eigen::MatrixXd output((int) p_steps, (int) a_steps);
+        Eigen::MatrixXf output((int) p_steps, (int) a_steps);
 
         // Process all angles
         for (size_t a_step = 0; a_step < a_steps; a_step++) {
                 // Rotate the image
-                double a = a_step * a_stepsize;
-                Eigen::MatrixXd input_rotated = rotate(input, origin, deg2rad(a));
+                float a = a_step * a_stepsize;
+                Eigen::MatrixXf input_rotated = rotate(input, origin, deg2rad(a));
 
                 // Process all projection bands
                 for (size_t p_step = 0; p_step < p_steps; p_step++) {
-                        double p = p_stepsize * p_step;
+                        float p = p_stepsize * p_step;
                         output(
                                 p_step,        // row
                                 a_step         // column
