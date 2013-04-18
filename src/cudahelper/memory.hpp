@@ -145,6 +145,35 @@ namespace CUDAHelper
         private:
                 MemType* _devicePtr;
         };
+
+        template<typename MemType>
+        class ConstantMemory: public Memory<MemType>
+        {
+        public:
+                ConstantMemory(const char* symbol, std::size_t size)
+                                : _symbol(symbol), Memory<MemType>(size)
+                {
+                }
+
+                ConstantMemory(const ConstantMemory<MemType>& other)
+                {
+                        assert(this->size() == other.size());
+                        checkError(
+                                        cudaMemcpyToSymbol(_symbol, other._symbol,
+                                                        cudaMemcpyDeviceToDevice));
+                }
+
+                void upload(const MemType* hostPtr)
+                {
+                        checkError(
+                                        cudaMemcpyToSymbol(_symbol, hostPtr,
+                                                        this->bytes(),
+                                                        cudaMemcpyHostToDevice));
+                }
+
+        private:
+                const char *_symbol;
+        };
 }
 
 #endif
