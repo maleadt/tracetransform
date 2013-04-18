@@ -26,12 +26,12 @@ namespace CUDAHelper
     public:
         explicit Error(cudaError_t errorCode) :
             std::runtime_error(cudaGetErrorString(errorCode)),
-            mErrorCode(errorCode)
+            _code(errorCode)
         {
         }
 
     private:
-        cudaError_t mErrorCode;
+        cudaError_t _code;
     };
 }
 

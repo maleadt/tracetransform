@@ -39,16 +39,16 @@ void hello()
         int b[N] = {15, 10, 6, 0, -11, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         clog(info) << a << std::endl;
 
-        CUDAHelper::Memory<char> ad(N);
-        ad.transferFrom(a);
+        CUDAHelper::GlobalMemory<char> ad(N);
+        ad.upload(a);
 
-        CUDAHelper::Memory<int> bd(N);
-        bd.transferFrom(b);
+        CUDAHelper::GlobalMemory<int> bd(N);
+        bd.upload(b);
 
         dim3 dimBlock(blocksize, 1);
         dim3 dimGrid(1, 1);
-        hello_kernel<<<dimGrid, dimBlock>>>(ad.get(), bd.get());
+        hello_kernel<<<dimGrid, dimBlock>>>(ad.data(), bd.data());
 
-        ad.transferTo(a);
+        ad.download(a);
         clog(info) << a << std::endl;
 }

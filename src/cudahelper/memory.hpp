@@ -8,6 +8,7 @@
 
 // Standard library
 #include <cstddef>
+#include <cassert>
 
 // CUDA
 #include <cuda.h>
@@ -24,84 +25,126 @@
 
 namespace CUDAHelper
 {
-    // Abstraction for Cuda memory management
-    // Manages allocation and transfer of memory
-    template<typename MemType>
-    class Memory {
-    public:
-        Memory() :
-            gpuPtr(0),
-            size(0)
+        // Abstraction for CUDA memory management
+        // Manages allocation and transfer of memory
+
+        template<typename MemType>
+        class Memory
         {
-        }
+        public:
+                explicit Memory(std::size_t size)
+                                : _size(size)
+                {
+                }
 
-        explicit Memory(std::size_t size) :
-            gpuPtr(allocate(size)),
-            size(size)
+        protected:
+                std::size_t size() const
+                {
+                        return _size;
+                }
+
+                std::size_t bytes() const
+                {
+                        return _size * sizeof(MemType);
+                }
+
+        private:
+                Memory(const Memory&);
+                Memory& operator=(const Memory&);
+
+                std::size_t _size;
+        };
+
+        template<typename MemType>
+        class HostMemory: public Memory<MemType>
         {
-        }
-        
-        Memory(Memory& other) :
-            gpuPtr(other.gpuPtr),
-            size(other.size)
+        public:
+                HostMemory(std::size_t size)
+                                : Memory<MemType>(size)
+                {
+                        checkError(cudaHostAlloc(&_hostPtr, this->bytes()));
+                }
+
+                HostMemory(const HostMemory<MemType>& other)
+                {
+                        assert(this->size() == other.size());
+                        checkError(
+                                        cudaMemcpy(_hostPtr, other._hostPtr,
+                                                        cudaMemcpyHostToHost));
+                }
+
+                ~HostMemory()
+                {
+                        checkError(cudaFreeHost(this->data()));
+                }
+
+                operator MemType*()
+                {
+                        return _hostPtr;
+                }
+
+                operator const MemType*() const
+                {
+                        return _hostPtr;
+                }
+
+        private:
+                MemType* _hostPtr;
+
+        };
+
+        template<typename MemType>
+        class GlobalMemory: public Memory<MemType>
         {
-            other.gpuPtr = 0;
-            other.size = 0;
-        }
+        public:
+                GlobalMemory(std::size_t size)
+                                : Memory<MemType>(size)
+                {
+                        checkError(cudaMalloc(&_devicePtr, this->bytes()));
+                }
 
-        ~Memory() {
-            free();
-        }
+                GlobalMemory(const GlobalMemory<MemType>& other)
+                {
+                        assert(this->size() == other.size());
+                        checkError(
+                                        cudaMemcpy(_devicePtr, other._devicePtr,
+                                                        cudaMemcpyDeviceToDevice));
+                }
 
-        void reallocate(std::size_t newSize) {
-            MemType *newPtr = allocate(newSize);
-            free();
-            gpuPtr = newPtr;
-            size = newSize;
-        }
+                ~GlobalMemory()
+                {
+                        checkError(cudaFree(this->data()));
+                }
 
-        void transferTo(MemType* hostPtr) const {
-            checkError(
-                cudaMemcpy(hostPtr, gpuPtr, sizeInBytes(), cudaMemcpyDeviceToHost)
-            );
-        }
+                const MemType* data() const
+                {
+                        return _devicePtr;
+                }
 
-        void transferFrom(const MemType* hostPtr) {
-            checkError(
-                cudaMemcpy(gpuPtr, hostPtr, sizeInBytes(), cudaMemcpyHostToDevice)
-            );
-        }
+                MemType* data()
+                {
+                        return _devicePtr;
+                }
 
-        const MemType* get() const {
-            return gpuPtr;
-        }
+                void download(MemType* hostPtr) const
+                {
+                        checkError(
+                                        cudaMemcpy(hostPtr, _devicePtr,
+                                                        this->bytes(),
+                                                        cudaMemcpyDeviceToHost));
+                }
 
-        MemType* get() {
-            return gpuPtr;
-        }
+                void upload(const MemType* hostPtr)
+                {
+                        checkError(
+                                        cudaMemcpy(_devicePtr, hostPtr,
+                                                        this->bytes(),
+                                                        cudaMemcpyHostToDevice));
+                }
 
-    private:
-        Memory(const Memory&) { }
-        Memory& operator=(const Memory&) { }
-
-        std::size_t sizeInBytes() const {
-            return size * sizeof(MemType);
-        }
-
-        MemType* allocate(std::size_t size) {
-            MemType* ptr;
-            checkError(cudaMalloc(&ptr, size * sizeof(MemType)));
-            return ptr;
-        }
-
-        void free() {
-            if (gpuPtr != 0)
-                cudaFree(gpuPtr);
-        }
-
-        MemType* gpuPtr;
-        std::size_t size;
-    };
+        private:
+                MemType* _devicePtr;
+        };
 }
 
 #endif
