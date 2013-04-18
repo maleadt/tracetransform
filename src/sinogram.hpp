@@ -20,10 +20,10 @@
 // Module definitions
 //
 
-Eigen::MatrixXd getSinogram(
-        const Eigen::MatrixXd &input,
-        const double a_stepsize,
-        const double p_stepsize,
+Eigen::MatrixXf getSinogram(
+        const Eigen::MatrixXf &input,
+        const float a_stepsize,
+        const float p_stepsize,
         FunctionalWrapper *tfunctional);
 
 #endif

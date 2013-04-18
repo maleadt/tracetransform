@@ -27,7 +27,7 @@
 // Module definitions
 //
 
-Transformer::Transformer(const Eigen::MatrixXd &image)
+Transformer::Transformer(const Eigen::MatrixXf &image)
                 : _image(image)
 {
         // Orthonormal P-functionals need a stretched image in order to ensure a
@@ -41,7 +41,7 @@ Transformer::Transformer(const Eigen::MatrixXd &image)
         _image_orthonormal = pad(_image_orthonormal);
 }
 
-Eigen::MatrixXd Transformer::getTransform(const std::vector<TFunctional> &tfunctionals,
+Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctional> &tfunctionals,
                 const std::vector<PFunctional> &pfunctionals) const
 {
         // Check for orthonormal P-functionals
@@ -60,14 +60,14 @@ Eigen::MatrixXd Transformer::getTransform(const std::vector<TFunctional> &tfunct
                         "Cannot mix regular and orthonormal P-functionals");
 
         // Select an image to use
-        const Eigen::MatrixXd *image_selected;
+        const Eigen::MatrixXf *image_selected;
         if (orthonormal)
                 image_selected = &_image_orthonormal;
         else
                 image_selected = &_image;
 
         // Allocate a matrix for all output data to reside in
-        Eigen::MatrixXd output(
+        Eigen::MatrixXf output(
                 360 / ANGLE_INTERVAL,
                 tfunctionals.size() * pfunctionals.size());
 
@@ -75,7 +75,7 @@ Eigen::MatrixXd Transformer::getTransform(const std::vector<TFunctional> &tfunct
         for (size_t t = 0; t < tfunctionals.size(); t++) {
                 // Calculate the trace transform sinogram
                 clog(debug) << "Calculating " << tfunctionals[t].name << " sinogram" << std::endl;
-                Eigen::MatrixXd sinogram = getSinogram(
+                Eigen::MatrixXf sinogram = getSinogram(
                         *image_selected,
                         ANGLE_INTERVAL,
                         DISTANCE_INTERVAL,
@@ -118,13 +118,13 @@ Eigen::MatrixXd Transformer::getTransform(const std::vector<TFunctional> &tfunct
                                         << " circus function for "
                                         << tfunctionals[t].name
                                         << " sinogram" << std::endl;
-                        Eigen::VectorXd circus = getCircusFunction(
+                        Eigen::VectorXf circus = getCircusFunction(
                                 sinogram,
                                 pfunctionals[p].wrapper
                         );
 
                         // Normalize
-                        Eigen::VectorXd normalized = zscore(circus);
+                        Eigen::VectorXf normalized = zscore(circus);
 
                         // Copy the data
                         assert(normalized.size() == output.rows());

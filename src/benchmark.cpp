@@ -47,7 +47,7 @@ public:
         Transformer *_transformer;
 
 private:
-        Eigen::MatrixXd _image;
+        Eigen::MatrixXf _image;
 };
 
 BENCHMARK_F(SmallImageFixture, Radon, 2, 3)
@@ -58,7 +58,7 @@ BENCHMARK_F(SmallImageFixture, Radon, 2, 3)
         std::vector<PFunctional> pfunctionals{
 
         };
-        Eigen::MatrixXd output = _transformer->getTransform(tfunctionals, pfunctionals);
+        Eigen::MatrixXf output = _transformer->getTransform(tfunctionals, pfunctionals);
 }
 
 BENCHMARK_F(SmallImageFixture, TraceRegular, 2, 3)
@@ -69,7 +69,7 @@ BENCHMARK_F(SmallImageFixture, TraceRegular, 2, 3)
         std::vector<PFunctional> pfunctionals{
                 PFunctional("P1",  new SimpleFunctionalWrapper(PFunctional1))
         };
-        Eigen::MatrixXd output = _transformer->getTransform(tfunctionals, pfunctionals);
+        Eigen::MatrixXf output = _transformer->getTransform(tfunctionals, pfunctionals);
 }
 
 BENCHMARK_F(SmallImageFixture, TraceOrthonormal, 2, 3)
@@ -83,7 +83,7 @@ BENCHMARK_F(SmallImageFixture, TraceOrthonormal, 2, 3)
                                 PFunctional::Type::HERMITE,
                                 1)
         };
-        Eigen::MatrixXd output = _transformer->getTransform(tfunctionals, pfunctionals);
+        Eigen::MatrixXf output = _transformer->getTransform(tfunctionals, pfunctionals);
 }
 
 

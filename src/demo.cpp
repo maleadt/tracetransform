@@ -194,12 +194,12 @@ int main(int argc, char **argv)
         //
         
         // Read the image
-        Eigen::MatrixXd input = pgmRead(vm["input"].as<std::string>());
+        Eigen::MatrixXf input = pgmRead(vm["input"].as<std::string>());
         input = gray2mat(input);
 
         // Transform the image
         Transformer transformer(input);
-        Eigen::MatrixXd output = transformer.getTransform(tfunctionals, pfunctionals);
+        Eigen::MatrixXf output = transformer.getTransform(tfunctionals, pfunctionals);
 
         // Save the output data
         if (pfunctionals.size() > 0) {          
@@ -216,7 +216,7 @@ int main(int argc, char **argv)
                                 // Save individual traces as well
                                 std::stringstream fn_trace_data;
                                 fn_trace_data << "trace_" << header.str() << ".dat";
-                                dataWrite(fn_trace_data.str(), (Eigen::MatrixXd) output.col(tp));
+                                dataWrite(fn_trace_data.str(), (Eigen::MatrixXf) output.col(tp));
                         }
                 }
                 dataWrite(vm["output"].as<std::string>(), output, headers);
