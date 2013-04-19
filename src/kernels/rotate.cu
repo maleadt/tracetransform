@@ -11,6 +11,7 @@
 // Local
 #include "../global.hpp"
 #include "../logger.hpp"
+#include "../cudahelper/chrono.hpp"
 
 // Static parameters
 const int blocksize = 16;
@@ -89,11 +90,15 @@ CUDAHelper::GlobalMemory<float> *rotate(
 {
         assert(rows*cols == input->size());
 
-        CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(input->size(), 0);
+        CUDAHelper::Chrono chrono;
+        chrono.start();
+        CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(input->size());
 
         dim3 threads(blocksize, blocksize);
         dim3 blocks(rows/blocksize, cols/blocksize);
         bilinear_rotate_kernel<<<blocks, threads>>>(*input, *output, rows, cols, angle);
 
+        chrono.stop();
+        clog(trace) << "Rotation kernel took " << chrono.elapsed() << " ms." << std::endl;
         return output;
 }
