@@ -20,16 +20,13 @@ const int blocksize = 16;
 // Kernels
 //
 
-typedef Eigen::RowVector2i Pointi;
-typedef Eigen::RowVector2f Pointf;
-
 __global__ void linear_rotate_kernel(const float* input, float* output, int width,
                 int height, float angle)
 {
-        Pointi p(blockIdx.x * blockDim.x + threadIdx.x,
+        Point<int>::type p(blockIdx.x * blockDim.x + threadIdx.x,
                         blockIdx.y * blockDim.y + threadIdx.y);
-        Pointf origin(width / 2, height / 2);
-        Pointi q(
+        Point<float>::type origin(width / 2, height / 2);
+        Point<int>::type q(
                         cos(angle) * (p.x() - origin.x())
                                         - sin(angle) * (p.y() - origin.y())
                                         + origin.x(),
@@ -40,52 +37,45 @@ __global__ void linear_rotate_kernel(const float* input, float* output, int widt
                 output[p.x() + p.y() * width] = input[q.x() + q.y() * width];
 }
 
-__global__ void bilinear_rotate_kernel(const float* input, float* output,
+__device__ float interpolate_kernel(const Eigen::Map<const Eigen::MatrixXf> &source, const Point<float>::type &p)
+{
+        // Get fractional and integral part of the coordinates
+        float x_int, y_int;
+        float x_fract = std::modf(p.x(), &x_int);
+        float y_fract = std::modf(p.y(), &y_int);
+
+        return    source((size_t)y_int, (size_t)x_int)*(1-x_fract)*(1-y_fract)
+                + source((size_t)y_int, (size_t)x_int+1)*x_fract*(1-y_fract)
+                + source((size_t)y_int+1, (size_t)x_int)*(1-x_fract)*y_fract
+                + source((size_t)y_int+1, (size_t)x_int+1)*x_fract*y_fract;
+
+}
+
+__global__ void bilinear_rotate_kernel(const float* _input, float* _output,
                 const unsigned int width, const unsigned int height,
                 const float angle)
 {
         // compute thread dimension
-        const unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
-        const unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+        const unsigned int col = blockIdx.x * blockDim.x + threadIdx.x;
+        const unsigned int row = blockIdx.y * blockDim.y + threadIdx.y;
 
-        // compute target address
-        const unsigned int idx = x + y * width;
+        // Get Eigen matrices back
+        Eigen::Map<const Eigen::MatrixXf> input(_input, height, width);
+        Eigen::Map<Eigen::MatrixXf> output(_output, height, width);
 
-        const int xA = (x - width / 2);
-        const int yA = (y - height / 2);
+        Point<float>::type origin(width / 2.0, height / 2.0);
 
-        const int xR = (int) (xA * cos(angle) - yA * sin(angle));
-        const int yR = (int) (xA * sin(angle) + yA * cos(angle));
+        // Calculate transform matrix
+        Eigen::Matrix2f transform;
+        transform <<    std::cos(angle), -std::sin(angle),
+                        std::sin(angle),  std::cos(angle);
 
-        float src_x = xR + width / 2;
-        float src_y = yR + height / 2;
-
-        if (src_x >= 0.0f && src_x < width && src_y >= 0.0f && src_y < height) {
-                // BI - LINEAR INTERPOLATION
-                float src_x0 = (float) (int) (src_x);
-                float src_x1 = (src_x0 + 1);
-                float src_y0 = (float) (int) (src_y);
-                float src_y1 = (src_y0 + 1);
-
-                float sx = (src_x - src_x0);
-                float sy = (src_y - src_y0);
-
-                int idx_src00 = min(max(0.0f, src_x0 + src_y0 * width),
-                                width * height - 1.0f);
-                int idx_src10 = min(max(0.0f, src_x1 + src_y0 * width),
-                                width * height - 1.0f);
-                int idx_src01 = min(max(0.0f, src_x0 + src_y1 * width),
-                                width * height - 1.0f);
-                int idx_src11 = min(max(0.0f, src_x1 + src_y1 * width),
-                                width * height - 1.0f);
-
-                output[idx] = (1.0f - sx) * (1.0f - sy) * input[idx_src00];
-                output[idx] += (sx) * (1.0f - sy) * input[idx_src10];
-                output[idx] += (1.0f - sx) * (sy) * input[idx_src01];
-                output[idx] += (sx) * (sy) * input[idx_src11];
-        } else {
-                output[idx] = 0.0f;
-        }
+        // Process this point
+        Point<float>::type p(col, row);
+        Point<float>::type q = ((p - origin) * transform) + origin;
+        if (    q.x() >= 0 && q.x() < input.cols()-1
+                && q.y() >= 0 && q.y() < input.rows()-1)
+                output(row, col) = interpolate_kernel(input, q);
 }
 
 
@@ -103,7 +93,7 @@ CUDAHelper::GlobalMemory<float> *rotate(
 
         dim3 threads(blocksize, blocksize);
         dim3 blocks(rows/blocksize, cols/blocksize);
-        linear_rotate_kernel<<<blocks, threads>>>(*input, *output, rows, cols, angle);
+        bilinear_rotate_kernel<<<blocks, threads>>>(*input, *output, rows, cols, angle);
 
         return output;
 }

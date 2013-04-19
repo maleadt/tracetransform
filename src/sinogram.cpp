@@ -13,7 +13,7 @@
 #include "logger.hpp"
 #include "auxiliary.hpp"
 #include "wrapper.hpp"
-#include "kernels/hello.hpp"
+#include "kernels/rotate.hpp"
 
 
 //
@@ -30,8 +30,6 @@ Eigen::MatrixXf getSinogram(
         assert(p_stepsize > 0);
         assert(input.rows() == input.cols());   // padded image!
 
-        hello();
-
         // Get the image origin to rotate around
         Point<float>::type origin((input.cols()-1)/2.0, (input.rows()-1)/2.0);
 
@@ -45,6 +43,20 @@ Eigen::MatrixXf getSinogram(
                 // Rotate the image
                 float a = a_step * a_stepsize;
                 Eigen::MatrixXf input_rotated = rotate(input, origin, -deg2rad(a));
+                pgmWrite("eigen.pgm", mat2gray(input_rotated));
+
+                // Rotate the image, using CUDA
+                CUDAHelper::GlobalMemory<float> *input_mem =
+                                new CUDAHelper::GlobalMemory<float>(
+                                                input.rows() * input.cols());
+                input_mem->upload(input.data());
+                CUDAHelper::GlobalMemory<float> *input_rotated_mem = rotate(
+                                input_mem, -deg2rad(a),
+                                input.rows(), input.cols());
+                input_rotated_mem->download(input_rotated.data());
+                pgmWrite("cuda.pgm", mat2gray(input_rotated));
+                if (a_step == 10)
+                        exit(0);
 
                 // Process all projection bands
                 for (size_t p_step = 0; p_step < p_steps; p_step++) {
