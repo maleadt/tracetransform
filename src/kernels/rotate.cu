@@ -92,7 +92,8 @@ CUDAHelper::GlobalMemory<float> *rotate(
 
         CUDAHelper::Chrono chrono;
         chrono.start();
-        CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(input->size());
+        // TODO: why is memset required? Fails otherwise on e.g. angle=50deg
+        CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(input->size(), 0);
 
         dim3 threads(blocksize, blocksize);
         dim3 blocks(rows/blocksize, cols/blocksize);

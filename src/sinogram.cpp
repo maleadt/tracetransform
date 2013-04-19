@@ -42,10 +42,6 @@ Eigen::MatrixXf getSinogram(
         for (size_t a_step = 0; a_step < a_steps; a_step++) {
                 // Rotate the image
                 float a = a_step * a_stepsize;
-                Eigen::MatrixXf input_rotated = rotate(input, origin, -deg2rad(a));
-                pgmWrite("eigen.pgm", mat2gray(input_rotated));
-
-                // Rotate the image, using CUDA
                 CUDAHelper::GlobalMemory<float> *input_mem =
                                 new CUDAHelper::GlobalMemory<float>(
                                                 input.rows() * input.cols());
@@ -53,10 +49,8 @@ Eigen::MatrixXf getSinogram(
                 CUDAHelper::GlobalMemory<float> *input_rotated_mem = rotate(
                                 input_mem, -deg2rad(a),
                                 input.rows(), input.cols());
+                Eigen::MatrixXf input_rotated(input.rows(), input.cols());
                 input_rotated_mem->download(input_rotated.data());
-                pgmWrite("cuda.pgm", mat2gray(input_rotated));
-                if (a_step == 10)
-                        exit(0);
 
                 // Process all projection bands
                 for (size_t p_step = 0; p_step < p_steps; p_step++) {
