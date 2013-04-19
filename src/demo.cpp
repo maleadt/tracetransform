@@ -234,8 +234,7 @@ int main(int argc, char **argv)
         }
 
         // Read the image
-        Eigen::MatrixXf input = pgmRead(vm["input"].as<std::string>());
-        input = gray2mat(input);
+        Eigen::MatrixXf input = gray2mat(pgmRead(vm["input"].as<std::string>()));
 
         // Transform the image
         Transformer transformer(input);

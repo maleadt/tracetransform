@@ -33,7 +33,7 @@ Eigen::MatrixXf getSinogram(
         hello();
 
         // Get the image origin to rotate around
-        Point origin((input.cols()-1)/2.0, (input.rows()-1)/2.0);
+        Point<float>::type origin((input.cols()-1)/2.0, (input.rows()-1)/2.0);
 
         // Calculate and allocate the output matrix
         size_t a_steps = (size_t) std::floor(360 / a_stepsize);

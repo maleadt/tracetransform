@@ -32,8 +32,7 @@ public:
         virtual void SetUp()
         {
                 // Read the image
-                _image = pgmRead("res/Cam1_V1.pgm");
-                _image = gray2mat(_image);
+                _image = gray2mat(pgmRead("res/Cam1_V1.pgm"));
 
                 // Set-up the transformer
                 _transformer = new Transformer(_image);

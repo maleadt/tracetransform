@@ -14,14 +14,8 @@
 // Eigen
 #include <Eigen/Dense>
 
-
-//
-// Structs
-//
-
-typedef Eigen::RowVector2d Point;
-
-std::ostream& operator<<(std::ostream &stream, const Point& point);
+// Local
+#include "global.hpp"
 
 
 //
@@ -29,29 +23,29 @@ std::ostream& operator<<(std::ostream &stream, const Point& point);
 //
 
 // Read an ASCII PGM file
-Eigen::MatrixXf pgmRead(std::string filename);
+Eigen::MatrixXi pgmRead(std::string filename);
 
 // Write an ASCII PGM file
-void pgmWrite(std::string filename, const Eigen::MatrixXf &data);
+void pgmWrite(std::string filename, const Eigen::MatrixXi &data);
 
 // Write a MATLAB and gnuplot-compatible data file
 void dataWrite(std::string filename, const Eigen::MatrixXf &data,
         const std::vector<std::string> &headers = std::vector<std::string>());
 
 // Convert a grayscale image (range [0, 255]) to a matrix (range [0, 1]).
-Eigen::MatrixXf gray2mat(const Eigen::MatrixXf &input);
+Eigen::MatrixXf gray2mat(const Eigen::MatrixXi &input);
 
 // Convert a matrix (arbitrary values) to a grayscale image (range [0, 255]). This
 // involves detecting the maximum value, and clamping that to 255.
-Eigen::MatrixXf mat2gray(const Eigen::MatrixXf &input);
+Eigen::MatrixXi mat2gray(const Eigen::MatrixXf &input);
 
 float deg2rad(float degrees);
 
-float interpolate(const Eigen::MatrixXf &source, const Point &p);
+float interpolate(const Eigen::MatrixXf &source, const Point<float>::type &p);
 
 Eigen::MatrixXf resize(const Eigen::MatrixXf &input, const size_t rows, const size_t cols);
 
-Eigen::MatrixXf rotate(const Eigen::MatrixXf &input, const Point &origin, const float angle);
+Eigen::MatrixXf rotate(const Eigen::MatrixXf &input, const Point<float>::type &origin, const float angle);
 
 Eigen::MatrixXf pad(const Eigen::MatrixXf &image);
 

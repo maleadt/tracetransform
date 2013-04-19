@@ -14,20 +14,10 @@
 
 
 //
-// Structs
-//
-
-std::ostream& operator<<(std::ostream &stream, const Point& point) {
-        stream << point.x() << "x" << point.y();
-        return stream;
-}
-
-
-//
 // Routines
 //
 
-Eigen::MatrixXf pgmRead(std::string filename)
+Eigen::MatrixXi pgmRead(std::string filename)
 {
         std::ifstream infile(filename);
         std::string inputLine = "";
@@ -50,7 +40,7 @@ Eigen::MatrixXf pgmRead(std::string filename)
         // Size
         size_t numrows = 0, numcols = 0;
         ss >> numcols >> numrows;
-        Eigen::MatrixXf data(numrows, numcols);
+        Eigen::MatrixXi data(numrows, numcols);
 
         // Maxval
         size_t maxval;
@@ -70,7 +60,7 @@ Eigen::MatrixXf pgmRead(std::string filename)
         return data;
 }
 
-void pgmWrite(std::string filename, const Eigen::MatrixXf &data)
+void pgmWrite(std::string filename, const Eigen::MatrixXi &data)
 {
         std::ofstream outfile(filename);
 
@@ -151,7 +141,7 @@ void dataWrite(std::string filename, const Eigen::MatrixXf &data,
         fd_data.close();
 }
 
-Eigen::MatrixXf gray2mat(const Eigen::MatrixXf &input)
+Eigen::MatrixXf gray2mat(const Eigen::MatrixXi &input)
 {
         // Scale
         Eigen::MatrixXf output(input.rows(), input.cols());
@@ -163,7 +153,7 @@ Eigen::MatrixXf gray2mat(const Eigen::MatrixXf &input)
         return output;
 }
 
-Eigen::MatrixXf mat2gray(const Eigen::MatrixXf &input)
+Eigen::MatrixXi mat2gray(const Eigen::MatrixXf &input)
 {
         // Detect maximum
         float maximum = 0;
@@ -176,7 +166,7 @@ Eigen::MatrixXf mat2gray(const Eigen::MatrixXf &input)
         }
 
         // Scale
-        Eigen::MatrixXf output(input.rows(), input.cols());
+        Eigen::MatrixXi output(input.rows(), input.cols());
         for (size_t col = 0; col < output.cols(); col++) {
                 for (size_t row = 0; row < output.rows(); row++) {
                         output(row, col) = input(row, col) * 255.0/maximum;
@@ -190,7 +180,7 @@ float deg2rad(float degrees)
         return (degrees * M_PI / 180);
 }
 
-float interpolate(const Eigen::MatrixXf &source, const Point &p)
+float interpolate(const Eigen::MatrixXf &source, const Point<float>::type &p)
 {
         assert(p.x() >= 0 && p.x() < source.cols()-1);
         assert(p.y() >= 0 && p.y() < source.rows()-1);
@@ -211,7 +201,7 @@ Eigen::MatrixXf resize(const Eigen::MatrixXf &input, const size_t rows, const si
 {
         // Calculate transform matrix
         // TODO: use Eigen::Geometry
-        Eigen::Matrix2d transform;
+        Eigen::Matrix2f transform;
         transform <<    ((float) input.rows()) / rows, 0,
                         0, (((float) input.cols()) / cols);
 
@@ -223,21 +213,21 @@ Eigen::MatrixXf resize(const Eigen::MatrixXf &input, const size_t rows, const si
         //        only handle padded images)
         for (size_t col = 1; col < cols-1; col++) {
                 for (size_t row = 1; row < rows-1; row++) {
-                        Point p(col, row);
-                        p += Eigen::RowVector2d(0.5, 0.5);
+                        Point<float>::type p(col, row);
+                        p += Eigen::RowVector2f(0.5, 0.5);
                         p *= transform;
-                        p -= Eigen::RowVector2d(0.5, 0.5);
+                        p -= Eigen::RowVector2f(0.5, 0.5);
                         output(row, col) = interpolate(input, p);
                 }
         }
         return output;
 }
 
-Eigen::MatrixXf rotate(const Eigen::MatrixXf &input, const Point &origin, const float angle)
+Eigen::MatrixXf rotate(const Eigen::MatrixXf &input, const Point<float>::type &origin, const float angle)
 {
         // Calculate transform matrix
         // TODO: use Eigen::Geometry
-        Eigen::Matrix2d transform;
+        Eigen::Matrix2f transform;
         transform <<    std::cos(angle), -std::sin(angle),
                         std::sin(angle),  std::cos(angle);
 
@@ -247,7 +237,7 @@ Eigen::MatrixXf rotate(const Eigen::MatrixXf &input, const Point &origin, const 
         // Process all points
         for (size_t col = 0; col < input.cols(); col++) {
                 for (size_t row = 0; row < input.rows(); row++) {
-                        Point p(col, row);
+                        Point<float>::type p(col, row);
                         p -= origin;    // TODO: why no pixel center offset?
                         p *= transform;
                         p += origin;
@@ -262,19 +252,19 @@ Eigen::MatrixXf rotate(const Eigen::MatrixXf &input, const Point &origin, const 
 Eigen::MatrixXf pad(const Eigen::MatrixXf &image)
 {
         // Pad the images so we can freely rotate without losing information
-        Point origin(
+        Point<float>::type origin(
                 std::floor((image.cols() + 1) / 2.0) - 1,
                 std::floor((image.rows() + 1) / 2.0) - 1);
-        int rLast = (int) std::ceil(std::hypot(
+        int rLast = (int) std::ceil(hypot(
                         image.cols() - 1 - origin.x() - 1,
                         image.rows() - 1 - origin.y() - 1)) + 1;
         int rFirst = -rLast;
         size_t nBins = (unsigned) (rLast - rFirst + 1);
         Eigen::MatrixXf image_padded = Eigen::MatrixXf::Zero(nBins, nBins);
-        Point origin_padded(
+        Point<float>::type origin_padded(
                 std::floor((image_padded.cols() + 1) / 2.0) - 1,
                 std::floor((image_padded.rows() + 1) / 2.0) - 1);
-        Point df = origin_padded - origin;
+        Point<float>::type df = origin_padded - origin;
         for (size_t col = 0; col < image.cols(); col++) {
                 for (size_t row = 0; row < image.rows(); row++) {
                         image_padded(row + (size_t) df.y(), col + (size_t) df.x())
