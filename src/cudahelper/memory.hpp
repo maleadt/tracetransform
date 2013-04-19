@@ -7,6 +7,8 @@
 #define _TRACETRANSFORM_CUDAHELPER_MEMORY_
 
 // Standard library
+#include <iostream>
+#include <iomanip>
 #include <cstddef>
 #include <cassert>
 
@@ -16,6 +18,7 @@
 #include <device_launch_parameters.h>
 
 // Local
+#include "../logger.hpp"
 #include "errorhandling.hpp"
 
 
@@ -37,12 +40,12 @@ namespace CUDAHelper
                 {
                 }
 
-        protected:
                 std::size_t size() const
                 {
                         return _size;
                 }
 
+        protected:
                 std::size_t bytes() const
                 {
                         return _size * sizeof(MemType);
@@ -70,6 +73,7 @@ namespace CUDAHelper
                         assert(this->size() == other.size());
                         checkError(
                                         cudaMemcpy(_hostPtr, other._hostPtr,
+                                                        this->bytes(),
                                                         cudaMemcpyHostToHost));
                 }
 
@@ -100,7 +104,16 @@ namespace CUDAHelper
                 GlobalMemory(std::size_t size)
                                 : Memory<MemType>(size)
                 {
+                        clog(trace) << "Allocating " << this->bytes() << " bytes in global memory." << std::endl;
                         checkError(cudaMalloc(&_devicePtr, this->bytes()));
+                }
+
+                GlobalMemory(std::size_t size, int value)
+                                : Memory<MemType>(size)
+                {
+                        clog(trace) << "Allocating " << this->bytes() << " bytes in global memory and setting them to 0x" << std::hex << value << std::dec << "." << std::endl;
+                        checkError(cudaMalloc(&_devicePtr, this->bytes()));
+                        checkError(cudaMemset(_devicePtr, value, this->bytes()));
                 }
 
                 GlobalMemory(const GlobalMemory<MemType>& other)
@@ -108,6 +121,7 @@ namespace CUDAHelper
                         assert(this->size() == other.size());
                         checkError(
                                         cudaMemcpy(_devicePtr, other._devicePtr,
+                                                        this->bytes(),
                                                         cudaMemcpyDeviceToDevice));
                 }
 
@@ -128,6 +142,7 @@ namespace CUDAHelper
 
                 void download(MemType* hostPtr) const
                 {
+                        clog(trace) << "Downloading " << this->bytes() << " bytes from global memory." << std::endl;
                         checkError(
                                         cudaMemcpy(hostPtr, _devicePtr,
                                                         this->bytes(),
@@ -136,6 +151,7 @@ namespace CUDAHelper
 
                 void upload(const MemType* hostPtr)
                 {
+                        clog(trace) << "Uploading " << this->bytes() << " bytes to global memory." << std::endl;
                         checkError(
                                         cudaMemcpy(_devicePtr, hostPtr,
                                                         this->bytes(),

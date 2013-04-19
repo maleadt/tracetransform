@@ -15,7 +15,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 # Extra warnings
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-SET(CUDA_NVCC_FLAGS "-Xcompiler -Wall,-Wextra")
+SET(CUDA_NVCC_FLAGS "-Xcompiler -Wall,-Wextra --gpu-architecture compute_35 --gpu-code sm_35")
 
 # Test execution string
 SEPARATE_ARGUMENTS(TEST_EXECUTION UNIX_COMMAND "-T 1 -P H1 ../res/Cam1_V1.pgm")

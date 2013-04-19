@@ -7,6 +7,9 @@
 // Configuration
 //
 
+// Header
+#include "hello.hpp"
+
 // Standard library
 #include <iostream>
 
