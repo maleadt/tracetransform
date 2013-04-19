@@ -41,7 +41,7 @@ Eigen::MatrixXf getSinogram(
         for (size_t a_step = 0; a_step < a_steps; a_step++) {
                 // Rotate the image
                 float a = a_step * a_stepsize;
-                Eigen::MatrixXf input_rotated = rotate(input, origin, deg2rad(a));
+                Eigen::MatrixXf input_rotated = rotate(input, origin, -deg2rad(a));
 
                 // Process all projection bands
                 for (size_t p_step = 0; p_step < p_steps; p_step++) {

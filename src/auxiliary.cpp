@@ -237,10 +237,9 @@ Eigen::MatrixXf rotate(const Eigen::MatrixXf &input, const Point &origin, const 
 {
         // Calculate transform matrix
         // TODO: use Eigen::Geometry
-        // TODO: -angle?
         Eigen::Matrix2d transform;
-        transform <<    std::cos(-angle), -std::sin(-angle),
-                        std::sin(-angle),  std::cos(-angle);
+        transform <<    std::cos(angle), -std::sin(angle),
+                        std::sin(angle),  std::cos(angle);
 
         // Allocate output matrix
         Eigen::MatrixXf output = Eigen::MatrixXf::Zero(input.rows(), input.cols());
