@@ -21,30 +21,13 @@ const int blocksize = 16;
 // Kernels
 //
 
-__global__ void linear_rotate_kernel(const float* input, float* output, int rows,
-                int cols, float angle)
-{
-        Point<int>::type p(blockIdx.x * blockDim.x + threadIdx.x,
-                        blockIdx.y * blockDim.y + threadIdx.y);
-        Point<float>::type origin(cols / 2, rows / 2);
-        Point<int>::type q(
-                        cos(angle) * (p.x() - origin.x())
-                                        - sin(angle) * (p.y() - origin.y())
-                                        + origin.x(),
-                        sin(angle) * (p.x() - origin.x())
-                                        + cos(angle) * (p.y() - origin.y())
-                                        + origin.y());
-        if (q.x() >= 0 && q.x() < cols && q.y() >= 0 && q.y() < rows)
-                output[p.x() + p.y() * cols] = input[q.x() + q.y() * cols];
-}
-
 __device__ float interpolate_kernel(const Eigen::Map<const Eigen::MatrixXf> &source, const Point<float>::type &p)
 {
         // Get fractional and integral part of the coordinates
-        int x_int = (int) p.x();
-        int y_int = (int) p.y();
-        float x_fract = p.x() - x_int;
-        float y_fract = p.y() - y_int;
+        const int x_int = (int) p.x();
+        const int y_int = (int) p.y();
+        const float x_fract = p.x() - x_int;
+        const float y_fract = p.y() - y_int;
 
         return    source(y_int, x_int)     * (1-x_fract)*(1-y_fract)
                 + source(y_int, x_int+1)   * x_fract*(1-y_fract)
@@ -55,7 +38,7 @@ __device__ float interpolate_kernel(const Eigen::Map<const Eigen::MatrixXf> &sou
 
 __constant__ float _transform[4];
 
-__global__ void bilinear_rotate_kernel(const float* _input, float* _output,
+__global__ void rotate_kernel(const float* _input, float* _output,
                 const int cols, const int rows)
 {
         // Compute thread dimension
@@ -102,7 +85,7 @@ CUDAHelper::GlobalMemory<float> *rotate(
 
         dim3 threads(blocksize, blocksize);
         dim3 blocks(rows/blocksize, cols/blocksize);
-        bilinear_rotate_kernel<<<blocks, threads>>>(*input, *output, rows, cols);
+        rotate_kernel<<<blocks, threads>>>(*input, *output, rows, cols);
 
         chrono.stop();
         clog(trace) << "Rotation kernel took " << chrono.elapsed() << " ms." << std::endl;
