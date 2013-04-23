@@ -14,7 +14,6 @@
 // Local
 #include "logger.hpp"
 #include "auxiliary.hpp"
-#include "wrapper.hpp"
 #include "sinogram.hpp"
 #include "circus.hpp"
 
@@ -41,14 +40,14 @@ Transformer::Transformer(const Eigen::MatrixXf &image)
         _image_orthonormal = pad(_image_orthonormal);
 }
 
-Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctional> &tfunctionals,
-                const std::vector<PFunctional> &pfunctionals) const
+Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
+                std::vector<PFunctionalWrapper> &pfunctionals) const
 {
         // Check for orthonormal P-functionals
         unsigned int orthonormal_count = 0;
         bool orthonormal;
         for (size_t p = 0; p < pfunctionals.size(); p++) {
-                if (pfunctionals[p].type == PFunctional::Type::HERMITE)
+                if (pfunctionals[p].functional == PFunctional::Hermite)
                         orthonormal_count++;
         }
         if (orthonormal_count == 0)
@@ -79,7 +78,7 @@ Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctional> &tfunct
                         *image_selected,
                         ANGLE_INTERVAL,
                         DISTANCE_INTERVAL,
-                        tfunctionals[t].wrapper
+                        tfunctionals[t]
                 );
 
                 if (clog(debug)) {
@@ -95,24 +94,19 @@ Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctional> &tfunct
                 }
 
                 // Orthonormal functionals require the nearest orthonormal sinogram
-                size_t sinogram_center;
                 if (orthonormal) {
                         clog(trace) << "Orthonormalizing sinogram" << std::endl;
+                        size_t sinogram_center;
                         sinogram = nearest_orthonormal_sinogram(sinogram, sinogram_center);
+                        for (size_t p = 0; p < pfunctionals.size(); p++) {
+                                if (pfunctionals[p].functional == PFunctional::Hermite) {
+                                        pfunctionals[p].arguments.center = sinogram_center;
+                                }
+                        }
                 }
 
                 // Process all P-functionals
                 for (size_t p = 0; p < pfunctionals.size(); p++) {
-                        // Configure any extra parameters
-                        if (pfunctionals[p].type == PFunctional::Type::HERMITE) {
-                                GenericFunctionalWrapper<unsigned int, size_t>* hermite_functional =
-                                                dynamic_cast<GenericFunctionalWrapper<
-                                                                unsigned int,
-                                                                size_t>*>(pfunctionals[p].wrapper);
-                                assert(hermite_functional);
-                                hermite_functional->configure(*pfunctionals[p].order, sinogram_center);
-                        }
-
                         // Calculate the circus function
                         clog(debug) << "Calculating " << pfunctionals[p].name
                                         << " circus function for "
@@ -120,7 +114,7 @@ Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctional> &tfunct
                                         << " sinogram" << std::endl;
                         Eigen::VectorXf circus = getCircusFunction(
                                 sinogram,
-                                pfunctionals[p].wrapper
+                                pfunctionals[p]
                         );
 
                         // Normalize

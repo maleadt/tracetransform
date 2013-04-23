@@ -73,10 +73,10 @@ SET(COMMON_LIBRARIES auxiliary logger)
 ADD_LIBRARY(functionals src/functionals.h src/functionals.c)
 
 ADD_LIBRARY(sinogram src/sinogram.hpp src/sinogram.cpp)
-TARGET_LINK_LIBRARIES(sinogram ${COMMON_LIBRARIES})
+TARGET_LINK_LIBRARIES(sinogram functionals ${COMMON_LIBRARIES})
 
 ADD_LIBRARY(circus src/circus.hpp src/circus.cpp)
-TARGET_LINK_LIBRARIES(circus ${COMMON_LIBRARIES})
+TARGET_LINK_LIBRARIES(circus functionals ${COMMON_LIBRARIES})
 
 ADD_LIBRARY(transform src/transform.hpp src/transform.cpp)
 TARGET_LINK_LIBRARIES(transform ${COMMON_LIBRARIES} sinogram circus)
@@ -87,11 +87,11 @@ TARGET_LINK_LIBRARIES(transform ${COMMON_LIBRARIES} sinogram circus)
 #
 
 ADD_EXECUTABLE(demo src/demo.cpp)
-TARGET_LINK_LIBRARIES(demo functionals ${COMMON_LIBRARIES} transform ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(demo ${COMMON_LIBRARIES} transform ${Boost_LIBRARIES})
 TARGET_LINK_LIBRARIES(demo debug ${BACKWARD})
 
 ADD_EXECUTABLE(benchmark src/benchmark.cpp)
-TARGET_LINK_LIBRARIES(benchmark functionals ${COMMON_LIBRARIES} transform ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(benchmark ${COMMON_LIBRARIES} transform ${Boost_LIBRARIES})
 
 
 #

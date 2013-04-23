@@ -255,7 +255,7 @@ Eigen::MatrixXf pad(const Eigen::MatrixXf &image)
         Point<float>::type origin(
                 std::floor((image.cols() + 1) / 2.0) - 1,
                 std::floor((image.rows() + 1) / 2.0) - 1);
-        int rLast = (int) std::ceil(hypot(
+        int rLast = (int) std::ceil(std::hypot(
                         image.cols() - 1 - origin.x() - 1,
                         image.rows() - 1 - origin.y() - 1)) + 1;
         int rFirst = -rLast;
