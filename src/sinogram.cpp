@@ -34,19 +34,19 @@ Eigen::MatrixXf getSinogram(
         Point<float>::type origin((input.cols()-1)/2.0, (input.rows()-1)/2.0);
 
         // Calculate and allocate the output matrix
-        size_t a_steps = 360;
-        size_t p_steps = (size_t) input.rows();
+        int a_steps = 360;
+        int p_steps = input.rows();
         Eigen::MatrixXf output(p_steps, a_steps);
 
         // Process all angles
-        for (size_t a = 0; a < a_steps; a++) {
+        for (int a = 0; a < a_steps; a++) {
                 // Rotate the image
                 Eigen::MatrixXf input_rotated = rotate(input, origin, -deg2rad(a));
 
                 // Process all projection bands
-                for (size_t p = 0; p < p_steps; p++) {
+                for (int p = 0; p < p_steps; p++) {
                         float *data = input_rotated.data() + p * input.rows();
-                        size_t length = input.rows();
+                        int length = input.rows();
                         float result;
                         switch (tfunctional.functional) {
                                 case TFunctional::Radon:
