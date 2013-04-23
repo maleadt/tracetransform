@@ -53,9 +53,10 @@ __device__ float interpolate_kernel(const Eigen::Map<const Eigen::MatrixXf> &sou
 
 }
 
+__constant__ float _transform[4];
+
 __global__ void bilinear_rotate_kernel(const float* _input, float* _output,
-                const int cols, const int rows,
-                const float angle)
+                const int cols, const int rows)
 {
         // Compute thread dimension
         const int col = blockIdx.x * blockDim.x + threadIdx.x;
@@ -64,13 +65,9 @@ __global__ void bilinear_rotate_kernel(const float* _input, float* _output,
         // Get Eigen matrices back
         Eigen::Map<const Eigen::MatrixXf> input(_input, rows, cols);
         Eigen::Map<Eigen::MatrixXf> output(_output, rows, cols);
+        Eigen::Map<const Eigen::Matrix2f> transform(_transform);
 
         Point<float>::type origin(cols / 2.0, rows / 2.0);
-
-        // Calculate transform matrix
-        Eigen::Matrix2f transform;
-        transform <<    std::cos(angle), -std::sin(angle),
-                        std::sin(angle),  std::cos(angle);
 
         // Process this point
         Point<float>::type p(col, row);
@@ -91,6 +88,13 @@ CUDAHelper::GlobalMemory<float> *rotate(
 {
         assert(rows*cols == input->size());
 
+        // Calculate transform matrix
+        Eigen::Matrix2f transform_data;
+        transform_data <<       std::cos(angle), -std::sin(angle),
+                                std::sin(angle),  std::cos(angle);
+        CUDAHelper::ConstantMemory<float> *transform = new CUDAHelper::ConstantMemory<float>(_transform, 4);
+        transform->upload(transform_data.data());
+
         CUDAHelper::Chrono chrono;
         chrono.start();
         // TODO: why is memset required? Fails otherwise on e.g. angle=50deg
@@ -98,7 +102,7 @@ CUDAHelper::GlobalMemory<float> *rotate(
 
         dim3 threads(blocksize, blocksize);
         dim3 blocks(rows/blocksize, cols/blocksize);
-        bilinear_rotate_kernel<<<blocks, threads>>>(*input, *output, rows, cols, angle);
+        bilinear_rotate_kernel<<<blocks, threads>>>(*input, *output, rows, cols);
 
         chrono.stop();
         clog(trace) << "Rotation kernel took " << chrono.elapsed() << " ms." << std::endl;
