@@ -79,7 +79,7 @@ Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctionalWrapper> 
                         tfunctionals[t]
                 );
                 end = std::chrono::system_clock::now();
-                clog(trace) << "Sinogram calculation took "
+                clog(debug) << "Sinogram calculation took "
                                 << std::chrono::duration_cast<std::chrono::milliseconds> (end - start).count()
                                 << " ms." << std::endl;
 
