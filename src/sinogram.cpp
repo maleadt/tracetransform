@@ -45,7 +45,7 @@ Eigen::MatrixXf getSinogram(
 
                 // Process all projection bands
                 for (size_t p = 0; p < p_steps; p++) {
-                        float *data = input_rotated.data() + ((size_t) std::floor(p)) * input.rows();
+                        float *data = input_rotated.data() + p * input.rows();
                         size_t length = input.rows();
                         float result;
                         switch (tfunctional.functional) {
