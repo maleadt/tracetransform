@@ -18,8 +18,9 @@ const int blocksize = 16;
 // Kernels
 //
 
-__global__ void TFunctionalRadon_kernel(const float* _input, const unsigned int width,
-                const unsigned int height, float* _output, const int a)
+__global__ void TFunctionalRadon_kernel(const float* _input,
+                const unsigned int width, const unsigned int height,
+                float* _output, const int a)
 {
         // Compute the thread dimensions
         const unsigned int col = blockIdx.x * blockDim.x + threadIdx.x;
@@ -39,8 +40,7 @@ __global__ void TFunctionalRadon_kernel(const float* _input, const unsigned int 
 // T functionals
 //
 
-CUDAHelper::GlobalMemory<float> *TFunctionalRadon(
-                const CUDAHelper::GlobalMemory<float> *input, int rows,
+void TFunctionalRadon(const CUDAHelper::GlobalMemory<float> *input, int rows,
                 int cols, CUDAHelper::GlobalMemory<float> *output, size_t a)
 {
         assert(rows*cols == input->size());
@@ -49,44 +49,39 @@ CUDAHelper::GlobalMemory<float> *TFunctionalRadon(
         chrono.start();
 
         dim3 threads(blocksize, blocksize);
-        dim3 blocks(rows/blocksize, cols/blocksize);
+        dim3 blocks(rows / blocksize, cols / blocksize);
         TFunctionalRadon_kernel<<<blocks, threads>>>(*input, rows, cols, *output, a);
 
         chrono.stop();
-        clog(trace) << "Radon kernel took " << chrono.elapsed() << " ms." << std::endl;
-        return output;
+        clog(trace) << "Radon kernel took " << chrono.elapsed() << " ms."
+                        << std::endl;
 }
 
-CUDAHelper::GlobalMemory<float> *TFunctional1(
-                const CUDAHelper::GlobalMemory<float> *input, int rows,
+void TFunctional1(const CUDAHelper::GlobalMemory<float> *input, int rows,
                 int cols, CUDAHelper::GlobalMemory<float> *output, size_t a)
 {
 
 }
 
-CUDAHelper::GlobalMemory<float> *TFunctional2(
-                const CUDAHelper::GlobalMemory<float> *input, int rows,
+void TFunctional2(const CUDAHelper::GlobalMemory<float> *input, int rows,
                 int cols, CUDAHelper::GlobalMemory<float> *output, size_t a)
 {
 
 }
 
-CUDAHelper::GlobalMemory<float> *TFunctional3(
-                const CUDAHelper::GlobalMemory<float> *input, int rows,
+void TFunctional3(const CUDAHelper::GlobalMemory<float> *input, int rows,
                 int cols, CUDAHelper::GlobalMemory<float> *output, size_t a)
 {
 
 }
 
-CUDAHelper::GlobalMemory<float> *TFunctional4(
-                const CUDAHelper::GlobalMemory<float> *input, int rows,
+void TFunctional4(const CUDAHelper::GlobalMemory<float> *input, int rows,
                 int cols, CUDAHelper::GlobalMemory<float> *output, size_t a)
 {
 
 }
 
-CUDAHelper::GlobalMemory<float> *TFunctional5(
-                const CUDAHelper::GlobalMemory<float> *input, int rows,
+void TFunctional5(const CUDAHelper::GlobalMemory<float> *input, int rows,
                 int cols, CUDAHelper::GlobalMemory<float> *output, size_t a)
 {
 

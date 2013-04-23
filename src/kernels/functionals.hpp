@@ -15,23 +15,18 @@
 //
 
 // T functionals
-extern CUDAHelper::GlobalMemory<float> *TFunctionalRadon(
-                const CUDAHelper::GlobalMemory<float> *input, int rows,
+extern void TFunctionalRadon(const CUDAHelper::GlobalMemory<float> *input,
+                int rows, int cols, CUDAHelper::GlobalMemory<float> *output,
+                size_t a);
+extern void TFunctional1(const CUDAHelper::GlobalMemory<float> *input, int rows,
                 int cols, CUDAHelper::GlobalMemory<float> *output, size_t a);
-extern CUDAHelper::GlobalMemory<float> *TFunctional1(
-                const CUDAHelper::GlobalMemory<float> *input, int rows,
+extern void TFunctional2(const CUDAHelper::GlobalMemory<float> *input, int rows,
                 int cols, CUDAHelper::GlobalMemory<float> *output, size_t a);
-extern CUDAHelper::GlobalMemory<float> *TFunctional2(
-                const CUDAHelper::GlobalMemory<float> *input, int rows,
+extern void TFunctional3(const CUDAHelper::GlobalMemory<float> *input, int rows,
                 int cols, CUDAHelper::GlobalMemory<float> *output, size_t a);
-extern CUDAHelper::GlobalMemory<float> *TFunctional3(
-                const CUDAHelper::GlobalMemory<float> *input, int rows,
+extern void TFunctional4(const CUDAHelper::GlobalMemory<float> *input, int rows,
                 int cols, CUDAHelper::GlobalMemory<float> *output, size_t a);
-extern CUDAHelper::GlobalMemory<float> *TFunctional4(
-                const CUDAHelper::GlobalMemory<float> *input, int rows,
-                int cols, CUDAHelper::GlobalMemory<float> *output, size_t a);
-extern CUDAHelper::GlobalMemory<float> *TFunctional5(
-                const CUDAHelper::GlobalMemory<float> *input, int rows,
+extern void TFunctional5(const CUDAHelper::GlobalMemory<float> *input, int rows,
                 int cols, CUDAHelper::GlobalMemory<float> *output, size_t a);
 
 // P-functionals
