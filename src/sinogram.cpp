@@ -33,6 +33,8 @@ Eigen::MatrixXf getSinogram(
         size_t a_steps = 360;
         size_t p_steps = (size_t) input.rows();
         Eigen::MatrixXf output(p_steps, a_steps);
+        // TODO: memset?
+        CUDAHelper::GlobalMemory<float> *output_mem = new CUDAHelper::GlobalMemory<float>(p_steps * a_steps, 0);
 
         // Upload the input image
         CUDAHelper::GlobalMemory<float> *input_mem =
@@ -46,33 +48,30 @@ Eigen::MatrixXf getSinogram(
                 CUDAHelper::GlobalMemory<float> *input_rotated_mem = rotate(
                                 input_mem, -deg2rad(a),
                                 input.rows(), input.cols());
-                Eigen::MatrixXf input_rotated(input.rows(), input.cols());
-                input_rotated_mem->download(input_rotated.data());
 
                 // Process all projection bands
-                CUDAHelper::GlobalMemory<float> *output_mem;
                 switch (tfunctional.functional) {
                         case TFunctional::Radon:
-                                output_mem = TFunctionalRadon(input_rotated_mem, input.rows(), input.cols());
+                                output_mem = TFunctionalRadon(input_rotated_mem, input.rows(), input.cols(), output_mem, a);
                                 break;
                         case TFunctional::T1:
-                                output_mem = TFunctional1(input_rotated_mem, input.rows(), input.cols());
+                                output_mem = TFunctional1(input_rotated_mem, input.rows(), input.cols(), output_mem, a);
                                 break;
                         case TFunctional::T2:
-                                output_mem = TFunctional2(input_rotated_mem, input.rows(), input.cols());
+                                output_mem = TFunctional2(input_rotated_mem, input.rows(), input.cols(), output_mem, a);
                                 break;
                         case TFunctional::T3:
-                                output_mem = TFunctional3(input_rotated_mem, input.rows(), input.cols());
+                                output_mem = TFunctional3(input_rotated_mem, input.rows(), input.cols(), output_mem, a);
                                 break;
                         case TFunctional::T4:
-                                output_mem = TFunctional4(input_rotated_mem, input.rows(), input.cols());
+                                output_mem = TFunctional4(input_rotated_mem, input.rows(), input.cols(), output_mem, a);
                                 break;
                         case TFunctional::T5:
-                                output_mem = TFunctional5(input_rotated_mem, input.rows(), input.cols());
+                                output_mem = TFunctional5(input_rotated_mem, input.rows(), input.cols(), output_mem, a);
                                 break;
                 }
-                output_mem->download(output.data());
         }
 
+        output_mem->download(output.data());
         return output;
 }
