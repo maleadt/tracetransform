@@ -8,6 +8,7 @@
 // Standard library
 #include <cmath>
 #include <vector>
+#include <chrono>
 #include <ostream>
 #include <stdexcept>
 
@@ -39,6 +40,8 @@ Transformer::Transformer(const Eigen::MatrixXf &image)
 Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
                 std::vector<PFunctionalWrapper> &pfunctionals) const
 {
+        std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+
         // Check for orthonormal P-functionals
         unsigned int orthonormal_count = 0;
         bool orthonormal;
@@ -70,10 +73,15 @@ Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctionalWrapper> 
         for (size_t t = 0; t < tfunctionals.size(); t++) {
                 // Calculate the trace transform sinogram
                 clog(debug) << "Calculating " << tfunctionals[t].name << " sinogram" << std::endl;
+                start = std::chrono::system_clock::now();
                 Eigen::MatrixXf sinogram = getSinogram(
                         *image_selected,
                         tfunctionals[t]
                 );
+                end = std::chrono::system_clock::now();
+                clog(trace) << "Sinogram calculation took "
+                                << std::chrono::duration_cast<std::chrono::milliseconds> (end - start).count()
+                                << " ms." << std::endl;
 
                 if (clog(debug)) {
                         // Save the sinogram image
