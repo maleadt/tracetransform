@@ -41,6 +41,6 @@ extern CUDAHelper::GlobalMemory<float> *PFunctional3(
                 int cols, int a);
 extern CUDAHelper::GlobalMemory<float> *PFunctionalHermite(
                 const CUDAHelper::GlobalMemory<float> *input, int rows,
-                int cols, int a, unsigned int order, size_t center);
+                int cols, int a, int order, size_t center);
 
 #endif

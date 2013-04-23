@@ -21,12 +21,12 @@ const int blocksize = 16;
 // Kernels
 //
 
-__global__ void linear_rotate_kernel(const float* input, float* output, int width,
-                int height, float angle)
+__global__ void linear_rotate_kernel(const float* input, float* output, int rows,
+                int cols, float angle)
 {
         Point<int>::type p(blockIdx.x * blockDim.x + threadIdx.x,
                         blockIdx.y * blockDim.y + threadIdx.y);
-        Point<float>::type origin(width / 2, height / 2);
+        Point<float>::type origin(cols / 2, rows / 2);
         Point<int>::type q(
                         cos(angle) * (p.x() - origin.x())
                                         - sin(angle) * (p.y() - origin.y())
@@ -34,37 +34,38 @@ __global__ void linear_rotate_kernel(const float* input, float* output, int widt
                         sin(angle) * (p.x() - origin.x())
                                         + cos(angle) * (p.y() - origin.y())
                                         + origin.y());
-        if (q.x() >= 0 && q.x() < width && q.y() >= 0 && q.y() < height)
-                output[p.x() + p.y() * width] = input[q.x() + q.y() * width];
+        if (q.x() >= 0 && q.x() < cols && q.y() >= 0 && q.y() < rows)
+                output[p.x() + p.y() * cols] = input[q.x() + q.y() * cols];
 }
 
 __device__ float interpolate_kernel(const Eigen::Map<const Eigen::MatrixXf> &source, const Point<float>::type &p)
 {
         // Get fractional and integral part of the coordinates
-        float x_int, y_int;
-        float x_fract = std::modf(p.x(), &x_int);
-        float y_fract = std::modf(p.y(), &y_int);
+        int x_int = (int) p.x();
+        int y_int = (int) p.y();
+        float x_fract = p.x() - x_int;
+        float y_fract = p.y() - y_int;
 
-        return    source((size_t)y_int, (size_t)x_int)*(1-x_fract)*(1-y_fract)
-                + source((size_t)y_int, (size_t)x_int+1)*x_fract*(1-y_fract)
-                + source((size_t)y_int+1, (size_t)x_int)*(1-x_fract)*y_fract
-                + source((size_t)y_int+1, (size_t)x_int+1)*x_fract*y_fract;
+        return    source(y_int, x_int)     * (1-x_fract)*(1-y_fract)
+                + source(y_int, x_int+1)   * x_fract*(1-y_fract)
+                + source(y_int+1, x_int)   * (1-x_fract)*y_fract
+                + source(y_int+1, x_int+1) * x_fract*y_fract;
 
 }
 
 __global__ void bilinear_rotate_kernel(const float* _input, float* _output,
-                const unsigned int width, const unsigned int height,
+                const int cols, const int rows,
                 const float angle)
 {
-        // compute thread dimension
-        const unsigned int col = blockIdx.x * blockDim.x + threadIdx.x;
-        const unsigned int row = blockIdx.y * blockDim.y + threadIdx.y;
+        // Compute thread dimension
+        const int col = blockIdx.x * blockDim.x + threadIdx.x;
+        const int row = blockIdx.y * blockDim.y + threadIdx.y;
 
         // Get Eigen matrices back
-        Eigen::Map<const Eigen::MatrixXf> input(_input, height, width);
-        Eigen::Map<Eigen::MatrixXf> output(_output, height, width);
+        Eigen::Map<const Eigen::MatrixXf> input(_input, rows, cols);
+        Eigen::Map<Eigen::MatrixXf> output(_output, rows, cols);
 
-        Point<float>::type origin(width / 2.0, height / 2.0);
+        Point<float>::type origin(cols / 2.0, rows / 2.0);
 
         // Calculate transform matrix
         Eigen::Matrix2f transform;

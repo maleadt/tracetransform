@@ -19,19 +19,19 @@ const int blocksize = 16;
 //
 
 __global__ void TFunctionalRadon_kernel(const float* _input,
-                const unsigned int width, const unsigned int height,
+                const int rows, const int cols,
                 float* _output, const int a)
 {
         // Compute the thread dimensions
-        const unsigned int col = blockIdx.x * blockDim.x + threadIdx.x;
-        const unsigned int row = blockIdx.y * blockDim.y + threadIdx.y;
+        const int col = blockIdx.x * blockDim.x + threadIdx.x;
+        const int row = blockIdx.y * blockDim.y + threadIdx.y;
 
         // Get Eigen matrices back
-        Eigen::Map<const Eigen::MatrixXf> input(_input, height, width);
-        Eigen::Map<Eigen::MatrixXf> output(_output, height, 360);
+        Eigen::Map<const Eigen::MatrixXf> input(_input, rows, cols);
+        Eigen::Map<Eigen::MatrixXf> output(_output, rows, 360);
 
         // Do we need to do stuff?
-        if (col < width && row < height) {
+        if (row < rows && col < cols) {
                 atomicAdd(&output(row, a), input(row, col));
         }
 }
@@ -115,7 +115,7 @@ CUDAHelper::GlobalMemory<float> *PFunctional3(
 
 CUDAHelper::GlobalMemory<float> *PFunctionalHermite(
                 const CUDAHelper::GlobalMemory<float> *input, int rows,
-                int cols, unsigned int order, size_t center)
+                int cols, int order, size_t center)
 {
 
 }
