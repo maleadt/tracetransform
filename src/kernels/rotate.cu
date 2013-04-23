@@ -88,17 +88,17 @@ CUDAHelper::GlobalMemory<float> *rotate(
 {
         assert(rows*cols == input->size());
 
+        CUDAHelper::Chrono chrono;
+        chrono.start();
+        // TODO: why is memset required? Fails otherwise on e.g. angle=50deg
+        CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(input->size(), 0);
+
         // Calculate transform matrix
         Eigen::Matrix2f transform_data;
         transform_data <<       std::cos(angle), -std::sin(angle),
                                 std::sin(angle),  std::cos(angle);
         CUDAHelper::ConstantMemory<float> *transform = new CUDAHelper::ConstantMemory<float>(_transform, 4);
         transform->upload(transform_data.data());
-
-        CUDAHelper::Chrono chrono;
-        chrono.start();
-        // TODO: why is memset required? Fails otherwise on e.g. angle=50deg
-        CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(input->size(), 0);
 
         dim3 threads(blocksize, blocksize);
         dim3 blocks(rows/blocksize, cols/blocksize);
