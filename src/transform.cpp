@@ -17,10 +17,6 @@
 #include "sinogram.hpp"
 #include "circus.hpp"
 
-// Algorithm parameters
-#define ANGLE_INTERVAL          1
-#define DISTANCE_INTERVAL       1
-
 
 //
 // Module definitions
@@ -31,7 +27,7 @@ Transformer::Transformer(const Eigen::MatrixXf &image)
 {
         // Orthonormal P-functionals need a stretched image in order to ensure a
         // square sinogram
-        size_t ndiag = (int) std::ceil(360.0/ANGLE_INTERVAL);
+        size_t ndiag = 360;
         size_t nsize = (int) std::ceil(ndiag/std::sqrt(2));
         _image_orthonormal = resize(_image, nsize, nsize);
 
@@ -67,7 +63,7 @@ Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctionalWrapper> 
 
         // Allocate a matrix for all output data to reside in
         Eigen::MatrixXf output(
-                360 / ANGLE_INTERVAL,
+                360,
                 tfunctionals.size() * pfunctionals.size());
 
         // Process all T-functionals
@@ -76,8 +72,6 @@ Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctionalWrapper> 
                 clog(debug) << "Calculating " << tfunctionals[t].name << " sinogram" << std::endl;
                 Eigen::MatrixXf sinogram = getSinogram(
                         *image_selected,
-                        ANGLE_INTERVAL,
-                        DISTANCE_INTERVAL,
                         tfunctionals[t]
                 );
 
