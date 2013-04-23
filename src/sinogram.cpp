@@ -30,8 +30,8 @@ Eigen::MatrixXf getSinogram(
         assert(input.rows() == input.cols());   // padded image!
 
         // Calculate and allocate the output matrix
-        size_t a_steps = 360;
-        size_t p_steps = (size_t) input.rows();
+        int a_steps = 360;
+        int p_steps = input.rows();
         CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(p_steps * a_steps, 0);
 
         // Upload the input image
@@ -41,7 +41,7 @@ Eigen::MatrixXf getSinogram(
         input_mem->upload(input.data());
 
         // Process all angles
-        for (size_t a = 0; a < a_steps; a++) {
+        for (int a = 0; a < a_steps; a++) {
                 // Rotate the image
                 CUDAHelper::GlobalMemory<float> *input_rotated = rotate(
                                 input_mem, -deg2rad(a),

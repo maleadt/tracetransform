@@ -75,8 +75,8 @@ void pgmWrite(std::string filename, const Eigen::MatrixXi &data)
 
         // Data
         long pos = outfile.tellp();
-        for (size_t row = 0; row < data.rows(); row++) {
-                for (size_t col = 0; col < data.cols(); col++) {
+        for (int row = 0; row < data.rows(); row++) {
+                for (int col = 0; col < data.cols(); col++) {
                         outfile << data(row, col);
                         if (outfile.tellp() - pos > 66) {
                                 outfile << "\n";
@@ -92,14 +92,14 @@ void pgmWrite(std::string filename, const Eigen::MatrixXi &data)
 void dataWrite(std::string filename, const Eigen::MatrixXf &data,
         const std::vector<std::string> &headers)
 {
-        assert(headers.size() == 0 || headers.size() == data.cols());
+        assert(headers.size() == 0 || (signed) headers.size() == data.cols());
 
         // Calculate column width
         std::vector<size_t> widths(data.cols(), 0);
-        for (size_t col = 0; col < data.cols(); col++) {
+        for (int col = 0; col < data.cols(); col++) {
                 if (headers.size() > 0)
                         widths[col] = headers[col].length();
-                for (size_t row = 0; row < data.rows(); row++) {
+                for (int row = 0; row < data.rows(); row++) {
                         float value = data(row, col);
                         size_t width = 3; // decimal, comma, 2 decimals
                         if (value > 1)
@@ -128,9 +128,9 @@ void dataWrite(std::string filename, const Eigen::MatrixXf &data,
 
         // Print data
         fd_data << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-        for (size_t row = 0; row < data.rows(); row++) {
+        for (int row = 0; row < data.rows(); row++) {
                 fd_data << "   ";
-                for (size_t col = 0; col < data.cols(); col++) {
+                for (int col = 0; col < data.cols(); col++) {
                         fd_data << std::setw(widths[col])
                                 << data(row, col);
                 }
@@ -145,8 +145,8 @@ Eigen::MatrixXf gray2mat(const Eigen::MatrixXi &input)
 {
         // Scale
         Eigen::MatrixXf output(input.rows(), input.cols());
-        for (size_t col = 0; col < output.cols(); col++) {
-                for (size_t row = 0; row < output.rows(); row++) {
+        for (int col = 0; col < output.cols(); col++) {
+                for (int row = 0; row < output.rows(); row++) {
                         output(row, col) = input(row, col) / 255.0;
                 }
         }
@@ -157,8 +157,8 @@ Eigen::MatrixXi mat2gray(const Eigen::MatrixXf &input)
 {
         // Detect maximum
         float maximum = 0;
-        for (size_t col = 0; col < input.cols(); col++) {
-                for (size_t row = 0; row < input.rows(); row++) {
+        for (int col = 0; col < input.cols(); col++) {
+                for (int row = 0; row < input.rows(); row++) {
                         float pixel = input(row, col);
                         if (pixel > maximum)
                                 maximum = pixel;
@@ -167,8 +167,8 @@ Eigen::MatrixXi mat2gray(const Eigen::MatrixXf &input)
 
         // Scale
         Eigen::MatrixXi output(input.rows(), input.cols());
-        for (size_t col = 0; col < output.cols(); col++) {
-                for (size_t row = 0; row < output.rows(); row++) {
+        for (int col = 0; col < output.cols(); col++) {
+                for (int row = 0; row < output.rows(); row++) {
                         output(row, col) = input(row, col) * 255.0/maximum;
                 }
         }
@@ -190,10 +190,10 @@ float interpolate(const Eigen::MatrixXf &source, const Point<float>::type &p)
         float x_fract = std::modf(p.x(), &x_int);
         float y_fract = std::modf(p.y(), &y_int);
 
-        return    source((size_t)y_int, (size_t)x_int)*(1-x_fract)*(1-y_fract)
-                + source((size_t)y_int, (size_t)x_int+1)*x_fract*(1-y_fract)
-                + source((size_t)y_int+1, (size_t)x_int)*(1-x_fract)*y_fract
-                + source((size_t)y_int+1, (size_t)x_int+1)*x_fract*y_fract;
+        return    source(y_int, x_int)*(1-x_fract)*(1-y_fract)
+                + source(y_int, x_int+1)*x_fract*(1-y_fract)
+                + source(y_int+1, x_int)*(1-x_fract)*y_fract
+                + source(y_int+1, x_int+1)*x_fract*y_fract;
 
 }
 
@@ -235,8 +235,8 @@ Eigen::MatrixXf rotate(const Eigen::MatrixXf &input, const Point<float>::type &o
         Eigen::MatrixXf output = Eigen::MatrixXf::Zero(input.rows(), input.cols());
 
         // Process all points
-        for (size_t col = 0; col < input.cols(); col++) {
-                for (size_t row = 0; row < input.rows(); row++) {
+        for (int col = 0; col < input.cols(); col++) {
+                for (int row = 0; row < input.rows(); row++) {
                         Point<float>::type p(col, row);
                         p -= origin;    // TODO: why no pixel center offset?
                         p *= transform;
@@ -259,15 +259,15 @@ Eigen::MatrixXf pad(const Eigen::MatrixXf &image)
                         image.cols() - 1 - origin.x() - 1,
                         image.rows() - 1 - origin.y() - 1)) + 1;
         int rFirst = -rLast;
-        size_t nBins = (unsigned) (rLast - rFirst + 1);
+        int nBins = (rLast - rFirst + 1);
         Eigen::MatrixXf image_padded = Eigen::MatrixXf::Zero(nBins, nBins);
         Point<float>::type origin_padded(
                 std::floor((image_padded.cols() + 1) / 2.0) - 1,
                 std::floor((image_padded.rows() + 1) / 2.0) - 1);
         Point<float>::type df = origin_padded - origin;
-        for (size_t col = 0; col < image.cols(); col++) {
-                for (size_t row = 0; row < image.rows(); row++) {
-                        image_padded(row + (size_t) df.y(), col + (size_t) df.x())
+        for (int col = 0; col < image.cols(); col++) {
+                for (int row = 0; row < image.rows(); row++) {
+                        image_padded(row + (int) df.y(), col + (int) df.x())
                                 = image(row, col);
                 }
         }
@@ -281,7 +281,7 @@ float arithmetic_mean(const Eigen::VectorXf &input)
                 return NAN;
 
         float sum = 0;
-        for (size_t i = 0; i < input.size(); i++) {
+        for (int i = 0; i < input.size(); i++) {
                 sum += input(i);
         }
 
@@ -295,7 +295,7 @@ float standard_deviation(const Eigen::VectorXf &input)
 
         float mean = arithmetic_mean(input);
         float sum = 0;
-        for (size_t i = 0; i < input.size(); i++) {
+        for (int i = 0; i < input.size(); i++) {
                 float diff = input(i) - mean;
                 sum += diff*diff;
         }
@@ -314,7 +314,7 @@ Eigen::VectorXf zscore(const Eigen::VectorXf &input)
         float stdev = standard_deviation(input);
 
         Eigen::VectorXf transformed(input.size());
-        for (size_t i = 0; i < input.size(); i++) {
+        for (int i = 0; i < input.size(); i++) {
                 transformed(i) = (input(i) - mean) / stdev;
         }
 

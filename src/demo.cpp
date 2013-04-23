@@ -225,7 +225,7 @@ int main(int argc, char **argv)
         // Save the output data
         if (pfunctionals.size() > 0) {          
                 std::vector<std::string> headers;
-                for (size_t tp = 0; tp < output.cols(); tp++) {
+                for (int tp = 0; tp < output.cols(); tp++) {
                         size_t t = tp / pfunctionals.size();
                         size_t p = tp % pfunctionals.size();
                         std::stringstream header;
