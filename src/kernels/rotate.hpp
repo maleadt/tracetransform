@@ -9,7 +9,11 @@
 // Local
 #include "../cudahelper/memory.hpp"
 
-// Kernel declarations
+
+//
+// Routines
+//
+
 extern CUDAHelper::GlobalMemory<float> *rotate(
                 const CUDAHelper::GlobalMemory<float> *input, float angle,
                 int rows, int cols);

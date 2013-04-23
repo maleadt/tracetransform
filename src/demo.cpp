@@ -24,10 +24,6 @@
 // Local
 #include "logger.hpp"
 #include "auxiliary.hpp"
-extern "C" {
-        #include "functionals.h"
-}
-#include "wrapper.hpp"
 #include "transform.hpp"
 #include "cudahelper/errorhandling.hpp"
 
@@ -36,28 +32,22 @@ extern "C" {
 // Program option parsers
 //
 
-std::istream& operator>>(std::istream& in, TFunctional& tfunctional)
+std::istream& operator>>(std::istream& in, TFunctionalWrapper& wrapper)
 {
-        std::string token;
-        in >> token;
-        if (token == "0") {
-                tfunctional = TFunctional("Radon",
-                                new SimpleFunctionalWrapper(TFunctionalRadon));
-        } else if (token == "1") {
-                tfunctional = TFunctional("T1",
-                                new SimpleFunctionalWrapper(TFunctional1));
-        } else if (token == "2") {
-                tfunctional = TFunctional("T2",
-                                new SimpleFunctionalWrapper(TFunctional2));
-        } else if (token == "3") {
-                tfunctional = TFunctional("T3",
-                                new SimpleFunctionalWrapper(TFunctional3));
-        } else if (token == "4") {
-                tfunctional = TFunctional("T4",
-                                new SimpleFunctionalWrapper(TFunctional4));
-        } else if (token == "5") {
-                tfunctional = TFunctional("T5",
-                                new SimpleFunctionalWrapper(TFunctional5));
+        in >> wrapper.name;
+        if (wrapper.name == "0") {
+                wrapper.functional = TFunctional::Radon;
+                wrapper.name = "radon";
+        } else if (wrapper.name == "1") {
+                wrapper.functional = TFunctional::T1;
+        } else if (wrapper.name == "2") {
+                wrapper.functional = TFunctional::T2;
+        } else if (wrapper.name == "3") {
+                wrapper.functional = TFunctional::T3;
+        } else if (wrapper.name == "4") {
+                wrapper.functional = TFunctional::T4;
+        } else if (wrapper.name == "5") {
+                wrapper.functional = TFunctional::T5;
         } else {
                 throw boost::program_options::validation_error(
                         boost::program_options::validation_error::invalid_option_value,
@@ -66,37 +56,29 @@ std::istream& operator>>(std::istream& in, TFunctional& tfunctional)
         return in;
 }
 
-std::istream& operator>>(std::istream& in, PFunctional& pfunctional)
+std::istream& operator>>(std::istream& in, PFunctionalWrapper& wrapper)
 {
-        std::string token;
-        in >> token;
-        if (token == "1") {
-                pfunctional = PFunctional("P1",
-                                new SimpleFunctionalWrapper(PFunctional1));
-        } else if (token == "2") {
-                pfunctional = PFunctional("P2",
-                                new SimpleFunctionalWrapper(PFunctional2));
-        } else if (token == "3") {
-                pfunctional = PFunctional("P3",
-                                new SimpleFunctionalWrapper(PFunctional3));
-        } else if (token[0] == 'H') {
-                unsigned int order;
-                if (token.size() < 2)
+        in >> wrapper.name;
+        if (wrapper.name == "1") {
+                wrapper.functional = PFunctional::P1;
+        } else if (wrapper.name == "2") {
+                wrapper.functional = PFunctional::P2;
+        } else if (wrapper.name == "3") {
+                wrapper.functional = PFunctional::P3;
+        } else if (wrapper.name[0] == 'H') {
+                wrapper.functional = PFunctional::Hermite;
+                if (wrapper.name.size() < 2)
                         throw boost::program_options::validation_error(
                                 boost::program_options::validation_error::invalid_option_value,
                                 "Missing order parameter for Hermite P-functional");
                 try {
-                        order = boost::lexical_cast<unsigned int>(token.substr(1));
+                        wrapper.arguments.order = boost::lexical_cast<unsigned int>(wrapper.name.substr(1));
                 }
                 catch(boost::bad_lexical_cast &) {
                         throw boost::program_options::validation_error(
                                 boost::program_options::validation_error::invalid_option_value,
                                 "Unparseable order parameter for Hermite P-functional");
                 }
-                pfunctional = PFunctional(boost::str(boost::format("H%d") % order),
-                                new GenericFunctionalWrapper<unsigned int, size_t>(PFunctionalHermite),
-                                PFunctional::Type::HERMITE,
-                                order);
         } else {
                 throw boost::program_options::validation_error(
                         boost::program_options::validation_error::invalid_option_value,
@@ -117,8 +99,8 @@ int main(int argc, char **argv)
         //
         
         // List of functionals
-        std::vector<TFunctional> tfunctionals;
-        std::vector<PFunctional> pfunctionals;
+        std::vector<TFunctionalWrapper> tfunctionals;
+        std::vector<PFunctionalWrapper> pfunctionals;
 
         // Declare named options
         boost::program_options::options_description desc("Allowed options");
@@ -140,11 +122,11 @@ int main(int argc, char **argv)
                         ->default_value("circus.dat"),
                         "where to write the output circus data")
                 ("t-functional,T",
-                        boost::program_options::value<std::vector<TFunctional>>(&tfunctionals)
+                        boost::program_options::value<std::vector<TFunctionalWrapper>>(&tfunctionals)
                         ->required(),
                         "T-functionals")
                 ("p-functional,P",
-                        boost::program_options::value<std::vector<PFunctional>>(&pfunctionals),
+                        boost::program_options::value<std::vector<PFunctionalWrapper>>(&pfunctionals),
                         "P-functionals")
         ;
 

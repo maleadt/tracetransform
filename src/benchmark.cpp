@@ -15,10 +15,6 @@
 // Local
 #include "logger.hpp"
 #include "auxiliary.hpp"
-extern "C" {
-        #include "functionals.h"
-}
-#include "wrapper.hpp"
 #include "transform.hpp"
 
 
@@ -51,10 +47,10 @@ private:
 
 BENCHMARK_F(SmallImageFixture, Radon, 2, 3)
 {
-        std::vector<TFunctional> tfunctionals{
-                TFunctional("Radon",  new SimpleFunctionalWrapper(TFunctionalRadon))
+        std::vector<TFunctionalWrapper> tfunctionals{
+                TFunctionalWrapper("radon",  TFunctional::Radon)
         };
-        std::vector<PFunctional> pfunctionals{
+        std::vector<PFunctionalWrapper> pfunctionals{
 
         };
         Eigen::MatrixXf output = _transformer->getTransform(tfunctionals, pfunctionals);
@@ -62,25 +58,22 @@ BENCHMARK_F(SmallImageFixture, Radon, 2, 3)
 
 BENCHMARK_F(SmallImageFixture, TraceRegular, 2, 3)
 {
-        std::vector<TFunctional> tfunctionals{
-                TFunctional("T1",  new SimpleFunctionalWrapper(TFunctional1))
+        std::vector<TFunctionalWrapper> tfunctionals{
+                TFunctionalWrapper("T1",  TFunctional::T1)
         };
-        std::vector<PFunctional> pfunctionals{
-                PFunctional("P1",  new SimpleFunctionalWrapper(PFunctional1))
+        std::vector<PFunctionalWrapper> pfunctionals{
+                PFunctionalWrapper("P1",  PFunctional::P1)
         };
         Eigen::MatrixXf output = _transformer->getTransform(tfunctionals, pfunctionals);
 }
 
 BENCHMARK_F(SmallImageFixture, TraceOrthonormal, 2, 3)
 {
-        std::vector<TFunctional> tfunctionals{
-                TFunctional("T1",  new SimpleFunctionalWrapper(TFunctional1))
+        std::vector<TFunctionalWrapper> tfunctionals{
+                TFunctionalWrapper("T1",  TFunctional::T1)
         };
-        std::vector<PFunctional> pfunctionals{
-                PFunctional("H1",
-                                new GenericFunctionalWrapper<unsigned int, size_t>(PFunctionalHermite),
-                                PFunctional::Type::HERMITE,
-                                1)
+        std::vector<PFunctionalWrapper> pfunctionals{
+                PFunctionalWrapper("H1",  PFunctional::Hermite, PFunctionalArguments(1))
         };
         Eigen::MatrixXf output = _transformer->getTransform(tfunctionals, pfunctionals);
 }

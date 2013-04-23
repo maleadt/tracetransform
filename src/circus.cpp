@@ -66,16 +66,31 @@ Eigen::MatrixXf nearest_orthonormal_sinogram(
 
 Eigen::VectorXf getCircusFunction(
         const Eigen::MatrixXf &input,
-        FunctionalWrapper *pfunctional)
+        const PFunctionalWrapper &pfunctional)
 {
         // Allocate the output matrix
         Eigen::VectorXf output(input.cols());
 
         // Trace all columns
         for (size_t p = 0; p < input.cols(); p++) {
-                output(p) = (*pfunctional)(
-                        input.data() + p*input.rows(),
-                        input.rows());
+                float *data = (float*) (input.data() + p*input.rows());
+                size_t length = input.rows();
+                float result;
+                switch (pfunctional.functional) {
+                        case PFunctional::P1:
+                                result = PFunctional1(data, length);
+                                break;
+                        case PFunctional::P2:
+                                result = PFunctional2(data, length);
+                                break;
+                        case PFunctional::P3:
+                                result = PFunctional3(data, length);
+                                break;
+                        case PFunctional::Hermite:
+                                result = PFunctionalHermite(data, length, *pfunctional.arguments.order, *pfunctional.arguments.center);
+                                break;
+                }
+                output(p) = result;
         }
 
         return output;
