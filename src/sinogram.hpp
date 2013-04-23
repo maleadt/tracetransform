@@ -58,8 +58,6 @@ struct TFunctionalWrapper
 
 Eigen::MatrixXf getSinogram(
         const Eigen::MatrixXf &input,
-        const float a_stepsize,
-        const float p_stepsize,
         const TFunctionalWrapper &tfunctional);
 
 #endif

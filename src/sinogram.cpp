@@ -25,17 +25,13 @@
 
 Eigen::MatrixXf getSinogram(
         const Eigen::MatrixXf &input,
-        const float a_stepsize,
-        const float p_stepsize,
         const TFunctionalWrapper &tfunctional)
 {
-        assert(a_stepsize > 0);
-        assert(p_stepsize > 0);
         assert(input.rows() == input.cols());   // padded image!
 
         // Calculate and allocate the output matrix
-        size_t a_steps = (size_t) std::floor(360 / a_stepsize);
-        size_t p_steps = (size_t) std::floor(input.rows() / p_stepsize);
+        size_t a_steps = 360;
+        size_t p_steps = (size_t) input.rows();
         Eigen::MatrixXf output(p_steps, a_steps);
 
         // Upload the input image
@@ -45,9 +41,8 @@ Eigen::MatrixXf getSinogram(
         input_mem->upload(input.data());
 
         // Process all angles
-        for (size_t a_step = 0; a_step < a_steps; a_step++) {
+        for (size_t a = 0; a < a_steps; a++) {
                 // Rotate the image
-                float a = a_step * a_stepsize;
                 CUDAHelper::GlobalMemory<float> *input_rotated_mem = rotate(
                                 input_mem, -deg2rad(a),
                                 input.rows(), input.cols());
@@ -55,7 +50,6 @@ Eigen::MatrixXf getSinogram(
                 input_rotated_mem->download(input_rotated.data());
 
                 // Process all projection bands
-                // TODO: p_stepsize
                 CUDAHelper::GlobalMemory<float> *output_mem;
                 switch (tfunctional.functional) {
                         case TFunctional::Radon:
