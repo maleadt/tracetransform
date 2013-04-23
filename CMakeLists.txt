@@ -86,7 +86,7 @@ ADD_LIBRARY(sinogram src/sinogram.hpp src/sinogram.cpp)
 TARGET_LINK_LIBRARIES(sinogram ${KERNELS} ${COMMON_LIBRARIES})
 
 ADD_LIBRARY(circus src/circus.hpp src/circus.cpp)
-TARGET_LINK_LIBRARIES(circus ${KERNELS} ${COMMON_LIBRARIES})
+TARGET_LINK_LIBRARIES(circus functionals ${KERNELS} ${COMMON_LIBRARIES})
 
 ADD_LIBRARY(transform src/transform.hpp src/transform.cpp)
 TARGET_LINK_LIBRARIES(transform ${COMMON_LIBRARIES} sinogram circus)

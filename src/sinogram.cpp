@@ -55,37 +55,29 @@ Eigen::MatrixXf getSinogram(
                 input_rotated_mem->download(input_rotated.data());
 
                 // Process all projection bands
-                for (size_t p_step = 0; p_step < p_steps; p_step++) {
-                        float p = p_stepsize * p_step;
-
-                        float *data = input_rotated.data() + ((size_t) std::floor(p)) * input.rows();
-                        size_t length = input.rows();
-                        float result;
-                        switch (tfunctional.functional) {
-                                case TFunctional::Radon:
-                                        result = TFunctionalRadon(data, length);
-                                        break;
-                                case TFunctional::T1:
-                                        result = TFunctional1(data, length);
-                                        break;
-                                case TFunctional::T2:
-                                        result = TFunctional2(data, length);
-                                        break;
-                                case TFunctional::T3:
-                                        result = TFunctional3(data, length);
-                                        break;
-                                case TFunctional::T4:
-                                        result = TFunctional4(data, length);
-                                        break;
-                                case TFunctional::T5:
-                                        result = TFunctional5(data, length);
-                                        break;
-                        }
-                        output(
-                                p_step,        // row
-                                a_step         // column
-                        ) = result;
+                // TODO: p_stepsize
+                CUDAHelper::GlobalMemory<float> *output_mem;
+                switch (tfunctional.functional) {
+                        case TFunctional::Radon:
+                                output_mem = TFunctionalRadon(input_rotated_mem, input.rows(), input.cols());
+                                break;
+                        case TFunctional::T1:
+                                output_mem = TFunctional1(input_rotated_mem, input.rows(), input.cols());
+                                break;
+                        case TFunctional::T2:
+                                output_mem = TFunctional2(input_rotated_mem, input.rows(), input.cols());
+                                break;
+                        case TFunctional::T3:
+                                output_mem = TFunctional3(input_rotated_mem, input.rows(), input.cols());
+                                break;
+                        case TFunctional::T4:
+                                output_mem = TFunctional4(input_rotated_mem, input.rows(), input.cols());
+                                break;
+                        case TFunctional::T5:
+                                output_mem = TFunctional5(input_rotated_mem, input.rows(), input.cols());
+                                break;
                 }
+                output_mem->download(output.data());
         }
 
         return output;
