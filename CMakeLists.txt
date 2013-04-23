@@ -56,7 +56,12 @@ IF (Elfutils_FOUND)
 ENDIF (Elfutils_FOUND)
 
 # CUDA
+# FIXME: Don't propagate host flags, since nvcc doesn't support C++11.
+#        This makes that we manually need to pass some stuff (such as -g).
 SET(CUDA_PROPAGATE_HOST_FLAGS FALSE)
+IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
+	SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcompiler -g")
+ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
 FIND_PACKAGE(CUDA)
 INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
 
