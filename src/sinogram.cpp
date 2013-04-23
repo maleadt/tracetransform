@@ -69,8 +69,8 @@ Eigen::MatrixXf getSinogram(
                                         break;
                         }
                         output(
-                                a,      // row
-                                p       // column
+                                p,      // row
+                                a       // column
                         ) = result;
                 }
         }
