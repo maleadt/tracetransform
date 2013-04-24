@@ -98,10 +98,12 @@ void TFunctionalRadon(const CUDAHelper::GlobalMemory<float> *input, int rows,
         chrono.start();
 
         // Launch radon kernel
-        dim3 threads(blocksize, blocksize);
-        dim3 blocks(std::ceil((float)rows/blocksize), std::ceil((float)cols/blocksize));
-        TFunctionalRadon_kernel<<<blocks, threads>>>(*input, rows, cols, *output, a);
-        CUDAHelper::checkState();
+        {
+                dim3 threads(blocksize, blocksize);
+                dim3 blocks(std::ceil((float)rows/blocksize), std::ceil((float)cols/blocksize));
+                TFunctionalRadon_kernel<<<blocks, threads>>>(*input, rows, cols, *output, a);
+                CUDAHelper::checkState();
+        }
 
         // Clean-up
         chrono.stop();
@@ -121,17 +123,17 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input, int rows,
         // Launch weighed median kernel
         CUDAHelper::GlobalMemory<float> *medians = new CUDAHelper::GlobalMemory<float>(cols, 0);
         {
-                dim3 median_threads(blocksize, 1);
-                dim3 median_blocks(std::ceil((float)rows/blocksize), 1);
-                findWeighedMedian_kernel<<<median_blocks, median_threads>>>(*input, rows, cols, *medians);
+                dim3 threads(blocksize, 1);
+                dim3 blocks(std::ceil((float)rows/blocksize), 1);
+                findWeighedMedian_kernel<<<blocks, threads>>>(*input, rows, cols, *medians);
                 CUDAHelper::checkState();
         }
 
         // Launch T1 kernel
         {
-                dim3 t1_threads(blocksize, blocksize);
-                dim3 t1_blocks(std::ceil((float)rows/blocksize), std::ceil((float)cols/blocksize));
-                TFunctional1_kernel<<<t1_threads, t1_blocks>>>(*input, rows, cols, *medians, *output, a);
+                dim3 threads(blocksize, blocksize);
+                dim3 blocks(std::ceil((float)rows/blocksize), std::ceil((float)cols/blocksize));
+                TFunctional1_kernel<<<threads, blocks>>>(*input, rows, cols, *medians, *output, a);
                 CUDAHelper::checkState();
         }
 
