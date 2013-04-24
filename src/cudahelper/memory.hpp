@@ -117,8 +117,10 @@ namespace CUDAHelper
                 }
 
                 GlobalMemory(const GlobalMemory<MemType>& other)
+                        : Memory<MemType>(other.size())
                 {
-                        assert(this->size() == other.size());
+                        clog(trace) << "Allocating and copying " << this->bytes() << " bytes in global memory." << std::endl;
+                        checkError(cudaMalloc(&_devicePtr, this->bytes()));
                         checkError(
                                         cudaMemcpy(_devicePtr, other._devicePtr,
                                                         this->bytes(),
