@@ -47,7 +47,7 @@ __global__ void rotate_kernel(const float *_input, float *_output,
         const int col = blockIdx.x * blockDim.x + threadIdx.x;
         const int row = blockIdx.y * blockDim.y + threadIdx.y;
 
-        // Get Eigen matrices back
+        // Construct Eigen objects
         Eigen::Map<const Eigen::MatrixXf> input(_input, rows, cols);
         Eigen::Map<Eigen::MatrixXf> output(_output, rows, cols);
         Eigen::Map<const Eigen::Matrix2f> transform(_transform);
