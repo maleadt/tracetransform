@@ -14,7 +14,7 @@
 #include "../cudahelper/chrono.hpp"
 
 // Static parameters
-const int blocksize = 16;
+const int blocksize = 8;
 
 
 //
@@ -50,14 +50,17 @@ __global__ void rotate_kernel(const float* _input, float* _output,
         Eigen::Map<Eigen::MatrixXf> output(_output, rows, cols);
         Eigen::Map<const Eigen::Matrix2f> transform(_transform);
 
+        // Calculate the source location
         Point<float>::type origin(cols / 2.0, rows / 2.0);
-
-        // Process this point
         Point<float>::type p(col, row);
         Point<float>::type q = ((p - origin) * transform) + origin;
-        if (    q.x() >= 0 && q.x() < input.cols()-1
-                && q.y() >= 0 && q.y() < input.rows()-1)
+
+        // Interpolate the source value
+        if (q.x() >= 0 && q.x() < cols - 1 && q.y() >= 0
+                        && q.y() < rows - 1)
                 output(row, col) = interpolate_kernel(input, q);
+        else if (col < cols && row < rows)
+                output(row, col) = 0;
 }
 
 
@@ -71,10 +74,10 @@ CUDAHelper::GlobalMemory<float> *rotate(
 {
         assert(rows*cols == input->size());
 
+        // Set-up
         CUDAHelper::Chrono chrono;
         chrono.start();
-        // TODO: why is memset required? Fails otherwise on e.g. angle=50deg
-        CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(input->size(), 0);
+        CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(input->size());
 
         // Calculate transform matrix
         Eigen::Matrix2f transform_data;
@@ -83,10 +86,13 @@ CUDAHelper::GlobalMemory<float> *rotate(
         CUDAHelper::ConstantMemory<float> *transform = new CUDAHelper::ConstantMemory<float>(_transform, 4);
         transform->upload(transform_data.data());
 
+        // Launch
         dim3 threads(blocksize, blocksize);
-        dim3 blocks(rows/blocksize, cols/blocksize);
+        dim3 blocks(std::ceil((float)rows/blocksize), std::ceil((float)cols/blocksize));
         rotate_kernel<<<blocks, threads>>>(*input, *output, rows, cols);
+        CUDAHelper::checkState();
 
+        // Clean-up
         chrono.stop();
         clog(trace) << "Rotation kernel took " << chrono.elapsed() << " ms." << std::endl;
         return output;
