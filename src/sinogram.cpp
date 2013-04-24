@@ -35,7 +35,7 @@ Eigen::MatrixXf getSinogram(
 
         // Calculate and allocate the output matrix
         int a_steps = 360;
-        int p_steps = input.rows();
+        int p_steps = input.cols();
         Eigen::MatrixXf output(p_steps, a_steps);
 
         // Process all angles
