@@ -47,22 +47,24 @@ __global__ void rotate_kernel(const float *_input, float *_output,
         const int col = blockIdx.x * blockDim.x + threadIdx.x;
         const int row = blockIdx.y * blockDim.y + threadIdx.y;
 
-        // Construct Eigen objects
-        Eigen::Map<const Eigen::MatrixXf> input(_input, rows, cols);
-        Eigen::Map<Eigen::MatrixXf> output(_output, rows, cols);
-        Eigen::Map<const Eigen::Matrix2f> transform(_transform);
+        if (row < rows && col < cols) {
+                // Construct Eigen objects
+                Eigen::Map<const Eigen::MatrixXf> input(_input, rows, cols);
+                Eigen::Map<Eigen::MatrixXf> output(_output, rows, cols);
+                Eigen::Map<const Eigen::Matrix2f> transform(_transform);
 
-        // Calculate the source location
-        Point<float>::type origin(cols / 2.0, rows / 2.0);
-        Point<float>::type p(col, row);
-        Point<float>::type q = ((p - origin) * transform) + origin;
+                // Calculate the source location
+                Point<float>::type origin(cols / 2.0, rows / 2.0);
+                Point<float>::type p(col, row);
+                Point<float>::type q = ((p - origin) * transform) + origin;
 
-        // Interpolate the source value
-        if (q.x() >= 0 && q.x() < cols - 1 && q.y() >= 0
-                        && q.y() < rows - 1)
-                output(row, col) = interpolate_kernel(input, q);
-        else if (col < cols && row < rows)
-                output(row, col) = 0;
+                // Interpolate the source value
+                if (q.x() >= 0 && q.x() < cols - 1 && q.y() >= 0
+                                && q.y() < rows - 1)
+                        output(row, col) = interpolate_kernel(input, q);
+                else if (col < cols && row < rows)
+                        output(row, col) = 0;
+        }
 }
 
 

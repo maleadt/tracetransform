@@ -45,7 +45,6 @@ namespace CUDAHelper
                         return _size;
                 }
 
-        protected:
                 std::size_t bytes() const
                 {
                         return _size * sizeof(MemType);
