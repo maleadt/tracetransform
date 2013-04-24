@@ -21,7 +21,9 @@ const int blocksize = 8;
 // Kernels
 //
 
-__device__ float interpolate_kernel(const Eigen::Map<const Eigen::MatrixXf> &source, const Point<float>::type &p)
+__device__ float interpolate_kernel(
+                const Eigen::Map<const Eigen::MatrixXf> &source,
+                const Point<float>::type &p)
 {
         // Get fractional and integral part of the coordinates
         const int x_int = (int) p.x();
@@ -38,7 +40,7 @@ __device__ float interpolate_kernel(const Eigen::Map<const Eigen::MatrixXf> &sou
 
 __constant__ float _transform[4];
 
-__global__ void rotate_kernel(const float* _input, float* _output,
+__global__ void rotate_kernel(const float *_input, float *_output,
                 const int cols, const int rows)
 {
         // Compute thread dimension

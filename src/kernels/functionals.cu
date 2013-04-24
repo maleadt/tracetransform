@@ -11,16 +11,16 @@
 #include "../cudahelper/chrono.hpp"
 
 // Static parameters
-const int blocksize = 16;
+const int blocksize = 8;
 
 
 //
 // Kernels
 //
 
-__global__ void TFunctionalRadon_kernel(const float* _input,
+__global__ void TFunctionalRadon_kernel(const float *_input,
                 const int rows, const int cols,
-                float* _output, const int a)
+                float *_output, const int a)
 {
         // Compute the thread dimensions
         const int col = blockIdx.x * blockDim.x + threadIdx.x;
@@ -31,9 +31,8 @@ __global__ void TFunctionalRadon_kernel(const float* _input,
         Eigen::Map<Eigen::MatrixXf> output(_output, rows, 360);
 
         // Do we need to do stuff?
-        if (row < rows && col < cols) {
+        if (row < rows && col < cols)
                 atomicAdd(&output(row, a), input(row, col));
-        }
 }
 
 //
@@ -45,13 +44,17 @@ void TFunctionalRadon(const CUDAHelper::GlobalMemory<float> *input, int rows,
 {
         assert(rows*cols == input->size());
 
+        // Set-up
         CUDAHelper::Chrono chrono;
         chrono.start();
 
+        // Launch
         dim3 threads(blocksize, blocksize);
-        dim3 blocks(rows / blocksize, cols / blocksize);
+        dim3 blocks(std::ceil((float)rows/blocksize), std::ceil((float)cols/blocksize));
         TFunctionalRadon_kernel<<<blocks, threads>>>(*input, rows, cols, *output, a);
+        CUDAHelper::checkState();
 
+        // Clean-up
         chrono.stop();
         clog(trace) << "Radon kernel took " << chrono.elapsed() << " ms."
                         << std::endl;
