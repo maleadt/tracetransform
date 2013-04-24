@@ -31,7 +31,7 @@ Eigen::MatrixXf getSinogram(
 
         // Calculate and allocate the output matrix
         int a_steps = 360;
-        int p_steps = input.rows();
+        int p_steps = input.cols();
         CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(p_steps * a_steps, 0);
 
         // Upload the input image

@@ -28,11 +28,11 @@ __global__ void TFunctionalRadon_kernel(const float *_input,
 
         // Get Eigen matrices back
         Eigen::Map<const Eigen::MatrixXf> input(_input, rows, cols);
-        Eigen::Map<Eigen::MatrixXf> output(_output, rows, 360);
+        Eigen::Map<Eigen::MatrixXf> output(_output, cols, 360);
 
         // Do we need to do stuff?
         if (row < rows && col < cols)
-                atomicAdd(&output(row, a), input(row, col));
+                atomicAdd(&output(col, a), input(row, col));
 }
 
 //
