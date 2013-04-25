@@ -164,7 +164,7 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input, int rows,
         chrono.start();
 
         // Launch prefix sum kernel
-        CUDAHelper::GlobalMemory<float> *prescan = new CUDAHelper::GlobalMemory<float>(*input);
+        CUDAHelper::GlobalMemory<float> *prescan = new CUDAHelper::GlobalMemory<float>(rows*cols);
         {
                 dim3 threads(1, rows);
                 dim3 blocks(cols, 1);
