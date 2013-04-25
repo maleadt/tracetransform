@@ -72,5 +72,8 @@ Eigen::MatrixXf getSinogram(
 
         Eigen::MatrixXf output_data(p_steps, a_steps);
         output->download(output_data.data());
+
+        delete input_mem;
+        delete output;
         return output_data;
 }

@@ -40,6 +40,10 @@ namespace CUDAHelper
                 {
                 }
 
+                virtual ~Memory()
+                {
+                }
+
                 std::size_t size() const
                 {
                         return _size;

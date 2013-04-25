@@ -180,6 +180,7 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input, int rows,
                 findWeighedMedian_kernel<<<blocks, threads>>>(*input, *prescan, rows, cols, *medians);
                 CUDAHelper::checkState();
         }
+        delete prescan;
 
         // Launch T1 kernel
         {
@@ -188,6 +189,7 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input, int rows,
                 TFunctional1_kernel<<<threads, blocks>>>(*input, rows, cols, *medians, *output, a);
                 CUDAHelper::checkState();
         }
+        delete medians;
 
         // Clean-up
         chrono.stop();
