@@ -12,6 +12,9 @@
 // Eigen
 #include <Eigen/Dense>
 
+// Local
+#include "cudahelper/memory.hpp"
+
 
 //
 // Functionals
@@ -56,8 +59,8 @@ struct TFunctionalWrapper
 // Module definitions
 //
 
-Eigen::MatrixXf getSinogram(
-        const Eigen::MatrixXf &input,
-        const TFunctionalWrapper &tfunctional);
+CUDAHelper::GlobalMemory<float> *getSinogram(
+        const CUDAHelper::GlobalMemory<float> *input, const int rows, const int cols,
+        const TFunctionalWrapper &tfunctional, int &output_rows, int &output_cols);
 
 #endif

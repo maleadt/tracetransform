@@ -15,6 +15,7 @@
 // Local
 #include "logger.hpp"
 #include "auxiliary.hpp"
+#include "cudahelper/memory.hpp"
 #include "kernels/rotate.hpp"
 #include "kernels/functionals.hpp"
 
@@ -23,58 +24,51 @@
 // Module definitions
 //
 
-Eigen::MatrixXf getSinogram(
-        const Eigen::MatrixXf &input,
-        const TFunctionalWrapper &tfunctional)
+// TODO: allow processing of multiple functionals, rotating the image only once
+CUDAHelper::GlobalMemory<float> *getSinogram(
+        const CUDAHelper::GlobalMemory<float> *input, const int rows, const int cols,
+        const TFunctionalWrapper &tfunctional, int &output_rows, int &output_cols)
 {
-        assert(input.rows() == input.cols());   // padded image!
+        assert(rows == cols);   // padded image!
+        assert(input->size() == rows*cols);
 
         // Calculate and allocate the output matrix
         int a_steps = 360;
-        int p_steps = input.cols();
+        int p_steps = cols;
         CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(p_steps * a_steps, 0);
-
-        // Upload the input image
-        CUDAHelper::GlobalMemory<float> *input_mem =
-                        new CUDAHelper::GlobalMemory<float>(
-                                        input.rows() * input.cols());
-        input_mem->upload(input.data());
 
         // Process all angles
         for (int a = 0; a < a_steps; a++) {
                 // Rotate the image
                 CUDAHelper::GlobalMemory<float> *input_rotated = rotate(
-                                input_mem, -deg2rad(a),
-                                input.rows(), input.cols());
+                                input, -deg2rad(a),
+                                rows, cols);
 
                 // Process all projection bands
                 switch (tfunctional.functional) {
                         case TFunctional::Radon:
-                                TFunctionalRadon(input_rotated, input.rows(), input.cols(), output, a);
+                                TFunctionalRadon(input_rotated, rows, cols, output, a);
                                 break;
                         case TFunctional::T1:
-                                TFunctional1(input_rotated, input.rows(), input.cols(), output, a);
+                                TFunctional1(input_rotated, rows, cols, output, a);
                                 break;
                         case TFunctional::T2:
-                                TFunctional2(input_rotated, input.rows(), input.cols(), output, a);
+                                TFunctional2(input_rotated, rows, cols, output, a);
                                 break;
                         case TFunctional::T3:
-                                TFunctional3(input_rotated, input.rows(), input.cols(), output, a);
+                                TFunctional3(input_rotated, rows, cols, output, a);
                                 break;
                         case TFunctional::T4:
-                                TFunctional4(input_rotated, input.rows(), input.cols(), output, a);
+                                TFunctional4(input_rotated, rows, cols, output, a);
                                 break;
                         case TFunctional::T5:
-                                TFunctional5(input_rotated, input.rows(), input.cols(), output, a);
+                                TFunctional5(input_rotated, rows, cols, output, a);
                                 break;
                 }
                 delete input_rotated;
         }
 
-        Eigen::MatrixXf output_data(p_steps, a_steps);
-        output->download(output_data.data());
-
-        delete input_mem;
-        delete output;
-        return output_data;
+        output_rows = p_steps;
+        output_cols = a_steps;
+        return output;
 }

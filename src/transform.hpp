@@ -16,6 +16,7 @@
 #include <Eigen/Dense>
 
 // Local
+#include "cudahelper/memory.hpp"
 #include "sinogram.hpp"
 #include "circus.hpp"
 
@@ -27,13 +28,15 @@
 class Transformer
 {
 public:
-        Transformer(const Eigen::MatrixXf &image);
+        Transformer(const Eigen::MatrixXf &image, bool orthonormal = false);
 
         Eigen::MatrixXf getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
                         std::vector<PFunctionalWrapper> &pfunctionals) const;
 
 private:
-        Eigen::MatrixXf _image, _image_orthonormal;
+        Eigen::MatrixXf _image;
+        bool _orthonormal;
+        CUDAHelper::GlobalMemory<float> *_memory;
 };
 
 #endif

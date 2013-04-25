@@ -15,54 +15,37 @@
 // Local
 #include "logger.hpp"
 #include "auxiliary.hpp"
-#include "sinogram.hpp"
-#include "circus.hpp"
 
 
 //
 // Module definitions
 //
 
-Transformer::Transformer(const Eigen::MatrixXf &image)
-                : _image(image)
+Transformer::Transformer(const Eigen::MatrixXf &image, bool orthonormal)
+                : _image(image), _orthonormal(orthonormal)
 {
         // Orthonormal P-functionals need a stretched image in order to ensure a
         // square sinogram
-        size_t ndiag = 360;
-        size_t nsize = (int) std::ceil(ndiag/std::sqrt(2));
-        _image_orthonormal = resize(_image, nsize, nsize);
+        if (_orthonormal) {
+                size_t ndiag = 360;
+                size_t nsize = (int) std::ceil(ndiag/std::sqrt(2));
+                _image = resize(_image, nsize, nsize);
+        }
 
         // Pad the images so we can freely rotate without losing information
         _image = pad(_image);
-        _image_orthonormal = pad(_image_orthonormal);
+
+        // Upload the image to device memory
+        _memory = new CUDAHelper::GlobalMemory<float>(
+                        _image.rows() * _image.cols());
+        _memory->upload(_image.data());
+
 }
 
 Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
                 std::vector<PFunctionalWrapper> &pfunctionals) const
 {
         std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
-
-        // Check for orthonormal P-functionals
-        unsigned int orthonormal_count = 0;
-        bool orthonormal;
-        for (size_t p = 0; p < pfunctionals.size(); p++) {
-                if (pfunctionals[p].functional == PFunctional::Hermite)
-                        orthonormal_count++;
-        }
-        if (orthonormal_count == 0)
-                orthonormal = false;
-        else if (orthonormal_count == pfunctionals.size())
-                orthonormal = true;
-        else
-                throw std::runtime_error(
-                        "Cannot mix regular and orthonormal P-functionals");
-
-        // Select an image to use
-        const Eigen::MatrixXf *image_selected;
-        if (orthonormal)
-                image_selected = &_image_orthonormal;
-        else
-                image_selected = &_image;
 
         // Allocate a matrix for all output data to reside in
         Eigen::MatrixXf output(
@@ -74,32 +57,38 @@ Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctionalWrapper> 
                 // Calculate the trace transform sinogram
                 clog(debug) << "Calculating " << tfunctionals[t].name << " sinogram" << std::endl;
                 start = std::chrono::system_clock::now();
-                Eigen::MatrixXf sinogram = getSinogram(
-                        *image_selected,
-                        tfunctionals[t]
+                // TODO: CUDAHelper::Memory<DIM>
+                int sinogram_rows, sinogram_cols;
+                CUDAHelper::GlobalMemory<float> *sinogram = getSinogram(
+                        _memory, _image.rows(), _image.cols(),
+                        tfunctionals[t], sinogram_rows, sinogram_cols
                 );
                 end = std::chrono::system_clock::now();
                 clog(debug) << "Sinogram calculation took "
                                 << std::chrono::duration_cast<std::chrono::milliseconds> (end - start).count()
                                 << " ms." << std::endl;
 
+                // TEMPORARY: download image
+                Eigen::MatrixXf sinogram_data(sinogram_rows, sinogram_cols);
+                sinogram->download(sinogram_data.data());
+
                 if (clog(debug)) {
                         // Save the sinogram image
                         std::stringstream fn_trace_image;
                         fn_trace_image << "trace_" << tfunctionals[t].name << ".pgm";
-                        pgmWrite(fn_trace_image.str(), mat2gray(sinogram));
+                        pgmWrite(fn_trace_image.str(), mat2gray(sinogram_data));
 
                         // Save the sinogram data
                         std::stringstream fn_trace_data;
                         fn_trace_data << "trace_" << tfunctionals[t].name << ".dat";
-                        dataWrite(fn_trace_data.str(), sinogram);
+                        dataWrite(fn_trace_data.str(), sinogram_data);
                 }
 
                 // Orthonormal functionals require the nearest orthonormal sinogram
-                if (orthonormal) {
+                if (_orthonormal) {
                         clog(trace) << "Orthonormalizing sinogram" << std::endl;
                         size_t sinogram_center;
-                        sinogram = nearest_orthonormal_sinogram(sinogram, sinogram_center);
+                        sinogram_data = nearest_orthonormal_sinogram(sinogram_data, sinogram_center);
                         for (size_t p = 0; p < pfunctionals.size(); p++) {
                                 if (pfunctionals[p].functional == PFunctional::Hermite) {
                                         pfunctionals[p].arguments.center = sinogram_center;
@@ -115,7 +104,7 @@ Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctionalWrapper> 
                                         << tfunctionals[t].name
                                         << " sinogram" << std::endl;
                         Eigen::VectorXf circus = getCircusFunction(
-                                sinogram,
+                                sinogram_data,
                                 pfunctionals[p]
                         );
 
