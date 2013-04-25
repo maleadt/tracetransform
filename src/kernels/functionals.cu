@@ -37,27 +37,31 @@ __global__ void prescan_kernel(const float *_input,
         Eigen::Map<const Eigen::MatrixXf> input(_input, rows, cols);
         Eigen::Map<Eigen::MatrixXf> output(_output, rows, cols);
 
+        int thid = threadIdx.y;
+        int n = rows;
+        int pout = 0, pin = 1;
+
         // Do we need to do stuff?
-        if (col < cols && row < rows) {
-                // Read from global memory.
-                float x = input(row, col);
-                temp[row] = x;
+        if (row < rows && col < cols) {
+                // Load input into shared memory
+                temp[pout * n + thid] = input(thid, col);
                 __syncthreads();
 
-                // Run each pass of the scan.
-                float sum = x;
-                #pragma unroll
-                for (int offset = 1; offset < rows; offset *= 2) {
-                    // Add tid - offset into sum, if this does not put us past the beginning
-                    // of the array. Write the sum back into scan array.
-                    if(row >= offset)
-                            sum += temp[row - offset];
-                    temp[row] = sum;
+                for (int offset = 1; offset < n; offset *= 2) {
+                        // Swap double buffer indices
+                        pout = 1 - pout;
+                        pin = 1 - pin;
+                        if (thid >= offset)
+                                temp[pout * n + thid] = temp[pin * n + thid]
+                                                + temp[pin * n + thid - offset];
+                        else
+                                temp[pout * n + thid] = temp[pin * n + thid];
+                        __syncthreads();
+
                 }
 
-                // Write sum to inclusive and sum - x (the original source element) to
-                // exclusive.
-                output(row, col) = sum;
+                // Write output
+                output(thid, col) = temp[pout * n + thid];
         }
 }
 
@@ -164,7 +168,7 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input, int rows,
         {
                 dim3 threads(1, rows);
                 dim3 blocks(cols, 1);
-                prescan_kernel<<<blocks, threads, rows*sizeof(float)>>>(*input, rows, cols, *prescan);
+                prescan_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, rows, cols, *prescan);
                 CUDAHelper::checkState();
         }
 
