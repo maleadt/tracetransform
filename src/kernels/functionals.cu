@@ -21,12 +21,13 @@ const int blocksize = 8;
 // Kernels
 //
 
+// TODO: needs decent synchronization, doesn't work cross-warp
 __global__ void prescan_kernel(const float *_input,
                 const int rows, const int cols,
                 float *_output)
 {
         // Shared memory
-        extern __shared__ float scan[];
+        extern __shared__ float temp[];
 
         // Compute the thread dimensions
         const int col = blockIdx.x;
@@ -38,25 +39,25 @@ __global__ void prescan_kernel(const float *_input,
 
         // Do we need to do stuff?
         if (col < cols && row < rows) {
-                int tid = threadIdx.y;
-
                 // Read from global memory.
-                float x = input(tid, col);
-                scan[tid] = x;
+                float x = input(row, col);
+                temp[row] = x;
+                __syncthreads();
 
                 // Run each pass of the scan.
                 float sum = x;
                 #pragma unroll
-                for(int offset = 1; offset < rows; offset *= 2) {
+                for (int offset = 1; offset < rows; offset *= 2) {
                     // Add tid - offset into sum, if this does not put us past the beginning
                     // of the array. Write the sum back into scan array.
-                    if(tid >= offset) sum += scan[tid - offset];
-                    scan[tid] = sum;
+                    if(row >= offset)
+                            sum += temp[row - offset];
+                    temp[row] = sum;
                 }
 
                 // Write sum to inclusive and sum - x (the original source element) to
                 // exclusive.
-                output(tid, col) = sum;
+                output(row, col) = sum;
         }
 }
 
