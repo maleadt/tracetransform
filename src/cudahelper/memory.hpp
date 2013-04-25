@@ -64,12 +64,15 @@ namespace CUDAHelper
                 HostMemory(std::size_t size)
                                 : Memory<MemType>(size)
                 {
+                        clog(trace) << "Allocating " << this->bytes() << " bytes of host memory." << std::endl;
                         checkError(cudaHostAlloc(&_hostPtr, this->bytes(), cudaHostAllocDefault));
                 }
 
                 HostMemory(const HostMemory<MemType>& other)
+                        : Memory<MemType>(other.size())
                 {
-                        assert(this->size() == other.size());
+                        clog(trace) << "Allocating " << this->bytes() << " bytes of host memory and setting contents." << std::endl;
+                        checkError(cudaHostAlloc(&_hostPtr, this->bytes(), cudaHostAllocDefault));
                         checkError(
                                         cudaMemcpy(_hostPtr, other._hostPtr,
                                                         this->bytes(),
@@ -78,6 +81,7 @@ namespace CUDAHelper
 
                 ~HostMemory()
                 {
+                        clog(trace) << "Freeing " << this->bytes() << " bytes of host memory." << std::endl;
                         checkError(cudaFreeHost(_hostPtr));
                 }
 
@@ -103,14 +107,14 @@ namespace CUDAHelper
                 GlobalMemory(std::size_t size)
                                 : Memory<MemType>(size)
                 {
-                        clog(trace) << "Allocating " << this->bytes() << " bytes in global memory." << std::endl;
+                        clog(trace) << "Allocating " << this->bytes() << " bytes of global memory." << std::endl;
                         checkError(cudaMalloc(&_devicePtr, this->bytes()));
                 }
 
                 GlobalMemory(std::size_t size, int value)
                                 : Memory<MemType>(size)
                 {
-                        clog(trace) << "Allocating " << this->bytes() << " bytes in global memory and setting them to 0x" << std::hex << value << std::dec << "." << std::endl;
+                        clog(trace) << "Allocating " << this->bytes() << " bytes of global memory and setting them to 0x" << std::hex << value << std::dec << "." << std::endl;
                         checkError(cudaMalloc(&_devicePtr, this->bytes()));
                         checkError(cudaMemset(_devicePtr, value, this->bytes()));
                 }
@@ -118,7 +122,7 @@ namespace CUDAHelper
                 GlobalMemory(const GlobalMemory<MemType>& other)
                         : Memory<MemType>(other.size())
                 {
-                        clog(trace) << "Allocating and copying " << this->bytes() << " bytes in global memory." << std::endl;
+                        clog(trace) << "Allocating " << this->bytes() << " bytes of global memory and setting contents." << std::endl;
                         checkError(cudaMalloc(&_devicePtr, this->bytes()));
                         checkError(
                                         cudaMemcpy(_devicePtr, other._devicePtr,
@@ -128,6 +132,7 @@ namespace CUDAHelper
 
                 ~GlobalMemory()
                 {
+                        clog(trace) << "Freeing " << this->bytes() << " bytes of global memory." << std::endl;
                         checkError(cudaFree(_devicePtr));
                 }
 
@@ -170,11 +175,13 @@ namespace CUDAHelper
                 ConstantMemory(const void* symbol, std::size_t size)
                                 : _symbol(symbol), Memory<MemType>(size)
                 {
+                        clog(trace) << "Configuring " << this->bytes() << " bytes of constant memory." << std::endl;
                 }
 
                 ConstantMemory(const ConstantMemory<MemType>& other)
+                : Memory<MemType>(other.size())
                 {
-                        assert(this->size() == other.size());
+                        clog(trace) << "Configuring " << this->bytes() << " bytes of constant memory and setting contents." << std::endl;
                         checkError(
                                         cudaMemcpyToSymbol(_symbol, other._symbol,
                                                         cudaMemcpyDeviceToDevice));
