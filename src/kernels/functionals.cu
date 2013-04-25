@@ -33,31 +33,28 @@ __global__ void prescan_kernel(const float *input,
         const int col = blockIdx.x;
         const int row = threadIdx.y;
 
-        int thid = threadIdx.y;
-        int n = rows;
-        int pout = 0, pin = 1;
-
         // Do we need to do stuff?
         if (row < rows && col < cols) {
                 // Load input into shared memory
-                temp[pout * n + thid] = input[thid + col*rows];
+                temp[row] = input[row + col*rows];
                 __syncthreads();
 
-                for (int offset = 1; offset < n; offset *= 2) {
+                int pout = 0, pin = 1;
+                for (int offset = 1; offset < rows; offset *= 2) {
                         // Swap double buffer indices
                         pout = 1 - pout;
                         pin = 1 - pin;
-                        if (thid >= offset)
-                                temp[pout * n + thid] = temp[pin * n + thid]
-                                                + temp[pin * n + thid - offset];
+                        if (row >= offset)
+                                temp[pout * rows + row] = temp[pin * rows + row]
+                                                + temp[pin * rows + row - offset];
                         else
-                                temp[pout * n + thid] = temp[pin * n + thid];
+                                temp[pout * rows + row] = temp[pin * rows + row];
                         __syncthreads();
 
                 }
 
                 // Write output
-                output[thid + col*rows] = temp[pout * n + thid];
+                output[row + col*rows] = temp[pout * rows + row];
         }
 }
 
@@ -65,16 +62,23 @@ __global__ void findWeighedMedian_kernel(const float *input, const float *presca
                 const int rows, const int cols,
                 float *output)
 {
+        // Shared memory
+        extern __shared__ float temp[];
+
         // Compute the thread dimensions
-        const int col = blockIdx.x * blockDim.x + threadIdx.x;
+        const int col = blockIdx.x;
+        const int row = threadIdx.y;
 
         // Do we need to do stuff?
-        if (col < cols) {
-                for (int row = 0; row < rows; row++) {
-                        if (2*prescan[row + col*rows] >= prescan[rows-1 + col*rows]) {
+        if (col < cols && row < rows) {
+                // Load input into shared memory
+                temp[row] = prescan[row + col*rows];
+                __syncthreads();
+
+                if (row > 0) {
+                        float threshold = temp[rows-1] / 2;
+                        if (temp[row-1] < threshold && temp[row] >= threshold)
                                 output[col] = row;
-                                break;
-                        }
                 }
         }
 }
@@ -157,9 +161,9 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input, int rows,
         // Launch weighed median kernel
         CUDAHelper::GlobalMemory<float> *medians = new CUDAHelper::GlobalMemory<float>(cols, 0);
         {
-                dim3 threads(blocksize, 1);
-                dim3 blocks(std::ceil((float)rows/blocksize), 1);
-                findWeighedMedian_kernel<<<blocks, threads>>>(*input, *prescan, rows, cols, *medians);
+                dim3 threads(1, rows);
+                dim3 blocks(cols, 1);
+                findWeighedMedian_kernel<<<blocks, threads, rows*sizeof(float)>>>(*input, *prescan, rows, cols, *medians);
                 CUDAHelper::checkState();
         }
         delete prescan;
