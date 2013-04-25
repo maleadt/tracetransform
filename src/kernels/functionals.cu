@@ -21,13 +21,16 @@ const int blocksize = 8;
 // Kernels
 //
 
-__global__ void prefixSum_kernel(const float *_input,
+__global__ void prescan_kernel(const float *_input,
                 const int rows, const int cols,
                 float *_output)
 {
+        // Shared memory
+        extern __shared__ float scan[];
+
         // Compute the thread dimensions
-        const int col = blockIdx.x * blockDim.x + threadIdx.x;
-        const int row = blockIdx.y * blockDim.y + threadIdx.y;
+        const int col = blockIdx.x;
+        const int row = threadIdx.y;
 
         // Construct Eigen objects
         Eigen::Map<const Eigen::MatrixXf> input(_input, rows, cols);
@@ -35,14 +38,29 @@ __global__ void prefixSum_kernel(const float *_input,
 
         // Do we need to do stuff?
         if (col < cols && row < rows) {
-                float sum = 0;
-                for (int row_above = 0; row_above <= row; row_above++)
-                        sum += input(row_above, col);
-                output(row, col) = sum;
+                int tid = threadIdx.y;
+
+                // Read from global memory.
+                float x = input(tid, col);
+                scan[tid] = x;
+
+                // Run each pass of the scan.
+                float sum = x;
+                #pragma unroll
+                for(int offset = 1; offset < rows; offset *= 2) {
+                    // Add tid - offset into sum, if this does not put us past the beginning
+                    // of the array. Write the sum back into scan array.
+                    if(tid >= offset) sum += scan[tid - offset];
+                    scan[tid] = sum;
+                }
+
+                // Write sum to inclusive and sum - x (the original source element) to
+                // exclusive.
+                output(tid, col) = sum;
         }
 }
 
-__global__ void findWeighedMedian_kernel(const float *_input, const float *_prefix_sum,
+__global__ void findWeighedMedian_kernel(const float *_input, const float *_prescan,
                 const int rows, const int cols,
                 float *_output)
 {
@@ -51,13 +69,13 @@ __global__ void findWeighedMedian_kernel(const float *_input, const float *_pref
 
         // Construct Eigen objects
         Eigen::Map<const Eigen::MatrixXf> input(_input, rows, cols);
-        Eigen::Map<const Eigen::MatrixXf> prefix_sum(_prefix_sum, rows, cols);
+        Eigen::Map<const Eigen::MatrixXf> prescan(_prescan, rows, cols);
         Eigen::Map<Eigen::VectorXf> output(_output, cols);
 
         // Do we need to do stuff?
         if (col < cols) {
                 for (int row = 0; row < rows; row++) {
-                        if (2*prefix_sum(row, col) >= prefix_sum(rows-1, col)) {
+                        if (2*prescan(row, col) >= prescan(rows-1, col)) {
                                 output(col) = row;
                                 break;
                         }
@@ -120,7 +138,7 @@ void TFunctionalRadon(const CUDAHelper::GlobalMemory<float> *input, int rows,
         // Launch radon kernel
         {
                 dim3 threads(blocksize, blocksize);
-                dim3 blocks(std::ceil((float)rows/blocksize), std::ceil((float)cols/blocksize));
+                dim3 blocks(std::ceil((float)cols/blocksize), std::ceil((float)rows/blocksize));
                 TFunctionalRadon_kernel<<<blocks, threads>>>(*input, rows, cols, *output, a);
                 CUDAHelper::checkState();
         }
@@ -141,11 +159,11 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input, int rows,
         chrono.start();
 
         // Launch prefix sum kernel
-        CUDAHelper::GlobalMemory<float> *prefix_sum = new CUDAHelper::GlobalMemory<float>(*input);
+        CUDAHelper::GlobalMemory<float> *prescan = new CUDAHelper::GlobalMemory<float>(*input);
         {
-                dim3 threads(blocksize, blocksize);
-                dim3 blocks(std::ceil((float)rows/blocksize), std::ceil((float)cols/blocksize));
-                prefixSum_kernel<<<blocks, threads>>>(*input, rows, cols, *prefix_sum);
+                dim3 threads(1, rows);
+                dim3 blocks(cols, 1);
+                prescan_kernel<<<blocks, threads, rows*sizeof(float)>>>(*input, rows, cols, *prescan);
                 CUDAHelper::checkState();
         }
 
@@ -154,14 +172,14 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input, int rows,
         {
                 dim3 threads(blocksize, 1);
                 dim3 blocks(std::ceil((float)rows/blocksize), 1);
-                findWeighedMedian_kernel<<<blocks, threads>>>(*input, *prefix_sum, rows, cols, *medians);
+                findWeighedMedian_kernel<<<blocks, threads>>>(*input, *prescan, rows, cols, *medians);
                 CUDAHelper::checkState();
         }
 
         // Launch T1 kernel
         {
                 dim3 threads(blocksize, blocksize);
-                dim3 blocks(std::ceil((float)rows/blocksize), std::ceil((float)cols/blocksize));
+                dim3 blocks(std::ceil((float)cols/blocksize), std::ceil((float)rows/blocksize));
                 TFunctional1_kernel<<<threads, blocks>>>(*input, rows, cols, *medians, *output, a);
                 CUDAHelper::checkState();
         }

@@ -92,7 +92,7 @@ CUDAHelper::GlobalMemory<float> *rotate(
 
         // Launch
         dim3 threads(blocksize, blocksize);
-        dim3 blocks(std::ceil((float)rows/blocksize), std::ceil((float)cols/blocksize));
+        dim3 blocks(std::ceil((float)cols/blocksize), std::ceil((float)rows/blocksize));
         rotate_kernel<<<blocks, threads>>>(*input, *output, rows, cols);
         CUDAHelper::checkState();
 
