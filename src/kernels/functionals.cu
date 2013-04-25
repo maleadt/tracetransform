@@ -21,7 +21,6 @@ const int blocksize = 8;
 // Kernels
 //
 
-// TODO: needs decent synchronization, doesn't work cross-warp
 __global__ void prescan_kernel(const float *input,
                 const int rows, const int cols,
                 float *output)
@@ -33,29 +32,26 @@ __global__ void prescan_kernel(const float *input,
         const int col = blockIdx.x;
         const int row = threadIdx.y;
 
-        // Do we need to do stuff?
-        if (row < rows && col < cols) {
-                // Load input into shared memory
-                temp[row] = input[row + col*rows];
+        // Load input into shared memory
+        temp[row] = input[row + col*rows];
+        __syncthreads();
+
+        int pout = 0, pin = 1;
+        for (int offset = 1; offset < rows; offset *= 2) {
+                // Swap double buffer indices
+                pout = 1 - pout;
+                pin = 1 - pin;
+                if (row >= offset)
+                        temp[pout * rows + row] = temp[pin * rows + row]
+                                        + temp[pin * rows + row - offset];
+                else
+                        temp[pout * rows + row] = temp[pin * rows + row];
                 __syncthreads();
 
-                int pout = 0, pin = 1;
-                for (int offset = 1; offset < rows; offset *= 2) {
-                        // Swap double buffer indices
-                        pout = 1 - pout;
-                        pin = 1 - pin;
-                        if (row >= offset)
-                                temp[pout * rows + row] = temp[pin * rows + row]
-                                                + temp[pin * rows + row - offset];
-                        else
-                                temp[pout * rows + row] = temp[pin * rows + row];
-                        __syncthreads();
-
-                }
-
-                // Write output
-                output[row + col*rows] = temp[pout * rows + row];
         }
+
+        // Write output
+        output[row + col*rows] = temp[pout * rows + row];
 }
 
 __global__ void findWeighedMedian_kernel(const float *input, const float *prescan,
@@ -69,17 +65,14 @@ __global__ void findWeighedMedian_kernel(const float *input, const float *presca
         const int col = blockIdx.x;
         const int row = threadIdx.y;
 
-        // Do we need to do stuff?
-        if (col < cols && row < rows) {
-                // Load input into shared memory
-                temp[row] = prescan[row + col*rows];
-                __syncthreads();
+        // Load input into shared memory
+        temp[row] = prescan[row + col*rows];
+        __syncthreads();
 
-                if (row > 0) {
-                        float threshold = temp[rows-1] / 2;
-                        if (temp[row-1] < threshold && temp[row] >= threshold)
-                                output[col] = row;
-                }
+        if (row > 0) {
+                float threshold = temp[rows-1] / 2;
+                if (temp[row-1] < threshold && temp[row] >= threshold)
+                        output[col] = row;
         }
 }
 

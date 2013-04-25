@@ -68,6 +68,7 @@ Eigen::MatrixXf getSinogram(
                                 TFunctional5(input_rotated, input.rows(), input.cols(), output, a);
                                 break;
                 }
+                delete input_rotated;
         }
 
         Eigen::MatrixXf output_data(p_steps, a_steps);
