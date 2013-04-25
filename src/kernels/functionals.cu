@@ -22,9 +22,9 @@ const int blocksize = 8;
 //
 
 // TODO: needs decent synchronization, doesn't work cross-warp
-__global__ void prescan_kernel(const float *_input,
+__global__ void prescan_kernel(const float *input,
                 const int rows, const int cols,
-                float *_output)
+                float *output)
 {
         // Shared memory
         extern __shared__ float temp[];
@@ -33,10 +33,6 @@ __global__ void prescan_kernel(const float *_input,
         const int col = blockIdx.x;
         const int row = threadIdx.y;
 
-        // Construct Eigen objects
-        Eigen::Map<const Eigen::MatrixXf> input(_input, rows, cols);
-        Eigen::Map<Eigen::MatrixXf> output(_output, rows, cols);
-
         int thid = threadIdx.y;
         int n = rows;
         int pout = 0, pin = 1;
@@ -44,7 +40,7 @@ __global__ void prescan_kernel(const float *_input,
         // Do we need to do stuff?
         if (row < rows && col < cols) {
                 // Load input into shared memory
-                temp[pout * n + thid] = input(thid, col);
+                temp[pout * n + thid] = input[thid + col*rows];
                 __syncthreads();
 
                 for (int offset = 1; offset < n; offset *= 2) {
@@ -61,69 +57,55 @@ __global__ void prescan_kernel(const float *_input,
                 }
 
                 // Write output
-                output(thid, col) = temp[pout * n + thid];
+                output[thid + col*rows] = temp[pout * n + thid];
         }
 }
 
-__global__ void findWeighedMedian_kernel(const float *_input, const float *_prescan,
+__global__ void findWeighedMedian_kernel(const float *input, const float *prescan,
                 const int rows, const int cols,
-                float *_output)
+                float *output)
 {
         // Compute the thread dimensions
         const int col = blockIdx.x * blockDim.x + threadIdx.x;
 
-        // Construct Eigen objects
-        Eigen::Map<const Eigen::MatrixXf> input(_input, rows, cols);
-        Eigen::Map<const Eigen::MatrixXf> prescan(_prescan, rows, cols);
-        Eigen::Map<Eigen::VectorXf> output(_output, cols);
-
         // Do we need to do stuff?
         if (col < cols) {
                 for (int row = 0; row < rows; row++) {
-                        if (2*prescan(row, col) >= prescan(rows-1, col)) {
-                                output(col) = row;
+                        if (2*prescan[row + col*rows] >= prescan[rows-1 + col*rows]) {
+                                output[col] = row;
                                 break;
                         }
                 }
         }
 }
 
-__global__ void TFunctionalRadon_kernel(const float *_input,
+__global__ void TFunctionalRadon_kernel(const float *input,
                 const int rows, const int cols,
-                float *_output, const int a)
+                float *output, const int a)
 {
         // Compute the thread dimensions
         const int col = blockIdx.x * blockDim.x + threadIdx.x;
         const int row = blockIdx.y * blockDim.y + threadIdx.y;
 
         if (row < rows && col < cols) {
-                // Construct Eigen objects
-                Eigen::Map<const Eigen::MatrixXf> input(_input, rows, cols);
-                Eigen::Map<Eigen::MatrixXf> output(_output, cols, 360);
-
                 // Integrate
-                atomicAdd(&output(col, a), input(row, col));
+                atomicAdd(&output[col + a*rows], input[row + col*rows]);
         }
 }
 
-__global__ void TFunctional1_kernel(const float *_input,
-                const int rows, const int cols, const float *_medians,
-                float *_output, const int a)
+__global__ void TFunctional1_kernel(const float *input,
+                const int rows, const int cols, const float *medians,
+                float *output, const int a)
 {
         // Compute the thread dimensions
         const int col = blockIdx.x * blockDim.x + threadIdx.x;
         const int row = blockIdx.y * blockDim.y + threadIdx.y;
 
         if (col < cols) {
-                // Construct Eigen objects
-                Eigen::Map<const Eigen::MatrixXf> input(_input, rows, cols);
-                Eigen::Map<const Eigen::VectorXf> medians(_medians, cols);
-                Eigen::Map<Eigen::MatrixXf> output(_output, cols, 360);
-
                 // Integrate
-                const int median = medians(col);
+                const int median = medians[col];
                 if (row < rows-median)
-                        atomicAdd(&output(col, a), input(row+median, col)*row);
+                        atomicAdd(&output[col + a*rows], input[row+median + col*rows] * row);
         }
 }
 
