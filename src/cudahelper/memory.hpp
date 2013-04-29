@@ -79,24 +79,24 @@ namespace CUDAHelper
         static std::vector<std::size_t> size_1d(std::size_t dim1)
         {
                 std::vector<std::size_t> sizes(1);
-                sizes.push_back(dim1);
+                sizes[0] = dim1;
                 return sizes;
         }
 
         static std::vector<std::size_t> size_2d(std::size_t dim1, std::size_t dim2)
         {
                 std::vector<std::size_t> sizes(2);
-                sizes.push_back(dim1);
-                sizes.push_back(dim2);
+                sizes[0] = dim1;
+                sizes[1] = dim2;
                 return sizes;
         }
 
         static std::vector<std::size_t> size_3d(std::size_t dim1, std::size_t dim2, std::size_t dim3)
         {
                 std::vector<std::size_t> sizes(3);
-                sizes.push_back(dim1);
-                sizes.push_back(dim2);
-                sizes.push_back(dim3);
+                sizes[0] = dim1;
+                sizes[1] = dim2;
+                sizes[2] = dim3;
                 return sizes;
         }
 
