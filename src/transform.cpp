@@ -36,8 +36,8 @@ Transformer::Transformer(const Eigen::MatrixXf &image, bool orthonormal)
         _image = pad(_image);
 
         // Upload the image to device memory
-        _memory = new CUDAHelper::GlobalMemory<float>(
-                        _image.rows() * _image.cols());
+        _memory = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(
+                        _image.rows(), _image.cols()));
         _memory->upload(_image.data());
 
 }

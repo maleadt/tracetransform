@@ -35,7 +35,7 @@ CUDAHelper::GlobalMemory<float> *getSinogram(
         // Calculate and allocate the output matrix
         int a_steps = 360;
         int p_steps = cols;
-        CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(p_steps * a_steps, 0);
+        CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(p_steps, a_steps), 0);
 
         // Process all angles
         for (int a = 0; a < a_steps; a++) {

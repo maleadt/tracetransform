@@ -143,7 +143,7 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input, int rows,
         chrono.start();
 
         // Launch prefix sum kernel
-        CUDAHelper::GlobalMemory<float> *prescan = new CUDAHelper::GlobalMemory<float>(rows*cols);
+        CUDAHelper::GlobalMemory<float> *prescan = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
         {
                 dim3 threads(1, rows);
                 dim3 blocks(cols, 1);
@@ -152,7 +152,7 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input, int rows,
         }
 
         // Launch weighed median kernel
-        CUDAHelper::GlobalMemory<float> *medians = new CUDAHelper::GlobalMemory<float>(cols, 0);
+        CUDAHelper::GlobalMemory<float> *medians = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(cols), 0);
         {
                 dim3 threads(1, rows);
                 dim3 blocks(cols, 1);

@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <cstddef>
 #include <cassert>
+#include <vector>
 
 // CUDA
 #include <cuda.h>
@@ -35,48 +36,89 @@ namespace CUDAHelper
         class Memory
         {
         public:
-                explicit Memory(std::size_t size)
-                                : _size(size)
+                explicit Memory(std::vector<std::size_t> sizes)
+                                : _sizes(sizes)
                 {
+                        assert(sizes.size() > 0);
                 }
 
                 virtual ~Memory()
                 {
                 }
 
+                std::vector<std::size_t> sizes() const
+                {
+                        return _sizes;
+                }
+
                 std::size_t size() const
                 {
-                        return _size;
+                        std::size_t product = 1;
+                        for (unsigned int i = 0; i < _sizes.size(); i++)
+                                product *= _sizes[i];
+                        return product;
                 }
 
                 std::size_t bytes() const
                 {
-                        return _size * sizeof(MemType);
+                        return size() * sizeof(MemType);
                 }
 
         private:
                 Memory(const Memory&);
                 Memory& operator=(const Memory&);
 
-                std::size_t _size;
+                std::vector<std::size_t> _sizes;
         };
+
+        static std::vector<std::size_t> size_1d(std::size_t dim1)
+        {
+                std::vector<std::size_t> sizes(1);
+                sizes.push_back(dim1);
+                return sizes;
+        }
+
+        static std::vector<std::size_t> size_2d(std::size_t dim1, std::size_t dim2)
+        {
+                std::vector<std::size_t> sizes(2);
+                sizes.push_back(dim1);
+                sizes.push_back(dim2);
+                return sizes;
+        }
+
+        static std::vector<std::size_t> size_3d(std::size_t dim1, std::size_t dim2, std::size_t dim3)
+        {
+                std::vector<std::size_t> sizes(3);
+                sizes.push_back(dim1);
+                sizes.push_back(dim2);
+                sizes.push_back(dim3);
+                return sizes;
+        }
 
         template<typename MemType>
         class HostMemory: public Memory<MemType>
         {
         public:
-                HostMemory(std::size_t size)
-                                : Memory<MemType>(size)
+                HostMemory(std::vector<std::size_t> sizes)
+                                : Memory<MemType>(sizes)
                 {
-                        clog(trace) << "Allocating " << this->bytes() << " bytes of host memory." << std::endl;
-                        checkError(cudaHostAlloc(&_hostPtr, this->bytes(), cudaHostAllocDefault));
+                        clog(trace) << "Allocating " << this->bytes()
+                                        << " bytes of host memory."
+                                        << std::endl;
+                        checkError(
+                                        cudaHostAlloc(&_hostPtr, this->bytes(),
+                                                        cudaHostAllocDefault));
                 }
 
                 HostMemory(const HostMemory<MemType>& other)
-                        : Memory<MemType>(other.size())
+                                : Memory<MemType>(other.sizes())
                 {
-                        clog(trace) << "Allocating " << this->bytes() << " bytes of host memory and setting contents." << std::endl;
-                        checkError(cudaHostAlloc(&_hostPtr, this->bytes(), cudaHostAllocDefault));
+                        clog(trace) << "Allocating " << this->bytes()
+                                        << " bytes of host memory and setting contents."
+                                        << std::endl;
+                        checkError(
+                                        cudaHostAlloc(&_hostPtr, this->bytes(),
+                                                        cudaHostAllocDefault));
                         checkError(
                                         cudaMemcpy(_hostPtr, other._hostPtr,
                                                         this->bytes(),
@@ -108,15 +150,15 @@ namespace CUDAHelper
         class GlobalMemory: public Memory<MemType>
         {
         public:
-                GlobalMemory(std::size_t size)
-                                : Memory<MemType>(size)
+                GlobalMemory(std::vector<std::size_t> sizes)
+                                : Memory<MemType>(sizes)
                 {
                         clog(trace) << "Allocating " << this->bytes() << " bytes of global memory." << std::endl;
                         checkError(cudaMalloc(&_devicePtr, this->bytes()));
                 }
 
-                GlobalMemory(std::size_t size, int value)
-                                : Memory<MemType>(size)
+                GlobalMemory(std::vector<std::size_t> sizes, int value)
+                                : Memory<MemType>(sizes)
                 {
                         clog(trace) << "Allocating " << this->bytes() << " bytes of global memory and setting them to 0x" << std::hex << value << std::dec << "." << std::endl;
                         checkError(cudaMalloc(&_devicePtr, this->bytes()));
@@ -124,7 +166,7 @@ namespace CUDAHelper
                 }
 
                 GlobalMemory(const GlobalMemory<MemType>& other)
-                        : Memory<MemType>(other.size())
+                        : Memory<MemType>(other.sizes())
                 {
                         clog(trace) << "Allocating " << this->bytes() << " bytes of global memory and setting contents." << std::endl;
                         checkError(cudaMalloc(&_devicePtr, this->bytes()));
@@ -176,14 +218,14 @@ namespace CUDAHelper
         class ConstantMemory: public Memory<MemType>
         {
         public:
-                ConstantMemory(const void* symbol, std::size_t size)
-                                : _symbol(symbol), Memory<MemType>(size)
+                ConstantMemory(const void* symbol, std::vector<std::size_t> sizes)
+                                : _symbol(symbol), Memory<MemType>(sizes)
                 {
                         clog(trace) << "Configuring " << this->bytes() << " bytes of constant memory." << std::endl;
                 }
 
                 ConstantMemory(const ConstantMemory<MemType>& other)
-                : Memory<MemType>(other.size())
+                : Memory<MemType>(other.sizes())
                 {
                         clog(trace) << "Configuring " << this->bytes() << " bytes of constant memory and setting contents." << std::endl;
                         checkError(

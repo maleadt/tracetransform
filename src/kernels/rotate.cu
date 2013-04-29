@@ -81,13 +81,13 @@ CUDAHelper::GlobalMemory<float> *rotate(
         // Set-up
         CUDAHelper::Chrono chrono;
         chrono.start();
-        CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(input->size());
+        CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(input->sizes());
 
         // Calculate transform matrix
         Eigen::Matrix2f transform_data;
         transform_data <<       std::cos(angle), -std::sin(angle),
                                 std::sin(angle),  std::cos(angle);
-        CUDAHelper::ConstantMemory<float> *transform = new CUDAHelper::ConstantMemory<float>(_transform, 4);
+        CUDAHelper::ConstantMemory<float> *transform = new CUDAHelper::ConstantMemory<float>(_transform, CUDAHelper::size_2d(2, 2));
         transform->upload(transform_data.data());
 
         // Launch
