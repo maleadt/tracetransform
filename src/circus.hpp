@@ -15,6 +15,9 @@
 // Eigen
 #include <Eigen/Dense>
 
+// Local
+#include "cudahelper/memory.hpp"
+
 
 //
 // Functionals
@@ -66,8 +69,8 @@ struct PFunctionalWrapper
 // Module definitions
 //
 
-Eigen::MatrixXf nearest_orthonormal_sinogram(
-        const Eigen::MatrixXf &input,
+CUDAHelper::GlobalMemory<float> *nearest_orthonormal_sinogram(
+        const CUDAHelper::GlobalMemory<float>* input,
         size_t& new_center);
 
 Eigen::VectorXf getCircusFunction(

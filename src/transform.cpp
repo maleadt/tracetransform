@@ -65,12 +65,11 @@ Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctionalWrapper> 
                                 << std::chrono::duration_cast<std::chrono::milliseconds> (end - start).count()
                                 << " ms." << std::endl;
 
-                // TEMPORARY: download image
-                Eigen::MatrixXf sinogram_data(sinogram->size(0), sinogram->size(1));
-                sinogram->download(sinogram_data.data());
-                delete sinogram;
-
                 if (clog(debug)) {
+                        // Download the image
+                        Eigen::MatrixXf sinogram_data(sinogram->size(0), sinogram->size(1));
+                        sinogram->download(sinogram_data.data());
+
                         // Save the sinogram image
                         std::stringstream fn_trace_image;
                         fn_trace_image << "trace_" << tfunctionals[t].name << ".pgm";
@@ -86,13 +85,20 @@ Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctionalWrapper> 
                 if (_orthonormal) {
                         clog(trace) << "Orthonormalizing sinogram" << std::endl;
                         size_t sinogram_center;
-                        sinogram_data = nearest_orthonormal_sinogram(sinogram_data, sinogram_center);
+                        CUDAHelper::GlobalMemory<float> *nos = nearest_orthonormal_sinogram(sinogram, sinogram_center);
+                        delete sinogram;
+                        sinogram = nos;
                         for (size_t p = 0; p < pfunctionals.size(); p++) {
                                 if (pfunctionals[p].functional == PFunctional::Hermite) {
                                         pfunctionals[p].arguments.center = sinogram_center;
                                 }
                         }
                 }
+
+                // TEMPORARY: download the image
+                Eigen::MatrixXf sinogram_data(sinogram->size(0), sinogram->size(1));
+                sinogram->download(sinogram_data.data());
+                delete sinogram;
 
                 // Process all P-functionals
                 for (size_t p = 0; p < pfunctionals.size(); p++) {

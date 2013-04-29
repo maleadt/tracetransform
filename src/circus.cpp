@@ -26,18 +26,22 @@ extern "C" {
 // Module definitions
 //
 
-Eigen::MatrixXf nearest_orthonormal_sinogram(
-        const Eigen::MatrixXf &input,
+CUDAHelper::GlobalMemory<float> *nearest_orthonormal_sinogram(
+        const CUDAHelper::GlobalMemory<float>* input,
         size_t& new_center)
 {
+        // TEMPORARY: download input
+        Eigen::MatrixXf input_data(input->size(0), input->size(1));
+        input->download(input_data.data());
+
         // Detect the offset of each column to the sinogram center
-        assert(input.rows() > 0 && input.cols() > 0);
-        int sinogram_center =  std::floor((input.rows() - 1) / 2.0);
-        std::vector<int> offset(input.cols());  // TODO: Eigen vector
-        for (int p = 0; p < input.cols(); p++) {
+        assert(input_data.rows() > 0 && input_data.cols() > 0);
+        int sinogram_center =  std::floor((input_data.rows() - 1) / 2.0);
+        std::vector<int> offset(input_data.cols());  // TODO: Eigen vector
+        for (int p = 0; p < input_data.cols(); p++) {
                 size_t median = findWeighedMedian(
-                        input.data() + p*input.rows(),
-                        input.rows());
+                                input_data.data() + p*input_data.rows(),
+                                input_data.rows());
                 offset[p] = median - sinogram_center;
         }
 
@@ -48,10 +52,10 @@ Eigen::MatrixXf nearest_orthonormal_sinogram(
         int padding = (int) (std::abs(max) + std::abs(min));
         new_center = sinogram_center + max;
         // TODO: zeros?
-        Eigen::MatrixXf aligned(input.rows() + padding, input.cols());
-        for (int col = 0; col < input.cols(); col++) {
-                for (int row = 0; row < input.rows(); row++) {
-                        aligned(max+row-offset[col], col) = input(row, col);
+        Eigen::MatrixXf aligned(input_data.rows() + padding, input_data.cols());
+        for (int col = 0; col < input_data.cols(); col++) {
+                for (int row = 0; row < input_data.rows(); row++) {
+                        aligned(max+row-offset[col], col) = input_data(row, col);
                 }
         }
 
@@ -61,7 +65,11 @@ Eigen::MatrixXf nearest_orthonormal_sinogram(
         Eigen::MatrixXf diagonal = Eigen::MatrixXf::Identity(aligned.rows(), aligned.cols());
         Eigen::MatrixXf nos = svd.matrixU() * diagonal * svd.matrixV().transpose();
 
-        return nos;
+        // TEMPORARY: upload input
+        CUDAHelper::GlobalMemory<float> *nos_mem = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(nos.rows(), nos.cols()));
+        nos_mem->upload(nos.data());
+
+        return nos_mem;
 }
 
 Eigen::VectorXf getCircusFunction(
