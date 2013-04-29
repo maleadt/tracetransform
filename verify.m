@@ -3,7 +3,7 @@ clear all;
 % Configuration
 imageFile = '../test/Cam1_V1.pgm';
 TFunctionals = [1 2 3 4 5];
-PFunctionals = [4 5 6];   % >= 4 --> Hermite
+PFunctionals = [1 2 3];   % >= 4 --> Hermite
 
 % Get absolute path to file
 curDir = pwd;
@@ -13,34 +13,50 @@ imagePath = pwd;
 imageFile = strcat(imagePath, filesep, imageName, imageExt);
 cd(curDir)
 
-% MATLAB algorithm
-fprintf(1, 'Executing MATLAB implementation...\n');
-image = mat2gray(imread(imageFile));
-[Sinogram_1 Circus_1] = OrthTraceSign(image,TFunctionals,PFunctionals, 1, 1);
-
 % Clean environment
 curPath = getenv('LD_LIBRARY_PATH');
 setenv('LD_LIBRARY_PATH',getenv('PATH'));
 
-% Compile C++ algorithm
+% Compile C++ implementation
 fprintf(1, 'Compiling C++ implementation...\n');
-cd('../reference/build_release');
+cd('cpp');
 delete('transform');
 [status, output] = system('make transform -j9');
 cd(curDir);
+if status > 0
+    error('Could not compile C++ implementation');
+    fprintf(1, output);
+end
 
-% C++ algorithm
+% C++ implementation
 fprintf(1, 'Executing C++ implementation...\n');
+delete('circus.dat');
 TFunctionalsCell = cellstr(num2str(TFunctionals(:)));
+TFunctionalsCell = strcat('-T ', TFunctionalsCell);
 HermitePFunctionals = PFunctionals >= 4;
-PFunctionals(HermitePFunctionals) = PFunctionals(HermitePFunctionals)-3;
-PFunctionalsCell = cellstr(num2str(PFunctionals(:)));
-PFunctionalsCell(HermitePFunctionals) = strcat('H', PFunctionalsCell(HermitePFunctionals));
-[status, output] = system(sprintf('../reference/build_release/transform "%s" %s %s', imageFile, strjoin(TFunctionalsCell, ','), strjoin(PFunctionalsCell, ',')));
+PFunctionalsSubstracted = PFunctionals;
+PFunctionalsSubstracted(HermitePFunctionals) = PFunctionalsSubstracted(HermitePFunctionals)-3;
+PFunctionalsCell = cellstr(num2str(PFunctionalsSubstracted(:)));
+PFunctionalsCell(~HermitePFunctionals) = strcat('-P ', PFunctionalsCell(~HermitePFunctionals));
+PFunctionalsCell(HermitePFunctionals) = strcat('-P H ', PFunctionalsCell(HermitePFunctionals));
+tic
+[status, output] = system(sprintf('./cpp/transform %s %s "%s"', strjoin(TFunctionalsCell, ' '), strjoin(PFunctionalsCell, ' '), imageFile));
+toc
+if status > 0
+    error('Could not execute C++ implementation');
+    fprintf(1, output);
+end
 Circus_2 = load('circus.dat');
 
 % Restore environment
 setenv('LD_LIBRARY_PATH',curPath);
+
+% MATLAB implementation
+fprintf(1, 'Executing MATLAB implementation...\n');
+image = mat2gray(imread(imageFile));
+tic
+[Sinogram_1 Circus_1] = OrthTraceSign(image,TFunctionals,PFunctionals, 1, 1);
+toc
 
 % Compare circus functions
 CircusDiff = sqrt(sum((Circus_2 - Circus_1).^2)./size(Circus_1,1)) ./ (max(Circus_1) - min(Circus_1));
