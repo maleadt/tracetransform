@@ -51,6 +51,11 @@ namespace CUDAHelper
                         return _sizes;
                 }
 
+                std::size_t size(unsigned int dim) const
+                {
+                        return _sizes[dim];
+                }
+
                 std::size_t size() const
                 {
                         std::size_t product = 1;

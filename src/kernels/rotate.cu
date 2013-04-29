@@ -73,10 +73,10 @@ __global__ void rotate_kernel(const float *_input, float *_output,
 //
 
 CUDAHelper::GlobalMemory<float> *rotate(
-                const CUDAHelper::GlobalMemory<float> *input, float angle,
-                int rows, int cols)
+                const CUDAHelper::GlobalMemory<float> *input, float angle)
 {
-        assert(rows*cols == input->size());
+        const int rows = input->size(0);
+        const int cols = input->size(1);
 
         // Set-up
         CUDAHelper::Chrono chrono;

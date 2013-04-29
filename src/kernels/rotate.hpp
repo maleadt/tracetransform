@@ -15,6 +15,5 @@
 //
 
 extern CUDAHelper::GlobalMemory<float> *rotate(
-                const CUDAHelper::GlobalMemory<float> *input, float angle,
-                int rows, int cols);
+                const CUDAHelper::GlobalMemory<float> *input, float angle);
 #endif

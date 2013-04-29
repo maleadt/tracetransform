@@ -60,7 +60,7 @@ struct TFunctionalWrapper
 //
 
 CUDAHelper::GlobalMemory<float> *getSinogram(
-        const CUDAHelper::GlobalMemory<float> *input, const int rows, const int cols,
-        const TFunctionalWrapper &tfunctional, int &output_rows, int &output_cols);
+        const CUDAHelper::GlobalMemory<float> *input,
+        const TFunctionalWrapper &tfunctional);
 
 #endif

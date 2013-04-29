@@ -26,11 +26,12 @@
 
 // TODO: allow processing of multiple functionals, rotating the image only once
 CUDAHelper::GlobalMemory<float> *getSinogram(
-        const CUDAHelper::GlobalMemory<float> *input, const int rows, const int cols,
-        const TFunctionalWrapper &tfunctional, int &output_rows, int &output_cols)
+        const CUDAHelper::GlobalMemory<float> *input,
+        const TFunctionalWrapper &tfunctional)
 {
-        assert(rows == cols);   // padded image!
-        assert(input->size() == rows*cols);
+        assert(input->size(0) == input->size(1));   // padded image!
+        const int rows = input->size(0);
+        const int cols = input->size(1);
 
         // Calculate and allocate the output matrix
         int a_steps = 360;
@@ -41,34 +42,31 @@ CUDAHelper::GlobalMemory<float> *getSinogram(
         for (int a = 0; a < a_steps; a++) {
                 // Rotate the image
                 CUDAHelper::GlobalMemory<float> *input_rotated = rotate(
-                                input, -deg2rad(a),
-                                rows, cols);
+                                input, -deg2rad(a));
 
                 // Process all projection bands
                 switch (tfunctional.functional) {
                         case TFunctional::Radon:
-                                TFunctionalRadon(input_rotated, rows, cols, output, a);
+                                TFunctionalRadon(input_rotated, output, a);
                                 break;
                         case TFunctional::T1:
-                                TFunctional1(input_rotated, rows, cols, output, a);
+                                TFunctional1(input_rotated, output, a);
                                 break;
                         case TFunctional::T2:
-                                TFunctional2(input_rotated, rows, cols, output, a);
+                                TFunctional2(input_rotated, output, a);
                                 break;
                         case TFunctional::T3:
-                                TFunctional3(input_rotated, rows, cols, output, a);
+                                TFunctional3(input_rotated, output, a);
                                 break;
                         case TFunctional::T4:
-                                TFunctional4(input_rotated, rows, cols, output, a);
+                                TFunctional4(input_rotated, output, a);
                                 break;
                         case TFunctional::T5:
-                                TFunctional5(input_rotated, rows, cols, output, a);
+                                TFunctional5(input_rotated, output, a);
                                 break;
                 }
                 delete input_rotated;
         }
 
-        output_rows = p_steps;
-        output_cols = a_steps;
         return output;
 }

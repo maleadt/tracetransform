@@ -57,11 +57,8 @@ Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctionalWrapper> 
                 // Calculate the trace transform sinogram
                 clog(debug) << "Calculating " << tfunctionals[t].name << " sinogram" << std::endl;
                 start = std::chrono::system_clock::now();
-                // TODO: CUDAHelper::Memory<DIM>
-                int sinogram_rows, sinogram_cols;
                 CUDAHelper::GlobalMemory<float> *sinogram = getSinogram(
-                        _memory, _image.rows(), _image.cols(),
-                        tfunctionals[t], sinogram_rows, sinogram_cols
+                        _memory, tfunctionals[t]
                 );
                 end = std::chrono::system_clock::now();
                 clog(debug) << "Sinogram calculation took "
@@ -69,8 +66,9 @@ Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctionalWrapper> 
                                 << " ms." << std::endl;
 
                 // TEMPORARY: download image
-                Eigen::MatrixXf sinogram_data(sinogram_rows, sinogram_cols);
+                Eigen::MatrixXf sinogram_data(sinogram->size(0), sinogram->size(1));
                 sinogram->download(sinogram_data.data());
+                delete sinogram;
 
                 if (clog(debug)) {
                         // Save the sinogram image

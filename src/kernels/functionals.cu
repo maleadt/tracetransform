@@ -110,10 +110,11 @@ __global__ void TFunctional1_kernel(const float *input,
 // T functionals
 //
 
-void TFunctionalRadon(const CUDAHelper::GlobalMemory<float> *input, int rows,
-                int cols, CUDAHelper::GlobalMemory<float> *output, int a)
+void TFunctionalRadon(const CUDAHelper::GlobalMemory<float> *input,
+                CUDAHelper::GlobalMemory<float> *output, int a)
 {
-        assert(rows*cols == input->size());
+        const int rows = input->size(0);
+        const int cols = input->size(1);
 
         // Set-up
         CUDAHelper::Chrono chrono;
@@ -133,10 +134,11 @@ void TFunctionalRadon(const CUDAHelper::GlobalMemory<float> *input, int rows,
                         << std::endl;
 }
 
-void TFunctional1(const CUDAHelper::GlobalMemory<float> *input, int rows,
-                int cols, CUDAHelper::GlobalMemory<float> *output, int a)
+void TFunctional1(const CUDAHelper::GlobalMemory<float> *input,
+                CUDAHelper::GlobalMemory<float> *output, int a)
 {
-        assert(rows*cols == input->size());
+        const int rows = input->size(0);
+        const int cols = input->size(1);
 
         // Set-up
         CUDAHelper::Chrono chrono;
@@ -176,26 +178,26 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input, int rows,
                         << std::endl;
 }
 
-void TFunctional2(const CUDAHelper::GlobalMemory<float> *input, int rows,
-                int cols, CUDAHelper::GlobalMemory<float> *output, int a)
+void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
+                CUDAHelper::GlobalMemory<float> *output, int a)
 {
 
 }
 
-void TFunctional3(const CUDAHelper::GlobalMemory<float> *input, int rows,
-                int cols, CUDAHelper::GlobalMemory<float> *output, int a)
+void TFunctional3(const CUDAHelper::GlobalMemory<float> *input,
+                CUDAHelper::GlobalMemory<float> *output, int a)
 {
 
 }
 
-void TFunctional4(const CUDAHelper::GlobalMemory<float> *input, int rows,
-                int cols, CUDAHelper::GlobalMemory<float> *output, int a)
+void TFunctional4(const CUDAHelper::GlobalMemory<float> *input,
+                CUDAHelper::GlobalMemory<float> *output, int a)
 {
 
 }
 
-void TFunctional5(const CUDAHelper::GlobalMemory<float> *input, int rows,
-                int cols, CUDAHelper::GlobalMemory<float> *output, int a)
+void TFunctional5(const CUDAHelper::GlobalMemory<float> *input,
+                CUDAHelper::GlobalMemory<float> *output, int a)
 {
 
 }
@@ -206,29 +208,26 @@ void TFunctional5(const CUDAHelper::GlobalMemory<float> *input, int rows,
 //
 
 CUDAHelper::GlobalMemory<float> *PFunctional1(
-                const CUDAHelper::GlobalMemory<float> *input, int rows,
-                int cols)
+                const CUDAHelper::GlobalMemory<float> *input)
 {
 
 }
 
 CUDAHelper::GlobalMemory<float> *PFunctional2(
-                const CUDAHelper::GlobalMemory<float> *input, int rows,
-                int cols)
+                const CUDAHelper::GlobalMemory<float> *input)
 {
 
 }
 
 CUDAHelper::GlobalMemory<float> *PFunctional3(
-                const CUDAHelper::GlobalMemory<float> *input, int rows,
-                int cols)
+                const CUDAHelper::GlobalMemory<float> *input)
 {
 
 }
 
 CUDAHelper::GlobalMemory<float> *PFunctionalHermite(
-                const CUDAHelper::GlobalMemory<float> *input, int rows,
-                int cols, unsigned int order, int center)
+                const CUDAHelper::GlobalMemory<float> *input,
+                unsigned int order, int center)
 {
 
 }
