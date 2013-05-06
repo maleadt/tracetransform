@@ -1,23 +1,38 @@
-clear all;
-%% Demo of extraction of trace transform signatures 
-A = imread('../test/Cam1_V1.pgm','pgm');        % Reading Image
-A_smth = mat2gray(A);                   % Image pre-processing, illumination normalization.
+% Check arguments
+if exist('imageFile') == 0
+        error('imageFile not defined');
+elseif exist('tfunctionals') == 0
+        error('tfunctionals not defined');
+elseif exist('pfunctionals') == 0
+        error('pfunctionals not defined');
+end
 
-%% Extraction of feature vectors
-Code_Tfunct = [1];                      %Code of T functionals to be used, numbers comprised
-                                        %between (1 to 7), which correspond to the files "FunctionalT1.c"
-                                        
-Code_Pfunct = [4];                      %Code of P functionals to be used, numbers between 1 and 3
-                                        %use the classical P-functionals defined in "Apply_Pfunct",
-                                        % from 4 onwards the Hermite functionals are employed.
-                                        
-angle_intrvl = 1;                       %3 degrees of angle interval between rotations
-flag = 1;                               %Flag 0 (no sinogram orthonormalization) or 1 (sinogram orthonormalization)
+% Gather data
+image = mat2gray(imread(imageFile, 'pgm'));
+[sinogram circus] = OrthTraceSign(image, tfunctionals, pfunctionals, 1, 0); % TODO: flag
 
-% Main function that extracts the orthonormal signatures.
-[Sinogram CircusF_a] = OrthTraceSign(A_smth,Code_Tfunct,Code_Pfunct, angle_intrvl,flag);
-figure
-imshow(mat2gray(Sinogram))
-corr(CircusF_a)                         % Testing that the features extracted are actually orthonormal
-figure
-plot(CircusF_a)                         % Plotting the features extracted
+% Save sinograms
+for t_i = 1:length(tfunctionals)
+    t = tfunctionals(t_i);
+    
+    trace = sinogram(:, :, t_i);
+    csvwrite(sprintf('trace_T%d.csv', t), trace);
+end
+
+% Save circus functions
+for t_i = 1:length(tfunctionals)
+    t = tfunctionals(t_i);
+    for p_i = 1:length(pfunctionals)
+        p = pfunctionals(p_i);
+        if p >= 4
+            p_real = p - 3;
+            type = 'H';
+        else
+            p_real = p;
+            type = 'P';
+        end
+        
+        trace = circus(:, p_i + (t_i-1)*length(pfunctionals));
+        csvwrite(sprintf('trace_T%d-%s%d.csv', t, type, p_real), trace);
+    end
+end

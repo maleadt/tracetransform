@@ -1,18 +1,25 @@
 function [Sinogram CircusF] = OrthTraceSign(I,Code_Tfunct,Code_Pfunct, angle_intrvl,flag)
-        Ipadd = impaddingf(I,angle_intrvl);     %% Padding the input image
+        Ipadd = impaddingf(I,angle_intrvl, flag);     %% Padding the input image
         Sinogram = TraceTransform(Ipadd,Code_Tfunct,Code_Pfunct,angle_intrvl,flag); 
         CircusF = Apply_Pfunct(Sinogram, Code_Pfunct, flag);
         CircusF = zscore(CircusF);
 end
 
-function Ipadd = impaddingf(I,angle_intrvl)
-        %% Resizing and padding the image with zeros
-        ndiag = ceil(360/angle_intrvl);
-        nrows = ceil(ndiag/sqrt(2));
-        %% Resizing the image to generate a square sinogram
-        Irsz = imresize(im2uint8(I), [nrows nrows]); %im2uint8(I);
-        M = nrows; %size(Irsz,1);
-        N = nrows; %size(Irsz,2);
+function Ipadd = impaddingf(I,angle_intrvl, flag)
+        if flag
+                %% Resizing and padding the image with zeros
+                ndiag = ceil(360/angle_intrvl);
+                nrows = ceil(ndiag/sqrt(2));
+                %% Resizing the image to generate a square sinogram
+                Irsz = imresize(im2uint8(I), [nrows nrows]);
+                M = nrows;
+                N = nrows;
+        else
+                Irsz = im2uint8(I);
+                M = size(Irsz,1);
+                N = size(Irsz,2);
+
+        end
         origin = floor(([M N]+1)/2);
          
         temp1 = M - 1 - origin(1);
