@@ -29,7 +29,7 @@ class Transformer
 public:
         Transformer(const Eigen::MatrixXf &image);
 
-        Eigen::MatrixXf getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
+        void getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
                         std::vector<PFunctionalWrapper> &pfunctionals) const;
 
 private:

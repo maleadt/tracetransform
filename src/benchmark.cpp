@@ -28,7 +28,7 @@ public:
         virtual void SetUp()
         {
                 // Read the image
-                _image = gray2mat(pgmRead("res/Cam1_V1.pgm"));
+                _image = gray2mat(readpgm("res/Cam1_V1.pgm"));
 
                 // Set-up the transformer
                 _transformer = new Transformer(_image);
@@ -53,7 +53,7 @@ BENCHMARK_F(SmallImageFixture, Radon, 2, 3)
         std::vector<PFunctionalWrapper> pfunctionals{
 
         };
-        Eigen::MatrixXf output = _transformer->getTransform(tfunctionals, pfunctionals);
+        _transformer->getTransform(tfunctionals, pfunctionals);
 }
 
 BENCHMARK_F(SmallImageFixture, TraceRegular, 2, 3)
@@ -64,7 +64,7 @@ BENCHMARK_F(SmallImageFixture, TraceRegular, 2, 3)
         std::vector<PFunctionalWrapper> pfunctionals{
                 PFunctionalWrapper("P1",  PFunctional::P1)
         };
-        Eigen::MatrixXf output = _transformer->getTransform(tfunctionals, pfunctionals);
+        _transformer->getTransform(tfunctionals, pfunctionals);
 }
 
 BENCHMARK_F(SmallImageFixture, TraceOrthonormal, 2, 3)
@@ -75,7 +75,7 @@ BENCHMARK_F(SmallImageFixture, TraceOrthonormal, 2, 3)
         std::vector<PFunctionalWrapper> pfunctionals{
                 PFunctionalWrapper("H1",  PFunctional::Hermite, PFunctionalArguments(1))
         };
-        Eigen::MatrixXf output = _transformer->getTransform(tfunctionals, pfunctionals);
+        _transformer->getTransform(tfunctionals, pfunctionals);
 }
 
 

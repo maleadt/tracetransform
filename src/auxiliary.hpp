@@ -23,14 +23,13 @@
 //
 
 // Read an ASCII PGM file
-Eigen::MatrixXi pgmRead(std::string filename);
+Eigen::MatrixXi readpgm(std::string filename);
 
 // Write an ASCII PGM file
-void pgmWrite(std::string filename, const Eigen::MatrixXi &data);
+void writepgm(std::string filename, const Eigen::MatrixXi &data);
 
-// Write a MATLAB and gnuplot-compatible data file
-void dataWrite(std::string filename, const Eigen::MatrixXf &data,
-        const std::vector<std::string> &headers = std::vector<std::string>());
+// Write a CSV file
+void writecsv(std::string filename, const Eigen::MatrixXf &data);
 
 // Convert a grayscale image (range [0, 255]) to a matrix (range [0, 1]).
 Eigen::MatrixXf gray2mat(const Eigen::MatrixXi &input);

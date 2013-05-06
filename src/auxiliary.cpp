@@ -17,7 +17,7 @@
 // Routines
 //
 
-Eigen::MatrixXi pgmRead(std::string filename)
+Eigen::MatrixXi readpgm(std::string filename)
 {
         std::ifstream infile(filename);
         std::string inputLine = "";
@@ -60,7 +60,7 @@ Eigen::MatrixXi pgmRead(std::string filename)
         return data;
 }
 
-void pgmWrite(std::string filename, const Eigen::MatrixXi &data)
+void writepgm(std::string filename, const Eigen::MatrixXi &data)
 {
         std::ofstream outfile(filename);
 
@@ -89,50 +89,17 @@ void pgmWrite(std::string filename, const Eigen::MatrixXi &data)
         outfile.close();
 }
 
-void dataWrite(std::string filename, const Eigen::MatrixXf &data,
-        const std::vector<std::string> &headers)
+void writecsv(std::string filename, const Eigen::MatrixXf &data)
 {
-        assert(headers.size() == 0 || (signed) headers.size() == data.cols());
-
-        // Calculate column width
-        std::vector<size_t> widths(data.cols(), 0);
-        for (int col = 0; col < data.cols(); col++) {
-                if (headers.size() > 0)
-                        widths[col] = headers[col].length();
-                for (int row = 0; row < data.rows(); row++) {
-                        float value = data(row, col);
-                        size_t width = 3; // decimal, comma, 2 decimals
-                        if (value > 1)
-                                width += std::floor(std::log10(value));
-                        if (value < 0)  // dash for negative numbers
-                                width++;
-                        if (width > widths[col])
-                                widths[col] = width;
-                }
-                widths[col] += 2;       // add spacing
-        }
-
         // Open file
         std::ofstream fd_data(filename);
 
-        // Print headers
-        if (headers.size() > 0) {
-                fd_data << "%  ";
-                fd_data << std::setiosflags(std::ios::fixed)
-                        << std::setprecision(0);
-                for (size_t col = 0; col < headers.size(); col++) {
-                        fd_data << std::setw(widths[col]) << headers[col];
-                }
-                fd_data << "\n";
-        }
-
         // Print data
-        fd_data << std::setiosflags(std::ios::fixed) << std::setprecision(2);
         for (int row = 0; row < data.rows(); row++) {
-                fd_data << "   ";
                 for (int col = 0; col < data.cols(); col++) {
-                        fd_data << std::setw(widths[col])
-                                << data(row, col);
+                        fd_data << data(row, col);
+                        if (col < data.cols()-1)
+                                fd_data << ", ";
                 }
                 fd_data << "\n";
         }

@@ -37,7 +37,7 @@ Transformer::Transformer(const Eigen::MatrixXf &image)
         _image_orthonormal = pad(_image_orthonormal);
 }
 
-Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
+void Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
                 std::vector<PFunctionalWrapper> &pfunctionals) const
 {
         std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
@@ -64,11 +64,6 @@ Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctionalWrapper> 
         else
                 image_selected = &_image;
 
-        // Allocate a matrix for all output data to reside in
-        Eigen::MatrixXf output(
-                360,
-                tfunctionals.size() * pfunctionals.size());
-
         // Process all T-functionals
         for (size_t t = 0; t < tfunctionals.size(); t++) {
                 // Calculate the trace transform sinogram
@@ -87,13 +82,13 @@ Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctionalWrapper> 
                         // Save the sinogram image
                         std::stringstream fn_trace_image;
                         fn_trace_image << "trace_" << tfunctionals[t].name << ".pgm";
-                        pgmWrite(fn_trace_image.str(), mat2gray(sinogram));
-
-                        // Save the sinogram data
-                        std::stringstream fn_trace_data;
-                        fn_trace_data << "trace_" << tfunctionals[t].name << ".dat";
-                        dataWrite(fn_trace_data.str(), sinogram);
+                        writepgm(fn_trace_image.str(), mat2gray(sinogram));
                 }
+
+                // Save the sinogram data
+                std::stringstream fn_trace_data;
+                fn_trace_data << "trace_" << tfunctionals[t].name << ".csv";
+                writecsv(fn_trace_data.str(), sinogram);
 
                 // Orthonormal functionals require the nearest orthonormal sinogram
                 if (orthonormal) {
@@ -122,11 +117,11 @@ Eigen::MatrixXf Transformer::getTransform(const std::vector<TFunctionalWrapper> 
                         // Normalize
                         Eigen::VectorXf normalized = zscore(circus);
 
-                        // Copy the data
-                        assert(normalized.size() == output.rows());
-                        output.col(t*pfunctionals.size() + p) = normalized;
+                        // Save the circus data
+                        std::stringstream fn_trace_data;
+                        fn_trace_data << "trace_" << tfunctionals[t].name
+                                        << "-" << pfunctionals[p].name << ".csv";
+                        writecsv(fn_trace_data.str(), normalized);
                 }
         }
-
-        return output;
 }

@@ -90,10 +90,3 @@ TARGET_LINK_LIBRARIES(demo debug ${BACKWARD})
 
 ADD_EXECUTABLE(benchmark src/benchmark.cpp)
 TARGET_LINK_LIBRARIES(benchmark ${COMMON_LIBRARIES} transform ${Boost_LIBRARIES})
-
-
-#
-# Resources
-#
-
-FILE(COPY res DESTINATION ${CMAKE_BINARY_DIR})

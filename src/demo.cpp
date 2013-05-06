@@ -55,11 +55,13 @@ std::istream& operator>>(std::istream& in, TFunctionalWrapper& wrapper)
 std::istream& operator>>(std::istream& in, PFunctionalWrapper& wrapper)
 {
         in >> wrapper.name;
-        if (wrapper.name == "1") {
+        if (isdigit(wrapper.name[0]))
+            wrapper.name = "P" + wrapper.name;
+        if (wrapper.name == "P1") {
                 wrapper.functional = PFunctional::P1;
-        } else if (wrapper.name == "2") {
+        } else if (wrapper.name == "P2") {
                 wrapper.functional = PFunctional::P2;
-        } else if (wrapper.name == "3") {
+        } else if (wrapper.name == "P3") {
                 wrapper.functional = PFunctional::P3;
         } else if (wrapper.name[0] == 'H') {
                 wrapper.functional = PFunctional::Hermite;
@@ -113,10 +115,6 @@ int main(int argc, char **argv)
                         boost::program_options::value<std::string>()
                         ->required(),
                         "image to process")
-                ("output,o",
-                        boost::program_options::value<std::string>()
-                        ->default_value("circus.dat"),
-                        "where to write the output circus data")
                 ("t-functional,T",
                         boost::program_options::value<std::vector<TFunctionalWrapper>>(&tfunctionals)
                         ->required(),
@@ -176,32 +174,11 @@ int main(int argc, char **argv)
         //
         
         // Read the image
-        Eigen::MatrixXf input = gray2mat(pgmRead(vm["input"].as<std::string>()));
+        Eigen::MatrixXf input = gray2mat(readpgm(vm["input"].as<std::string>()));
 
         // Transform the image
         Transformer transformer(input);
-        Eigen::MatrixXf output = transformer.getTransform(tfunctionals, pfunctionals);
-
-        // Save the output data
-        if (pfunctionals.size() > 0) {          
-                std::vector<std::string> headers;
-                for (int tp = 0; tp < output.cols(); tp++) {
-                        size_t t = tp / pfunctionals.size();
-                        size_t p = tp % pfunctionals.size();
-                        std::stringstream header;
-                        header << tfunctionals[t].name << "-"
-                                << pfunctionals[p].name;
-                        headers.push_back(header.str());
-
-                        if (clog(debug)) {
-                                // Save individual traces as well
-                                std::stringstream fn_trace_data;
-                                fn_trace_data << "trace_" << header.str() << ".dat";
-                                dataWrite(fn_trace_data.str(), (Eigen::MatrixXf) output.col(tp));
-                        }
-                }
-                dataWrite(vm["output"].as<std::string>(), output, headers);
-        }
+        transformer.getTransform(tfunctionals, pfunctionals);
 
         clog(debug) << "Exiting" << std::endl;
         return 0;
