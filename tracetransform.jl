@@ -26,7 +26,7 @@ function getTraceTransform(
                 # Process all projection bands
                 p_i = 1
                 for p in distances
-                        output[p_i, a_i] = call(functional, vec(input_rotated[:, p]))
+                        output[p_i, a_i] = call(functional, vec(input_rotated[:, 1+p]))
                         p_i += 1
                 end     
                 a_i += 1

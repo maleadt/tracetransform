@@ -1,4 +1,3 @@
-require("image")
 require("geometry")
 require("tracetransform")
 require("circusfunction")
@@ -6,6 +5,7 @@ require("auxiliary")
 require("functionals")
 
 using ArgParse
+using Images
 
 ANGLE_INTERVAL = 1
 DISTANCE_INTERVAL = 1
@@ -17,11 +17,12 @@ function main(args)
         
         # Parse the command arguments
         s = ArgParseSettings("Allowed options")
+        s.suppress_warnings = true # TODO: fix bug in argparse
         @add_arg_table s begin
-                "--verbose"
+                "--verbose", "-v"
                         action = :store_true
                         help = "display some more details"
-                "--debug"
+                "--debug", "-d"
                         action = :store_true
                         help = "write debug information"
                 "--t-functional", "-T"
@@ -36,9 +37,6 @@ function main(args)
                 "input"
                         help = "image to process"
                         required = true
-                "output"
-                        help = "where to write the output circus data"
-                        default = "circus.dat"
         end
         parsed_args = parse_args(args, s)
 
@@ -98,7 +96,8 @@ function main(args)
         #
 
         # Read the image
-        input = imread(parsed_args["input"])
+        input_image = imread(parsed_args["input"])
+        input = gray2mat(input_image)
 
         # Orthonormal P-functionals need a stretched image in order to ensure a
         # square sinogram
@@ -120,22 +119,14 @@ function main(args)
         input_padded[1+offset[2]:endpoint[2], 1+offset[1]:endpoint[1]] = input
 
         # Calculate the sampling resolution
-        angles::Vector = vec(Range(0.0, ANGLE_INTERVAL, 360))
+        angles::Vector = [0:359]
         diagonal = hypot(size(input)...)
-        distances::Vector = iround([1:DISTANCE_INTERVAL:diagonal])
-
-        # Allocate a matrix for all output data to reside in
-        output::Matrix = Array(
-                eltype(input),
-                length(angles),
-                length(tfunctionals) * length(pfunctionals))
+        distances::Vector = [0:iround(diagonal+1)]
 
         # Process all T-functionals
-        t_i = 0
-        print("Calculating")
         for tfunctional in tfunctionals
                 # Calculate the trace transform sinogram
-                print(" $(tfunctional.name)...")
+                println("Calculating $(tfunctional.name) sinogram")
                 const sinogram = getTraceTransform(
                         input_padded,
                         angles,
@@ -145,11 +136,11 @@ function main(args)
 
                 if parsed_args["debug"]
                         # Save the sinogram image
-                        ppmwrite(mat2gray(sinogram), "trace_$(tfunctional.name).pgm")
-
-                        # Save the sinogram data
-                        datawrite("trace_$(tfunctional.name).dat", sinogram);
+                        imwrite(share(input_image, mat2gray(sinogram)), "trace_$(tfunctional.name).pbm")
                 end
+
+                # Save the sinogram data
+                writecsv("trace_$(tfunctional.name).csv", sinogram);
 
                 # Orthonormal functionals require the nearest orthonormal sinogram
                 if orthonormal
@@ -157,7 +148,6 @@ function main(args)
                 end
 
                 # Process all P-functionals
-                p_i = 1
                 for pfunctional in pfunctionals
                         # Configure any extra parameters
                         if isa(pfunctional, HermiteFunctional)
@@ -165,7 +155,7 @@ function main(args)
                         end
 
                         # Calculate the circus function
-                        print(" $(pfunctional.name)...")
+                        println("Calculating $(pfunctional.name) circus function for $(tfunctional.name) sinogram")
                         circus::Vector = getCircusFunction(
                                 sinogram,
                                 pfunctional
@@ -174,26 +164,9 @@ function main(args)
                         # Normalize
                         normalized = zscore(circus)
 
-                        if parsed_args["debug"]
-                                # Save the circus data
-                                datawrite("trace_$(tfunctional.name)-$(pfunctional.name).dat", normalized);
-                        end
-
-                        # Copy the data
-                        @assert length(normalized) == rows(output)
-                        output[:, t_i*length(tfunctionals) + p_i] = normalized
-                        p_i += 1
+                        # Save the circus data
+                        writecsv("trace_$(tfunctional.name)-$(pfunctional.name).csv", normalized);
                 end
-                t_i += 1
-        end
-
-        # Save the output data
-        if length(pfunctionals) > 0
-                headers::Vector = String[]
-                for tfunctional in tfunctionals, pfunctional in pfunctionals
-                        push!(headers, "$(tfunctional.name)-$(pfunctional.name)")
-                end
-                datawrite(parsed_args["output"], output, headers)
         end
 end
 
