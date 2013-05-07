@@ -21,9 +21,14 @@ const int blocksize = 8;
 // Kernels
 //
 
+enum prescan_function_t {
+        NONE = 0,
+        SQRT
+};
+
 __global__ void prescan_kernel(const float *input,
                 const int rows, const int cols,
-                float *output)
+                float *output, prescan_function_t prescan_function)
 {
         // Shared memory
         extern __shared__ float temp[];
@@ -33,7 +38,14 @@ __global__ void prescan_kernel(const float *input,
         const int row = threadIdx.y;
 
         // Load input into shared memory
-        temp[row] = input[row + col*rows];
+        switch (prescan_function) {
+                case SQRT:
+                        temp[row] = sqrt(input[row + col*rows]);
+                        break;
+                default:
+                        temp[row] = input[row + col*rows];
+                        break;
+        }
         __syncthreads();
 
         int pout = 0, pin = 1;
@@ -165,7 +177,7 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input,
         {
                 dim3 threads(1, rows);
                 dim3 blocks(cols, 1);
-                prescan_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, rows, cols, *prescan);
+                prescan_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, rows, cols, *prescan, NONE);
                 CUDAHelper::checkState();
         }
 
@@ -209,7 +221,7 @@ void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
         {
                 dim3 threads(1, rows);
                 dim3 blocks(cols, 1);
-                prescan_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, rows, cols, *prescan);
+                prescan_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, rows, cols, *prescan, NONE);
                 CUDAHelper::checkState();
         }
 
