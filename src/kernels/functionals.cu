@@ -107,16 +107,44 @@ __global__ void TFunctional1_kernel(const float *input,
                 const float *medians,
                 float *output, const int a)
 {
+        // Shared memory
+        extern __shared__ float temp[];
+        __shared__ int median;
+
         // Compute the thread dimensions
         const int col = blockIdx.x;
         const int cols = gridDim.x;
         const int row = threadIdx.y;
         const int rows = blockDim.y;
 
-        // Integrate
-        const int median = medians[col];
+        // Fetch
+        if (row == 0)
+                median = medians[col];
+        __syncthreads();
         if (row < rows-median)
-                atomicAdd(&output[col + a*rows], input[row+median + col*rows] * row);
+                temp[row] = input[row+median + col*rows] * row;
+        else
+                temp[row] = 0;
+        __syncthreads();
+
+        // Reduce
+        int pout = 0, pin = 1;
+        for (int offset = 1; offset < rows; offset *= 2) {
+                // Swap double buffer indices
+                pout = 1 - pout;
+                pin = 1 - pin;
+                if (row >= offset)
+                        temp[pout * rows + row] = temp[pin * rows + row]
+                                        + temp[pin * rows + row - offset];
+                else
+                        temp[pout * rows + row] = temp[pin * rows + row];
+                __syncthreads();
+
+        }
+
+        // Write back
+        if (row == rows-1)
+                output[col + a*rows] = temp[pout * rows + row];
 }
 
 __global__ void TFunctional2_kernel(const float *input,
@@ -196,7 +224,7 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input,
         {
                 dim3 threads(1, rows);
                 dim3 blocks(cols, 1);
-                TFunctional1_kernel<<<blocks, threads>>>(*input, *medians, *output, a);
+                TFunctional1_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, *medians, *output, a);
                 CUDAHelper::checkState();
         }
         delete medians;
