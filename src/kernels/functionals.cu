@@ -128,6 +128,7 @@ __global__ void TFunctional1_kernel(const float *input,
         __syncthreads();
 
         // Reduce
+        // TODO: call prescan_kernel using dynamic parallelism?
         int pout = 0, pin = 1;
         for (int offset = 1; offset < rows; offset *= 2) {
                 // Swap double buffer indices
