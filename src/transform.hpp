@@ -28,9 +28,9 @@
 class Transformer
 {
 public:
-        Transformer(const Eigen::MatrixXf &image, bool orthonormal = false);
+        Transformer(const Eigen::MatrixXf &image, bool orthonormal);
 
-        Eigen::MatrixXf getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
+        void getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
                         std::vector<PFunctionalWrapper> &pfunctionals) const;
 
 private:
