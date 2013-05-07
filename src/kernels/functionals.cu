@@ -27,7 +27,6 @@ enum prescan_function_t {
 };
 
 __global__ void prescan_kernel(const float *input,
-                const int rows, const int cols,
                 float *output, prescan_function_t prescan_function)
 {
         // Shared memory
@@ -35,7 +34,9 @@ __global__ void prescan_kernel(const float *input,
 
         // Compute the thread dimensions
         const int col = blockIdx.x;
+        const int cols = gridDim.x;
         const int row = threadIdx.y;
+        const int rows = blockDim.y;
 
         // Load input into shared memory
         switch (prescan_function) {
@@ -67,7 +68,6 @@ __global__ void prescan_kernel(const float *input,
 }
 
 __global__ void findWeighedMedian_kernel(const float *input, const float *prescan,
-                const int rows, const int cols,
                 float *output)
 {
         // Shared memory
@@ -75,7 +75,9 @@ __global__ void findWeighedMedian_kernel(const float *input, const float *presca
 
         // Compute the thread dimensions
         const int col = blockIdx.x;
+        const int cols = gridDim.x;
         const int row = threadIdx.y;
+        const int rows = blockDim.y;
 
         // Load input into shared memory
         temp[row] = prescan[row + col*rows];
@@ -89,49 +91,48 @@ __global__ void findWeighedMedian_kernel(const float *input, const float *presca
 }
 
 __global__ void TFunctionalRadon_kernel(const float *input,
-                const int rows, const int cols,
                 float *output, const int a)
 {
         // Compute the thread dimensions
-        const int col = blockIdx.x * blockDim.x + threadIdx.x;
-        const int row = blockIdx.y * blockDim.y + threadIdx.y;
+        const int col = blockIdx.x;
+        const int cols = gridDim.x;
+        const int row = threadIdx.y;
+        const int rows = blockDim.y;
 
-        if (row < rows && col < cols) {
-                // Integrate
-                atomicAdd(&output[col + a*rows], input[row + col*rows]);
-        }
+        // Integrate
+        atomicAdd(&output[col + a*rows], input[row + col*rows]);
 }
 
 __global__ void TFunctional1_kernel(const float *input,
-                const int rows, const int cols, const float *medians,
+                const float *medians,
                 float *output, const int a)
 {
         // Compute the thread dimensions
-        const int col = blockIdx.x * blockDim.x + threadIdx.x;
-        const int row = blockIdx.y * blockDim.y + threadIdx.y;
+        const int col = blockIdx.x;
+        const int cols = gridDim.x;
+        const int row = threadIdx.y;
+        const int rows = blockDim.y;
 
-        if (col < cols) {
-                // Integrate
-                const int median = medians[col];
-                if (row < rows-median)
-                        atomicAdd(&output[col + a*rows], input[row+median + col*rows] * row);
-        }
+        // Integrate
+        const int median = medians[col];
+        if (row < rows-median)
+                atomicAdd(&output[col + a*rows], input[row+median + col*rows] * row);
 }
 
 __global__ void TFunctional2_kernel(const float *input,
-                const int rows, const int cols, const float *medians,
+                const float *medians,
                 float *output, const int a)
 {
         // Compute the thread dimensions
-        const int col = blockIdx.x * blockDim.x + threadIdx.x;
-        const int row = blockIdx.y * blockDim.y + threadIdx.y;
+        const int col = blockIdx.x;
+        const int cols = gridDim.x;
+        const int row = threadIdx.y;
+        const int rows = blockDim.y;
 
-        if (col < cols) {
-                // Integrate
-                const int median = medians[col];
-                if (row < rows-median)
-                        atomicAdd(&output[col + a*rows], input[row+median + col*rows] * row * row);
-        }
+        // Integrate
+        const int median = medians[col];
+        if (row < rows-median)
+                atomicAdd(&output[col + a*rows], input[row+median + col*rows] * row * row);
 }
 
 //
@@ -150,9 +151,9 @@ void TFunctionalRadon(const CUDAHelper::GlobalMemory<float> *input,
 
         // Launch radon kernel
         {
-                dim3 threads(blocksize, blocksize);
-                dim3 blocks(std::ceil((float)cols/blocksize), std::ceil((float)rows/blocksize));
-                TFunctionalRadon_kernel<<<blocks, threads>>>(*input, rows, cols, *output, a);
+                dim3 threads(1, rows);
+                dim3 blocks(cols, 1);
+                TFunctionalRadon_kernel<<<blocks, threads>>>(*input, *output, a);
                 CUDAHelper::checkState();
         }
 
@@ -177,7 +178,7 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input,
         {
                 dim3 threads(1, rows);
                 dim3 blocks(cols, 1);
-                prescan_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, rows, cols, *prescan, NONE);
+                prescan_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, *prescan, NONE);
                 CUDAHelper::checkState();
         }
 
@@ -186,16 +187,16 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input,
         {
                 dim3 threads(1, rows);
                 dim3 blocks(cols, 1);
-                findWeighedMedian_kernel<<<blocks, threads, rows*sizeof(float)>>>(*input, *prescan, rows, cols, *medians);
+                findWeighedMedian_kernel<<<blocks, threads, rows*sizeof(float)>>>(*input, *prescan, *medians);
                 CUDAHelper::checkState();
         }
         delete prescan;
 
         // Launch T1 kernel
         {
-                dim3 threads(blocksize, blocksize);
-                dim3 blocks(std::ceil((float)cols/blocksize), std::ceil((float)rows/blocksize));
-                TFunctional1_kernel<<<threads, blocks>>>(*input, rows, cols, *medians, *output, a);
+                dim3 threads(1, rows);
+                dim3 blocks(cols, 1);
+                TFunctional1_kernel<<<blocks, threads>>>(*input, *medians, *output, a);
                 CUDAHelper::checkState();
         }
         delete medians;
@@ -221,7 +222,7 @@ void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
         {
                 dim3 threads(1, rows);
                 dim3 blocks(cols, 1);
-                prescan_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, rows, cols, *prescan, NONE);
+                prescan_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, *prescan, NONE);
                 CUDAHelper::checkState();
         }
 
@@ -230,16 +231,16 @@ void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
         {
                 dim3 threads(1, rows);
                 dim3 blocks(cols, 1);
-                findWeighedMedian_kernel<<<blocks, threads, rows*sizeof(float)>>>(*input, *prescan, rows, cols, *medians);
+                findWeighedMedian_kernel<<<blocks, threads, rows*sizeof(float)>>>(*input, *prescan, *medians);
                 CUDAHelper::checkState();
         }
         delete prescan;
 
         // Launch T2 kernel
         {
-                dim3 threads(blocksize, blocksize);
-                dim3 blocks(std::ceil((float)cols/blocksize), std::ceil((float)rows/blocksize));
-                TFunctional2_kernel<<<threads, blocks>>>(*input, rows, cols, *medians, *output, a);
+                dim3 threads(1, rows);
+                dim3 blocks(cols, 1);
+                TFunctional2_kernel<<<blocks, threads>>>(*input, *medians, *output, a);
                 CUDAHelper::checkState();
         }
         delete medians;

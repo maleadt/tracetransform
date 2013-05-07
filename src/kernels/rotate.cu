@@ -40,31 +40,30 @@ __device__ float interpolate_kernel(
 
 __constant__ float _transform[4];
 
-__global__ void rotate_kernel(const float *_input, float *_output,
-                const int cols, const int rows)
+__global__ void rotate_kernel(const float *_input, float *_output)
 {
-        // Compute thread dimension
-        const int col = blockIdx.x * blockDim.x + threadIdx.x;
-        const int row = blockIdx.y * blockDim.y + threadIdx.y;
+        // Compute the thread dimensions
+        const int col = blockIdx.x;
+        const int cols = gridDim.x;
+        const int row = threadIdx.y;
+        const int rows = blockDim.y;
 
-        if (row < rows && col < cols) {
-                // Construct Eigen objects
-                Eigen::Map<const Eigen::MatrixXf> input(_input, rows, cols);
-                Eigen::Map<Eigen::MatrixXf> output(_output, rows, cols);
-                Eigen::Map<const Eigen::Matrix2f> transform(_transform);
+        // Construct Eigen objects
+        Eigen::Map<const Eigen::MatrixXf> input(_input, rows, cols);
+        Eigen::Map<Eigen::MatrixXf> output(_output, rows, cols);
+        Eigen::Map<const Eigen::Matrix2f> transform(_transform);
 
-                // Calculate the source location
-                Point<float>::type origin(cols / 2.0, rows / 2.0);
-                Point<float>::type p(col, row);
-                Point<float>::type q = ((p - origin) * transform) + origin;
+        // Calculate the source location
+        Point<float>::type origin(cols / 2.0, rows / 2.0);
+        Point<float>::type p(col, row);
+        Point<float>::type q = ((p - origin) * transform) + origin;
 
-                // Interpolate the source value
-                if (q.x() >= 0 && q.x() < cols - 1 && q.y() >= 0
-                                && q.y() < rows - 1)
-                        output(row, col) = interpolate_kernel(input, q);
-                else if (col < cols && row < rows)
-                        output(row, col) = 0;
-        }
+        // Interpolate the source value
+        if (q.x() >= 0 && q.x() < cols - 1 && q.y() >= 0
+                        && q.y() < rows - 1)
+                output(row, col) = interpolate_kernel(input, q);
+        else if (col < cols && row < rows)
+                output(row, col) = 0;
 }
 
 
@@ -91,9 +90,9 @@ CUDAHelper::GlobalMemory<float> *rotate(
         transform->upload(transform_data.data());
 
         // Launch
-        dim3 threads(blocksize, blocksize);
-        dim3 blocks(std::ceil((float)cols/blocksize), std::ceil((float)rows/blocksize));
-        rotate_kernel<<<blocks, threads>>>(*input, *output, rows, cols);
+        dim3 threads(1, rows);
+        dim3 blocks(cols, 1);
+        rotate_kernel<<<blocks, threads>>>(*input, *output);
         CUDAHelper::checkState();
 
         // Clean-up
