@@ -31,7 +31,7 @@ public:
                 _image = gray2mat(readpgm("res/Cam1_V1.pgm"));
 
                 // Set-up the transformer
-                _transformer = new Transformer(_image);
+                _transformer = new Transformer(_image, false);
         }
 
         virtual void TearDown()
@@ -67,7 +67,35 @@ BENCHMARK_F(SmallImageFixture, TraceRegular, 2, 3)
         _transformer->getTransform(tfunctionals, pfunctionals);
 }
 
-BENCHMARK_F(SmallImageFixture, TraceOrthonormal, 2, 3)
+
+//
+// Small orthonormal image test
+//
+
+class SmallOrthonormalImageFixture : public Hayai::Fixture
+{
+public:
+        virtual void SetUp()
+        {
+                // Read the image
+                _image = gray2mat(readpgm("res/Cam1_V1.pgm"));
+
+                // Set-up the transformer
+                _transformer = new Transformer(_image, true);
+        }
+
+        virtual void TearDown()
+        {
+                delete _transformer;
+        }
+
+        Transformer *_transformer;
+
+private:
+        Eigen::MatrixXf _image;
+};
+
+BENCHMARK_F(SmallOrthonormalImageFixture, TraceOrthonormal, 2, 3)
 {
         std::vector<TFunctionalWrapper> tfunctionals{
                 TFunctionalWrapper("T1",  TFunctional::T1)

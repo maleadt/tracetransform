@@ -157,6 +157,22 @@ int main(int argc, char **argv)
                 std::cout << desc << std::endl;
                 return 1;
         }
+
+        // Check for orthonormal P-functionals
+        unsigned int orthonormal_count = 0;
+        bool orthonormal;
+        for (size_t p = 0; p < pfunctionals.size(); p++) {
+                if (pfunctionals[p].functional == PFunctional::Hermite)
+                        orthonormal_count++;
+        }
+        if (orthonormal_count == 0)
+                orthonormal = false;
+        else if (orthonormal_count == pfunctionals.size())
+                orthonormal = true;
+        else
+                throw boost::program_options::validation_error(
+                        boost::program_options::validation_error::invalid_option_value,
+                        "Cannot mix regular and orthonormal P-functionals");
         
         // Configure logging
         if (vm.count("debug")) {
@@ -177,7 +193,7 @@ int main(int argc, char **argv)
         Eigen::MatrixXf input = gray2mat(readpgm(vm["input"].as<std::string>()));
 
         // Transform the image
-        Transformer transformer(input);
+        Transformer transformer(input, orthonormal);
         transformer.getTransform(tfunctionals, pfunctionals);
 
         clog(debug) << "Exiting" << std::endl;

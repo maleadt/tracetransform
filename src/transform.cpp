@@ -23,18 +23,19 @@
 // Module definitions
 //
 
-Transformer::Transformer(const Eigen::MatrixXf &image)
-                : _image(image)
+Transformer::Transformer(const Eigen::MatrixXf &image, bool orthonormal)
+                : _image(image), _orthonormal(orthonormal)
 {
         // Orthonormal P-functionals need a stretched image in order to ensure a
         // square sinogram
-        size_t ndiag = 360;
-        size_t nsize = (int) std::ceil(ndiag/std::sqrt(2));
-        _image_orthonormal = resize(_image, nsize, nsize);
+        if (_orthonormal) {
+                size_t ndiag = 360;
+                size_t nsize = (int) std::ceil(ndiag/std::sqrt(2));
+                _image = resize(_image, nsize, nsize);
+        }
 
         // Pad the images so we can freely rotate without losing information
         _image = pad(_image);
-        _image_orthonormal = pad(_image_orthonormal);
 }
 
 void Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
@@ -42,35 +43,13 @@ void Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctiona
 {
         std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
 
-        // Check for orthonormal P-functionals
-        unsigned int orthonormal_count = 0;
-        bool orthonormal;
-        for (size_t p = 0; p < pfunctionals.size(); p++) {
-                if (pfunctionals[p].functional == PFunctional::Hermite)
-                        orthonormal_count++;
-        }
-        if (orthonormal_count == 0)
-                orthonormal = false;
-        else if (orthonormal_count == pfunctionals.size())
-                orthonormal = true;
-        else
-                throw std::runtime_error(
-                        "Cannot mix regular and orthonormal P-functionals");
-
-        // Select an image to use
-        const Eigen::MatrixXf *image_selected;
-        if (orthonormal)
-                image_selected = &_image_orthonormal;
-        else
-                image_selected = &_image;
-
         // Process all T-functionals
         for (size_t t = 0; t < tfunctionals.size(); t++) {
                 // Calculate the trace transform sinogram
                 clog(debug) << "Calculating " << tfunctionals[t].name << " sinogram" << std::endl;
                 start = std::chrono::system_clock::now();
                 Eigen::MatrixXf sinogram = getSinogram(
-                        *image_selected,
+                        _image,
                         tfunctionals[t]
                 );
                 end = std::chrono::system_clock::now();
@@ -91,7 +70,7 @@ void Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctiona
                 writecsv(fn_trace_data.str(), sinogram);
 
                 // Orthonormal functionals require the nearest orthonormal sinogram
-                if (orthonormal) {
+                if (_orthonormal) {
                         clog(trace) << "Orthonormalizing sinogram" << std::endl;
                         size_t sinogram_center;
                         sinogram = nearest_orthonormal_sinogram(sinogram, sinogram_center);

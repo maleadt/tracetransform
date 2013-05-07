@@ -27,13 +27,14 @@
 class Transformer
 {
 public:
-        Transformer(const Eigen::MatrixXf &image);
+        Transformer(const Eigen::MatrixXf &image, bool orthonormal);
 
         void getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
                         std::vector<PFunctionalWrapper> &pfunctionals) const;
 
 private:
-        Eigen::MatrixXf _image, _image_orthonormal;
+        Eigen::MatrixXf _image;
+        bool _orthonormal;
 };
 
 #endif
