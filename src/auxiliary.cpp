@@ -11,6 +11,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cmath>
+#include <stdexcept>
 
 
 //
@@ -20,14 +21,14 @@
 Eigen::MatrixXi readpgm(std::string filename)
 {
         std::ifstream infile(filename);
+        if (!infile.good())
+                throw std::runtime_error("could not open input file");
         std::string inputLine = "";
 
         // First line: version
         getline(infile, inputLine);
-        if (inputLine.compare("P2") != 0) {
-                std::cerr << "readPGM: invalid PGM version " << inputLine << std::endl;
-                // TODO: throw exception
-        }
+        if (inputLine.compare("P2") != 0)
+                throw std::runtime_error("invalid PGM version");
 
         // Second line: comment (optional)
         if (infile.peek() == '#')
