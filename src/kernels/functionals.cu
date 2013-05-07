@@ -68,7 +68,7 @@ __global__ void prescan_kernel(const float *input,
 }
 
 __global__ void findWeighedMedian_kernel(const float *input, const float *prescan,
-                float *output)
+                int *output)
 {
         // Shared memory
         extern __shared__ float temp[];
@@ -104,7 +104,7 @@ __global__ void TFunctionalRadon_kernel(const float *input,
 }
 
 __global__ void TFunctional1_kernel(const float *input,
-                const float *medians,
+                const int *medians,
                 float *output, const int a)
 {
         // Shared memory
@@ -148,7 +148,7 @@ __global__ void TFunctional1_kernel(const float *input,
 }
 
 __global__ void TFunctional2_kernel(const float *input,
-                const float *medians,
+                const int *medians,
                 float *output, const int a)
 {
         // Compute the thread dimensions
@@ -211,7 +211,7 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input,
         }
 
         // Launch weighed median kernel
-        CUDAHelper::GlobalMemory<float> *medians = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(cols), 0);
+        CUDAHelper::GlobalMemory<int> *medians = new CUDAHelper::GlobalMemory<int>(CUDAHelper::size_1d(cols), 0);
         {
                 dim3 threads(1, rows);
                 dim3 blocks(cols, 1);
@@ -255,7 +255,7 @@ void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
         }
 
         // Launch weighed median kernel
-        CUDAHelper::GlobalMemory<float> *medians = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(cols), 0);
+        CUDAHelper::GlobalMemory<int> *medians = new CUDAHelper::GlobalMemory<int>(CUDAHelper::size_1d(cols), 0);
         {
                 dim3 threads(1, rows);
                 dim3 blocks(cols, 1);
