@@ -1,32 +1,4 @@
 #
-# Wrappers
-#
-
-abstract Functional
-
-function call(f::Functional, data::Vector)
-        return f.functional(data)
-end
-
-type SimpleFunctional <: Functional
-        functional::Function
-        name::String
-end
-
-type HermiteFunctional <: Functional
-        name::String
-        order::Uint
-        center::Uint
-end
-
-HermiteFunctional(name::String, order::Uint) = HermiteFunctional(name, order, unsigned(0))
-
-function call(f::HermiteFunctional, data::Vector)
-        return p_hermite(data, f.order, f.center)
-end
-
-
-#
 # Auxiliary
 #
 
