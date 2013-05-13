@@ -17,6 +17,8 @@ for t_i = 1:length(tfunctionals)
     
     trace = sinogram(:, :, t_i);
     csvwrite(sprintf('trace_T%d.csv', t), trace);
+    % TODO: debug flag
+    imwrite(mat2gray(trace), sprintf('trace_T%d.pgm', t));
 end
 
 % Save circus functions
