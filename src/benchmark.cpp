@@ -134,16 +134,15 @@ int main(int argc, char **argv)
         // Transform the image
         Transformer transformer(input, orthonormal);
         for (unsigned int n = 0; n < iterations; n++) {
-                transformer.getTransform(tfunctionals, pfunctionals);
+                transformer.getTransform(tfunctionals, pfunctionals, false);
                 timings[n + 1] = std::chrono::system_clock::now();
         }
 
         // Get iteration durations
         std::vector<long int> durations(iterations);
         for (unsigned int n = 0; n < iterations; n++) {
-                durations[n] = std::chrono::duration_cast
-                                < std::chrono::milliseconds
-                                > (timings[n + 1] - timings[n]).count();
+                durations[n] = std::chrono::duration_cast<std::chrono::milliseconds>
+                        (timings[n + 1] - timings[n]).count();
         }
 
         // Calculate some statistics
