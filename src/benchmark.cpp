@@ -154,7 +154,7 @@ int main(int argc, char **argv)
 
         clog(info) << "Total execution time for " << iterations
                         << " iterations: " << sum << " ms." << std::endl;
-        clog(info) << "Average execution time: " << mean << " ± " << stdev
+        clog(info) << "Average execution time: " << mean << " +/- " << stdev
                         << " ms." << std::endl;
 
         return 0;
