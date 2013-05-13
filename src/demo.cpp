@@ -13,7 +13,6 @@
 
 // Boost
 #include <boost/program_options.hpp>
-#include <boost/format.hpp>
 
 // Eigen
 #include <Eigen/Dense>
@@ -22,68 +21,6 @@
 #include "logger.hpp"
 #include "auxiliary.hpp"
 #include "transform.hpp"
-
-
-//
-// Program option parsers
-//
-
-std::istream& operator>>(std::istream& in, TFunctionalWrapper& wrapper)
-{
-        in >> wrapper.name;
-        wrapper.name = "T" + wrapper.name;
-        if (wrapper.name == "T0") {
-                wrapper.functional = TFunctional::Radon;
-        } else if (wrapper.name == "T1") {
-                wrapper.functional = TFunctional::T1;
-        } else if (wrapper.name == "T2") {
-                wrapper.functional = TFunctional::T2;
-        } else if (wrapper.name == "T3") {
-                wrapper.functional = TFunctional::T3;
-        } else if (wrapper.name == "T4") {
-                wrapper.functional = TFunctional::T4;
-        } else if (wrapper.name == "T5") {
-                wrapper.functional = TFunctional::T5;
-        } else {
-                throw boost::program_options::validation_error(
-                        boost::program_options::validation_error::invalid_option_value,
-                        "Unknown T-functional");
-        }
-        return in;
-}
-
-std::istream& operator>>(std::istream& in, PFunctionalWrapper& wrapper)
-{
-        in >> wrapper.name;
-        if (isdigit(wrapper.name[0]))
-            wrapper.name = "P" + wrapper.name;
-        if (wrapper.name == "P1") {
-                wrapper.functional = PFunctional::P1;
-        } else if (wrapper.name == "P2") {
-                wrapper.functional = PFunctional::P2;
-        } else if (wrapper.name == "P3") {
-                wrapper.functional = PFunctional::P3;
-        } else if (wrapper.name[0] == 'H') {
-                wrapper.functional = PFunctional::Hermite;
-                if (wrapper.name.size() < 2)
-                        throw boost::program_options::validation_error(
-                                boost::program_options::validation_error::invalid_option_value,
-                                "Missing order parameter for Hermite P-functional");
-                try {
-                        wrapper.arguments.order = boost::lexical_cast<unsigned int>(wrapper.name.substr(1));
-                }
-                catch(boost::bad_lexical_cast &) {
-                        throw boost::program_options::validation_error(
-                                boost::program_options::validation_error::invalid_option_value,
-                                "Unparseable order parameter for Hermite P-functional");
-                }
-        } else {
-                throw boost::program_options::validation_error(
-                        boost::program_options::validation_error::invalid_option_value,
-                        "Unknown P-functional");
-        }
-    return in;
-}
 
 
 //
@@ -196,6 +133,5 @@ int main(int argc, char **argv)
         Transformer transformer(input, orthonormal);
         transformer.getTransform(tfunctionals, pfunctionals);
 
-        clog(debug) << "Exiting" << std::endl;
         return 0;
 }

@@ -9,6 +9,9 @@
 // Standard library
 #include <cstddef>
 
+// Boost
+#include <boost/program_options.hpp>
+
 // Eigen
 #include <Eigen/Dense>
 
@@ -50,6 +53,8 @@ struct TFunctionalWrapper
         TFunctional functional;
         TFunctionalArguments arguments;
 };
+
+std::istream& operator>>(std::istream& in, TFunctionalWrapper& wrapper);
 
 
 //
