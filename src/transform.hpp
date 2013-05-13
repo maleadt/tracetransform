@@ -31,7 +31,7 @@ public:
         Transformer(const Eigen::MatrixXf &image, bool orthonormal);
 
         void getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
-                        std::vector<PFunctionalWrapper> &pfunctionals) const;
+                        std::vector<PFunctionalWrapper> &pfunctionals, bool write_data = true) const;
 
 private:
         Eigen::MatrixXf _image;

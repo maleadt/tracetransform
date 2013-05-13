@@ -26,6 +26,39 @@ extern "C" {
 // Module definitions
 //
 
+std::istream& operator>>(std::istream& in, PFunctionalWrapper& wrapper)
+{
+        in >> wrapper.name;
+        if (isdigit(wrapper.name[0]))
+            wrapper.name = "P" + wrapper.name;
+        if (wrapper.name == "P1") {
+                wrapper.functional = PFunctional::P1;
+        } else if (wrapper.name == "P2") {
+                wrapper.functional = PFunctional::P2;
+        } else if (wrapper.name == "P3") {
+                wrapper.functional = PFunctional::P3;
+        } else if (wrapper.name[0] == 'H') {
+                wrapper.functional = PFunctional::Hermite;
+                if (wrapper.name.size() < 2)
+                        throw boost::program_options::validation_error(
+                                boost::program_options::validation_error::invalid_option_value,
+                                "Missing order parameter for Hermite P-functional");
+                try {
+                        wrapper.arguments.order = boost::lexical_cast<unsigned int>(wrapper.name.substr(1));
+                }
+                catch(boost::bad_lexical_cast &) {
+                        throw boost::program_options::validation_error(
+                                boost::program_options::validation_error::invalid_option_value,
+                                "Unparseable order parameter for Hermite P-functional");
+                }
+        } else {
+                throw boost::program_options::validation_error(
+                        boost::program_options::validation_error::invalid_option_value,
+                        "Unknown P-functional");
+        }
+    return in;
+}
+
 CUDAHelper::GlobalMemory<float> *nearest_orthonormal_sinogram(
         const CUDAHelper::GlobalMemory<float>* input,
         size_t& new_center)

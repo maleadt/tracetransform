@@ -8,7 +8,6 @@
 // Standard library
 #include <cmath>
 #include <vector>
-#include <chrono>
 #include <ostream>
 #include <stdexcept>
 
@@ -42,39 +41,34 @@ Transformer::Transformer(const Eigen::MatrixXf &image, bool orthonormal)
 }
 
 void Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
-                std::vector<PFunctionalWrapper> &pfunctionals) const
+                std::vector<PFunctionalWrapper> &pfunctionals, bool write_data) const
 {
-        std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
-
         // Process all T-functionals
         for (size_t t = 0; t < tfunctionals.size(); t++) {
                 // Calculate the trace transform sinogram
                 clog(debug) << "Calculating " << tfunctionals[t].name << " sinogram" << std::endl;
-                start = std::chrono::system_clock::now();
                 CUDAHelper::GlobalMemory<float> *sinogram = getSinogram(
                         _memory,
                         tfunctionals[t]
                 );
-                end = std::chrono::system_clock::now();
-                clog(debug) << "Sinogram calculation took "
-                                << std::chrono::duration_cast<std::chrono::milliseconds> (end - start).count()
-                                << " ms." << std::endl;
 
-                // Download the image
-                Eigen::MatrixXf sinogram_data(sinogram->size(0), sinogram->size(1));
-                sinogram->download(sinogram_data.data());
+                if (write_data) {
+                        // Download the image
+                        Eigen::MatrixXf sinogram_data(sinogram->size(0), sinogram->size(1));
+                        sinogram->download(sinogram_data.data());
 
-                if (clog(debug)) {
-                        // Save the sinogram image
-                        std::stringstream fn_trace_image;
-                        fn_trace_image << "trace_" << tfunctionals[t].name << ".pgm";
-                        writepgm(fn_trace_image.str(), mat2gray(sinogram_data));
+                        // Save the sinogram trace
+                        std::stringstream fn_trace_data;
+                        fn_trace_data << "trace_" << tfunctionals[t].name << ".csv";
+                        writecsv(fn_trace_data.str(), sinogram_data);
+
+                        if (clog(debug)) {
+                                // Save the sinogram image
+                                std::stringstream fn_trace_image;
+                                fn_trace_image << "trace_" << tfunctionals[t].name << ".pgm";
+                                writepgm(fn_trace_image.str(), mat2gray(sinogram_data));
+                        }
                 }
-
-                // Save the sinogram data
-                std::stringstream fn_trace_data;
-                fn_trace_data << "trace_" << tfunctionals[t].name << ".csv";
-                writecsv(fn_trace_data.str(), sinogram_data);
 
                 // Orthonormal functionals require the nearest orthonormal sinogram
                 if (_orthonormal) {
@@ -91,6 +85,7 @@ void Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctiona
                 }
 
                 // TEMPORARY: download the image
+                Eigen::MatrixXf sinogram_data(sinogram->size(0), sinogram->size(1));
                 sinogram->download(sinogram_data.data());
                 delete sinogram;
 
@@ -109,11 +104,13 @@ void Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctiona
                         // Normalize
                         Eigen::VectorXf normalized = zscore(circus);
 
-                        // Save the circus data
-                        std::stringstream fn_trace_data;
-                        fn_trace_data << "trace_" << tfunctionals[t].name
-                                        << "-" << pfunctionals[p].name << ".csv";
-                        writecsv(fn_trace_data.str(), normalized);
+                        if (write_data) {
+                                // Save the circus trace
+                                std::stringstream fn_trace_data;
+                                fn_trace_data << "trace_" << tfunctionals[t].name
+                                                << "-" << pfunctionals[p].name << ".csv";
+                                writecsv(fn_trace_data.str(), normalized);
+                        }
                 }
         }
 }

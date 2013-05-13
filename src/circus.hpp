@@ -11,6 +11,7 @@
 
 // Boost
 #include <boost/optional.hpp>
+#include <boost/program_options.hpp>
 
 // Eigen
 #include <Eigen/Dense>
@@ -63,6 +64,8 @@ struct PFunctionalWrapper
         PFunctional functional;
         PFunctionalArguments arguments;
 };
+
+std::istream& operator>>(std::istream& in, PFunctionalWrapper& wrapper);
 
 
 //
