@@ -13,9 +13,6 @@
 #include "../logger.hpp"
 #include "../cudahelper/chrono.hpp"
 
-// Static parameters
-const int blocksize = 8;
-
 
 //
 // Kernels

@@ -15,7 +15,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 # Extra warnings
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-SET(CUDA_NVCC_FLAGS "-Xcompiler -Wall,-Wextra --gpu-architecture compute_35 --gpu-code sm_35 --ptxas-options=-v")
+SET(CUDA_NVCC_FLAGS "-Xcompiler -Wall,-Wextra -arch sm_35 --ptxas-options=-v")
 
 # Test execution string
 SEPARATE_ARGUMENTS(TEST_EXECUTION UNIX_COMMAND "-T 1 -P H1 ../res/Cam1_V1.pgm")
@@ -62,10 +62,6 @@ IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
 ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
 FIND_PACKAGE(CUDA)
 INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
-
-# CUDPP
-FIND_PACKAGE(CUDPP)
-INCLUDE_DIRECTORIES(${CUDPP_INCLUDE_DIRS})
 
 
 #
