@@ -129,10 +129,13 @@ int main(int argc, char **argv)
         unsigned int iterations = vm["iterations"].as<unsigned int>();
         std::vector<std::chrono::time_point<std::chrono::high_resolution_clock>>
                 timings(iterations + 1);
-        timings[0] = std::chrono::system_clock::now();
+
+        // Warm-up
+        Transformer transformer(input, orthonormal);
+        transformer.getTransform(tfunctionals, pfunctionals, false);
 
         // Transform the image
-        Transformer transformer(input, orthonormal);
+        timings[0] = std::chrono::system_clock::now();
         for (unsigned int n = 0; n < iterations; n++) {
                 transformer.getTransform(tfunctionals, pfunctionals, false);
                 timings[n + 1] = std::chrono::system_clock::now();
@@ -143,6 +146,7 @@ int main(int argc, char **argv)
         for (unsigned int n = 0; n < iterations; n++) {
                 durations[n] = std::chrono::duration_cast<std::chrono::milliseconds>
                         (timings[n + 1] - timings[n]).count();
+                clog(debug) << "Iteration " << n << ": " << durations[n] << " ms." << std::endl;
         }
 
         // Calculate some statistics
