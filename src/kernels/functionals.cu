@@ -182,6 +182,27 @@ __global__ void TFunctional2_kernel(const float *input,
                 output[col + a*rows] = temp[rows + row];
 }
 
+__global__ void TFunctionalP1_kernel(const float *input,
+                float *output)
+{
+        // Compute the thread dimensions
+        const int col = blockIdx.x;
+        const int cols = gridDim.x;
+        const int _row = threadIdx.y;
+        const int rows = blockDim.y;
+
+        if (_row == 0) {
+                float sum = 0;
+                float previous = input[col*rows];
+                for (int row = 1; row < rows; row++) {
+                        float current = input[row + col*rows];
+                        sum += fabs(previous - current);
+                        previous = current;
+                }
+                output[col] = sum;
+        }
+}
+
 //
 // T functionals
 //
@@ -321,27 +342,46 @@ void TFunctional5(const CUDAHelper::GlobalMemory<float> *input,
 // P-functionals
 //
 
-CUDAHelper::GlobalMemory<float> *PFunctional1(
-                const CUDAHelper::GlobalMemory<float> *input)
+void PFunctional1(const CUDAHelper::GlobalMemory<float> *input,
+                CUDAHelper::GlobalMemory<float> *output)
+{
+        const int rows = input->size(0);
+        const int cols = input->size(1);
+
+        // Set-up
+        CUDAHelper::Chrono chrono;
+        chrono.start();
+
+        // Launch P1 kernel
+        {
+                dim3 threads(1, rows);
+                dim3 blocks(cols, 1);
+                TFunctionalP1_kernel<<<blocks, threads>>>(*input, *output);
+                CUDAHelper::checkState();
+        }
+
+        // Clean-up
+        chrono.stop();
+        clog(trace) << "P1 kernel took " << chrono.elapsed() << " ms."
+                        << std::endl;
+
+}
+
+void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
+                CUDAHelper::GlobalMemory<float> *output)
 {
 
 }
 
-CUDAHelper::GlobalMemory<float> *PFunctional2(
-                const CUDAHelper::GlobalMemory<float> *input)
+void PFunctional3(const CUDAHelper::GlobalMemory<float> *input,
+                CUDAHelper::GlobalMemory<float> *output)
 {
 
 }
 
-CUDAHelper::GlobalMemory<float> *PFunctional3(
-                const CUDAHelper::GlobalMemory<float> *input)
-{
-
-}
-
-CUDAHelper::GlobalMemory<float> *PFunctionalHermite(
-                const CUDAHelper::GlobalMemory<float> *input,
-                unsigned int order, int center)
+void PFunctionalHermite(const CUDAHelper::GlobalMemory<float> *input,
+                CUDAHelper::GlobalMemory<float> *output, unsigned int order,
+                int center)
 {
 
 }

@@ -20,6 +20,7 @@
 extern "C" {
         #include "functionals.h"
 }
+#include "kernels/functionals.hpp"
 
 
 //
@@ -109,38 +110,27 @@ CUDAHelper::GlobalMemory<float> *getCircusFunction(
         const CUDAHelper::GlobalMemory<float> *input,
         const PFunctionalWrapper &pfunctional)
 {
-        // TEMPORARY: download input
-        Eigen::MatrixXf input_data(input->size(0), input->size(1));
-        input->download(input_data.data());
+        const int rows = input->size(0);
+        const int cols = input->size(1);
 
         // Allocate the output matrix
-        Eigen::VectorXf output(input_data.cols());
+        CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(cols));
 
         // Trace all columns
-        for (int p = 0; p < input_data.cols(); p++) {
-                float *data = (float*) (input_data.data() + p*input_data.rows());
-                size_t length = input_data.rows();
-                float result;
-                switch (pfunctional.functional) {
-                        case PFunctional::P1:
-                                result = PFunctional1(data, length);
-                                break;
-                        case PFunctional::P2:
-                                result = PFunctional2(data, length);
-                                break;
-                        case PFunctional::P3:
-                                result = PFunctional3(data, length);
-                                break;
-                        case PFunctional::Hermite:
-                                result = PFunctionalHermite(data, length, *pfunctional.arguments.order, *pfunctional.arguments.center);
-                                break;
-                }
-                output(p) = result;
+        switch (pfunctional.functional) {
+                case PFunctional::P1:
+                        PFunctional1(input, output);
+                        break;
+                case PFunctional::P2:
+                        PFunctional2(input, output);
+                        break;
+                case PFunctional::P3:
+                        PFunctional3(input, output);
+                        break;
+                case PFunctional::Hermite:
+                        PFunctionalHermite(input, output, *pfunctional.arguments.order, *pfunctional.arguments.center);
+                        break;
         }
 
-        // TEMPORARY: upload input
-        CUDAHelper::GlobalMemory<float> *output_mem = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(output.size()));
-        output_mem->upload(output.data());
-
-        return output_mem;
+        return output;
 }

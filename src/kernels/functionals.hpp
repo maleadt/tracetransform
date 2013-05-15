@@ -30,17 +30,14 @@ extern void TFunctional5(const CUDAHelper::GlobalMemory<float> *input,
                 CUDAHelper::GlobalMemory<float> *output, int a);
 
 // P-functionals
-extern CUDAHelper::GlobalMemory<float> *PFunctional1(
-                const CUDAHelper::GlobalMemory<float> *input,
-                int a);
-extern CUDAHelper::GlobalMemory<float> *PFunctional2(
-                const CUDAHelper::GlobalMemory<float> *input,
-                int a);
-extern CUDAHelper::GlobalMemory<float> *PFunctional3(
-                const CUDAHelper::GlobalMemory<float> *input,
-                int a);
-extern CUDAHelper::GlobalMemory<float> *PFunctionalHermite(
-                const CUDAHelper::GlobalMemory<float> *input,
-                int a, unsigned int order, int center);
+extern void PFunctional1(const CUDAHelper::GlobalMemory<float> *input,
+                CUDAHelper::GlobalMemory<float> *output);
+extern void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
+                CUDAHelper::GlobalMemory<float> *output);
+extern void PFunctional3(const CUDAHelper::GlobalMemory<float> *input,
+                CUDAHelper::GlobalMemory<float> *output);
+extern void PFunctionalHermite(const CUDAHelper::GlobalMemory<float> *input,
+                CUDAHelper::GlobalMemory<float> *output, unsigned int order,
+                int center);
 
 #endif
