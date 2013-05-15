@@ -60,8 +60,8 @@ std::istream& operator>>(std::istream& in, PFunctionalWrapper& wrapper)
 }
 
 CUDAHelper::GlobalMemory<float> *nearest_orthonormal_sinogram(
-        const CUDAHelper::GlobalMemory<float>* input,
-        size_t& new_center)
+        const CUDAHelper::GlobalMemory<float> *input,
+        size_t &new_center)
 {
         // TEMPORARY: download input
         Eigen::MatrixXf input_data(input->size(0), input->size(1));
@@ -105,17 +105,21 @@ CUDAHelper::GlobalMemory<float> *nearest_orthonormal_sinogram(
         return nos_mem;
 }
 
-Eigen::VectorXf getCircusFunction(
-        const Eigen::MatrixXf &input,
+CUDAHelper::GlobalMemory<float> *getCircusFunction(
+        const CUDAHelper::GlobalMemory<float> *input,
         const PFunctionalWrapper &pfunctional)
 {
+        // TEMPORARY: download input
+        Eigen::MatrixXf input_data(input->size(0), input->size(1));
+        input->download(input_data.data());
+
         // Allocate the output matrix
-        Eigen::VectorXf output(input.cols());
+        Eigen::VectorXf output(input_data.cols());
 
         // Trace all columns
-        for (int p = 0; p < input.cols(); p++) {
-                float *data = (float*) (input.data() + p*input.rows());
-                size_t length = input.rows();
+        for (int p = 0; p < input_data.cols(); p++) {
+                float *data = (float*) (input_data.data() + p*input_data.rows());
+                size_t length = input_data.rows();
                 float result;
                 switch (pfunctional.functional) {
                         case PFunctional::P1:
@@ -134,5 +138,9 @@ Eigen::VectorXf getCircusFunction(
                 output(p) = result;
         }
 
-        return output;
+        // TEMPORARY: upload input
+        CUDAHelper::GlobalMemory<float> *output_mem = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(output.size()));
+        output_mem->upload(output.data());
+
+        return output_mem;
 }

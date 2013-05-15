@@ -84,11 +84,6 @@ void Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctiona
                         }
                 }
 
-                // TEMPORARY: download the image
-                Eigen::MatrixXf sinogram_data(sinogram->size(0), sinogram->size(1));
-                sinogram->download(sinogram_data.data());
-                delete sinogram;
-
                 // Process all P-functionals
                 for (size_t p = 0; p < pfunctionals.size(); p++) {
                         // Calculate the circus function
@@ -96,13 +91,18 @@ void Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctiona
                                         << " circus function for "
                                         << tfunctionals[t].name
                                         << " sinogram" << std::endl;
-                        Eigen::VectorXf circus = getCircusFunction(
-                                sinogram_data,
+                        CUDAHelper::GlobalMemory<float> *circus = getCircusFunction(
+                                sinogram,
                                 pfunctionals[p]
                         );
 
+                        // TEMPORARY: download the image
+                        Eigen::VectorXf circus_data(circus->size(0));
+                        circus->download(circus_data.data());
+                        delete circus;
+
                         // Normalize
-                        Eigen::VectorXf normalized = zscore(circus);
+                        Eigen::VectorXf normalized = zscore(circus_data);
 
                         if (write_data) {
                                 // Save the circus trace
@@ -112,5 +112,8 @@ void Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctiona
                                 writecsv(fn_trace_data.str(), normalized);
                         }
                 }
+
+                // Clean-up
+                delete sinogram;
         }
 }

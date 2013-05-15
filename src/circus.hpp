@@ -73,11 +73,11 @@ std::istream& operator>>(std::istream& in, PFunctionalWrapper& wrapper);
 //
 
 CUDAHelper::GlobalMemory<float> *nearest_orthonormal_sinogram(
-        const CUDAHelper::GlobalMemory<float>* input,
-        size_t& new_center);
+        const CUDAHelper::GlobalMemory<float> *input,
+        size_t &new_center);
 
-Eigen::VectorXf getCircusFunction(
-        const Eigen::MatrixXf &input,
+CUDAHelper::GlobalMemory<float> *getCircusFunction(
+        const CUDAHelper::GlobalMemory<float> *input,
         const PFunctionalWrapper &pfunctional);
 
 #endif
