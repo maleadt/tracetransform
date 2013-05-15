@@ -41,8 +41,8 @@ enum prescan_function_t {
         SQRT
 };
 
-__global__ void prescan_kernel(const float *input,
-                float *output, const prescan_function_t prescan_function)
+__global__ void prescan_kernel(const float *input, float *output,
+                const prescan_function_t prescan_function)
 {
         // Shared memory
         extern __shared__ float temp[];
@@ -72,8 +72,8 @@ __global__ void prescan_kernel(const float *input,
         output[row + col*rows] = temp[rows + row];
 }
 
-__global__ void findWeighedMedian_kernel(const float *input, const float *prescan,
-                int *output)
+__global__ void findWeighedMedian_kernel(const float *input,
+                const float *prescan, int *output)
 {
         // Shared memory
         extern __shared__ float temp[];
@@ -119,8 +119,7 @@ __global__ void TFunctionalRadon_kernel(const float *input,
                 output[col + a*rows] = temp[rows + row];
 }
 
-__global__ void TFunctional1_kernel(const float *input,
-                const int *medians,
+__global__ void TFunctional1_kernel(const float *input, const int *medians,
                 float *output, const int a)
 {
         // Shared memory
@@ -151,8 +150,7 @@ __global__ void TFunctional1_kernel(const float *input,
                 output[col + a*rows] = temp[rows + row];
 }
 
-__global__ void TFunctional2_kernel(const float *input,
-                const int *medians,
+__global__ void TFunctional2_kernel(const float *input, const int *medians,
                 float *output, const int a)
 {
         // Shared memory
@@ -183,7 +181,7 @@ __global__ void TFunctional2_kernel(const float *input,
                 output[col + a*rows] = temp[rows + row];
 }
 
-__global__ void TFunctionalP1_kernel(const float *input,
+__global__ void PFunctional1_kernel(const float *input,
                 float *output)
 {
         // Shared memory
@@ -208,6 +206,17 @@ __global__ void TFunctionalP1_kernel(const float *input,
         // Write back
         if (row == rows-1)
                 output[col] = temp[rows + row];
+}
+
+__global__ void PFunctional2_kernel(const float *input, const int *medians,
+                float *output, int rows)
+{
+        // Compute the thread dimensions
+        const int col = blockIdx.x;
+        const int cols = gridDim.x;
+
+        // This is almost useless, isn't it
+        output[col] = input[medians[col] + col*rows];
 }
 
 //
@@ -363,7 +372,7 @@ void PFunctional1(const CUDAHelper::GlobalMemory<float> *input,
         {
                 dim3 threads(1, rows);
                 dim3 blocks(cols, 1);
-                TFunctionalP1_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, *output);
+                PFunctional1_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, *output);
                 CUDAHelper::checkState();
         }
 
@@ -377,6 +386,45 @@ void PFunctional1(const CUDAHelper::GlobalMemory<float> *input,
 void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
                 CUDAHelper::GlobalMemory<float> *output)
 {
+        const int rows = input->size(0);
+        const int cols = input->size(1);
+
+        // Set-up
+        CUDAHelper::Chrono chrono;
+        chrono.start();
+
+        // Launch prefix sum kernel
+        CUDAHelper::GlobalMemory<float> *prescan = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
+        {
+                dim3 threads(1, rows);
+                dim3 blocks(cols, 1);
+                prescan_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, *prescan, NONE);
+                CUDAHelper::checkState();
+        }
+
+        // Launch weighed median kernel
+        CUDAHelper::GlobalMemory<int> *medians = new CUDAHelper::GlobalMemory<int>(CUDAHelper::size_1d(cols), 0);
+        {
+                dim3 threads(1, rows);
+                dim3 blocks(cols, 1);
+                findWeighedMedian_kernel<<<blocks, threads, rows*sizeof(float)>>>(*input, *prescan, *medians);
+                CUDAHelper::checkState();
+        }
+        delete prescan;
+
+        // Launch P2 kernel
+        {
+                dim3 threads(1, 1);
+                dim3 blocks(cols, 1);
+                PFunctional2_kernel<<<blocks, threads>>>(*input, *medians, *output, rows);
+                CUDAHelper::checkState();
+        }
+        delete medians;
+
+        // Clean-up
+        chrono.stop();
+        clog(trace) << "P2 kernel took " << chrono.elapsed() << " ms."
+                        << std::endl;
 
 }
 
