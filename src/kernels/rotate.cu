@@ -68,8 +68,8 @@ __global__ void rotate_kernel(const float *_input, float *_output)
 // Wrappers
 //
 
-CUDAHelper::GlobalMemory<float> *rotate(
-                const CUDAHelper::GlobalMemory<float> *input, float angle)
+void rotate(const CUDAHelper::GlobalMemory<float> *input,
+                CUDAHelper::GlobalMemory<float> *output, float angle)
 {
         const int rows = input->size(0);
         const int cols = input->size(1);
@@ -77,7 +77,6 @@ CUDAHelper::GlobalMemory<float> *rotate(
         // Set-up
         CUDAHelper::Chrono chrono;
         chrono.start();
-        CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(input->sizes());
 
         // Calculate transform matrix
         Eigen::Matrix2f transform_data;
@@ -95,5 +94,4 @@ CUDAHelper::GlobalMemory<float> *rotate(
         // Clean-up
         chrono.stop();
         clog(trace) << "Rotation kernel took " << chrono.elapsed() << " ms." << std::endl;
-        return output;
 }

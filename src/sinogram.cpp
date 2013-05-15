@@ -62,11 +62,13 @@ CUDAHelper::GlobalMemory<float> *getSinogram(
         int p_steps = cols;
         CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(p_steps, a_steps), 0);
 
+        // Allocate intermediary matrix for rotated image
+        CUDAHelper::GlobalMemory<float> *input_rotated = new CUDAHelper::GlobalMemory<float>(input->sizes());
+
         // Process all angles
         for (int a = 0; a < a_steps; a++) {
                 // Rotate the image
-                CUDAHelper::GlobalMemory<float> *input_rotated = rotate(
-                                input, -deg2rad(a));
+                rotate(input, input_rotated, -deg2rad(a));
 
                 // Process all projection bands
                 switch (tfunctional.functional) {
@@ -89,8 +91,8 @@ CUDAHelper::GlobalMemory<float> *getSinogram(
                                 TFunctional5(input_rotated, output, a);
                                 break;
                 }
-                delete input_rotated;
         }
 
+        delete input_rotated;
         return output;
 }
