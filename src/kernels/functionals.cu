@@ -58,6 +58,7 @@ __global__ void prescan_kernel(const float *input,
                 case SQRT:
                         temp[row] = sqrt(input[row + col*rows]);
                         break;
+                case NONE:
                 default:
                         temp[row] = input[row + col*rows];
                         break;
@@ -107,7 +108,7 @@ __global__ void TFunctionalRadon_kernel(const float *input,
         const int rows = blockDim.y;
 
         // Fetch
-        temp[row] = input[row + col*rows] * row;
+        temp[row] = input[row + col*rows];
         __syncthreads();
 
         // Scan
@@ -185,22 +186,28 @@ __global__ void TFunctional2_kernel(const float *input,
 __global__ void TFunctionalP1_kernel(const float *input,
                 float *output)
 {
+        // Shared memory
+        extern __shared__ float temp[];
+
         // Compute the thread dimensions
         const int col = blockIdx.x;
         const int cols = gridDim.x;
-        const int _row = threadIdx.y;
+        const int row = threadIdx.y;
         const int rows = blockDim.y;
 
-        if (_row == 0) {
-                float sum = 0;
-                float previous = input[col*rows];
-                for (int row = 1; row < rows; row++) {
-                        float current = input[row + col*rows];
-                        sum += fabs(previous - current);
-                        previous = current;
-                }
-                output[col] = sum;
-        }
+        // Fetch
+        if (row == 0)
+                temp[row] = 0;
+        else
+                temp[row] = fabs(input[row + col*rows] - input[row + col*rows - 1]);
+        __syncthreads();
+
+        // Scan
+        scan_array(temp, row, rows);
+
+        // Write back
+        if (row == rows-1)
+                output[col] = temp[rows + row];
 }
 
 //
@@ -356,7 +363,7 @@ void PFunctional1(const CUDAHelper::GlobalMemory<float> *input,
         {
                 dim3 threads(1, rows);
                 dim3 blocks(cols, 1);
-                TFunctionalP1_kernel<<<blocks, threads>>>(*input, *output);
+                TFunctionalP1_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, *output);
                 CUDAHelper::checkState();
         }
 
