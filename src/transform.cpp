@@ -14,6 +14,7 @@
 // Local
 #include "logger.hpp"
 #include "auxiliary.hpp"
+#include "kernels/circus.hpp"
 
 
 //

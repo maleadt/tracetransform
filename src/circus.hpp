@@ -72,10 +72,6 @@ std::istream& operator>>(std::istream& in, PFunctionalWrapper& wrapper);
 // Module definitions
 //
 
-CUDAHelper::GlobalMemory<float> *nearest_orthonormal_sinogram(
-        const CUDAHelper::GlobalMemory<float> *input,
-        size_t &new_center);
-
 CUDAHelper::GlobalMemory<float> *getCircusFunction(
         const CUDAHelper::GlobalMemory<float> *input,
         const PFunctionalWrapper &pfunctional);

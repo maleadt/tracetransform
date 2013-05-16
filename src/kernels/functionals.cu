@@ -18,22 +18,44 @@
 // Kernels
 //
 
-__device__ void scan_array(float* temp, int row, int rows)
+enum scan_operation_t {
+        SUM = 0,
+        MIN,
+        MAX
+};
+
+// TODO: replace with faster tree-based algorithm
+//       http://stackoverflow.com/questions/11385475/scan-array-cuda
+__device__ void scan_array(float* temp, int index, int length, scan_operation_t operation)
 {
         int pout = 0, pin = 1;
-        for (int offset = 1; offset < rows; offset *= 2) {
+        for (int offset = 1; offset < length; offset *= 2) {
                 // Swap double buffer indices
                 pout = 1 - pout;
                 pin = 1 - pin;
-                if (row >= offset)
-                        temp[pout * rows + row] = temp[pin * rows + row]
-                                        + temp[pin * rows + row - offset];
-                else
-                        temp[pout * rows + row] = temp[pin * rows + row];
+                if (index >= offset) {
+                        switch (operation) {
+                                case SUM:
+                                        temp[pout * length + index] = temp[pin * length + index]
+                                                        + temp[pin * length + index - offset];
+                                        break;
+                                case MIN:
+                                        temp[pout * length + index] = fmin(temp[pin * length + index]
+                                                        , temp[pin * length + index - offset]);
+                                        break;
+                                case MAX:
+                                        temp[pout * length + index] = fmax(temp[pin * length + index]
+                                                        , temp[pin * length + index - offset]);
+                                        break;
+
+                        }
+                } else {
+                        temp[pout * length + index] = temp[pin * length + index];
+                }
                 __syncthreads();
 
         }
-        temp[pin * rows + row] = temp[pout * rows + row];
+        temp[pin * length + index] = temp[pout * length + index];
 }
 
 enum prescan_function_t {
@@ -66,7 +88,7 @@ __global__ void prescan_kernel(const float *input, float *output,
         __syncthreads();
 
         // Scan
-        scan_array(temp, row, rows);
+        scan_array(temp, row, rows, SUM);
 
         // Write back
         output[row + col*rows] = temp[rows + row];
@@ -112,7 +134,7 @@ __global__ void TFunctionalRadon_kernel(const float *input,
         __syncthreads();
 
         // Scan
-        scan_array(temp, row, rows);
+        scan_array(temp, row, rows, SUM);
 
         // Write back
         if (row == rows-1)
@@ -143,7 +165,7 @@ __global__ void TFunctional1_kernel(const float *input, const int *medians,
         __syncthreads();
 
         // Scan
-        scan_array(temp, row, rows);
+        scan_array(temp, row, rows, SUM);
 
         // Write back
         if (row == rows-1)
@@ -174,7 +196,7 @@ __global__ void TFunctional2_kernel(const float *input, const int *medians,
         __syncthreads();
 
         // Scan
-        scan_array(temp, row, rows);
+        scan_array(temp, row, rows, SUM);
 
         // Write back
         if (row == rows-1)
@@ -201,7 +223,7 @@ __global__ void PFunctional1_kernel(const float *input,
         __syncthreads();
 
         // Scan
-        scan_array(temp, row, rows);
+        scan_array(temp, row, rows, SUM);
 
         // Write back
         if (row == rows-1)
