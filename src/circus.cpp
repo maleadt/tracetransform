@@ -80,8 +80,7 @@ Eigen::MatrixXf nearest_orthonormal_sinogram(
         assert(sgn(min) != sgn(max));
         int padding = (int) (std::abs(max) + std::abs(min));
         new_center = sinogram_center + max;
-        // TODO: zeros?
-        Eigen::MatrixXf aligned(input.rows() + padding, input.cols());
+        Eigen::MatrixXf aligned = Eigen::MatrixXf::Zero(input.rows() + padding, input.cols());
         for (int col = 0; col < input.cols(); col++) {
                 for (int row = 0; row < input.rows(); row++) {
                         aligned(max+row-offset[col], col) = input(row, col);
@@ -91,8 +90,7 @@ Eigen::MatrixXf nearest_orthonormal_sinogram(
         // Compute the nearest orthonormal sinogram
         Eigen::JacobiSVD<Eigen::MatrixXf, Eigen::ColPivHouseholderQRPreconditioner> svd(
                 aligned, Eigen::ComputeFullU | Eigen::ComputeFullV);
-        Eigen::MatrixXf diagonal = Eigen::MatrixXf::Identity(aligned.rows(), aligned.cols());
-        Eigen::MatrixXf nos = svd.matrixU() * diagonal * svd.matrixV().transpose();
+        Eigen::MatrixXf nos = svd.matrixU().block(0, 0, aligned.rows(), aligned.cols()) * svd.matrixV().transpose();
 
         return nos;
 }
