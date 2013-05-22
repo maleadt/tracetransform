@@ -98,10 +98,6 @@ TARGET_LINK_LIBRARIES(transform ${COMMON_LIBRARIES} sinogram circus)
 # Executables
 #
 
-ADD_EXECUTABLE(test_svd src/test_svd.cpp)
-TARGET_LINK_LIBRARIES(test_svd ${COMMON_LIBRARIES} transform ${CULA_LIBRARIES} ${Boost_LIBRARIES})
-TARGET_LINK_LIBRARIES(test_svd debug ${BACKWARD})
-
 ADD_EXECUTABLE(demo src/demo.cpp)
 TARGET_LINK_LIBRARIES(demo ${COMMON_LIBRARIES} transform ${Boost_LIBRARIES})
 TARGET_LINK_LIBRARIES(demo debug ${BACKWARD})
