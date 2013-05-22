@@ -27,13 +27,11 @@
 std::istream& operator>>(std::istream& in, PFunctionalWrapper& wrapper)
 {
         in >> wrapper.name;
-        if (isdigit(wrapper.name[0]))
-            wrapper.name = "P" + wrapper.name;
-        if (wrapper.name == "P1") {
+        if (wrapper.name == "1") {
                 wrapper.functional = PFunctional::P1;
-        } else if (wrapper.name == "P2") {
+        } else if (wrapper.name == "2") {
                 wrapper.functional = PFunctional::P2;
-        } else if (wrapper.name == "P3") {
+        } else if (wrapper.name == "3") {
                 wrapper.functional = PFunctional::P3;
         } else if (wrapper.name[0] == 'H') {
                 wrapper.functional = PFunctional::Hermite;
