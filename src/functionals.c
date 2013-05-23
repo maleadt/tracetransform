@@ -212,18 +212,18 @@ float PFunctional3(const float* data, const size_t length)
 float PFunctionalHermite(const float* data, const size_t length, unsigned int order, size_t center)
 {
         // Discretize the [-10, 10] domain to fit the column iterator
-        float z = -10;
         float stepsize_lower = 10.0 / center;
         float stepsize_upper = 10.0 / (length - 1 - center);
 
         // Calculate the integral
         float integral = 0;
+        float z;
         for (size_t p = 0; p < length; p++) {
-                integral += data[p] * hermite_function(order, z);
-                if (z < 0)
-                        z += stepsize_lower;
+                if (p < center)
+                        z = p * stepsize_lower - 10;
                 else
-                        z += stepsize_upper;
+                        z = (p-center) * stepsize_upper;
+                integral += data[p] * hermite_function(order, z);
         }
         return integral;
 }
