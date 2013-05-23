@@ -241,6 +241,68 @@ __global__ void PFunctional2_kernel(const float *input, const int *medians,
         output[col] = input[medians[col] + col*rows];
 }
 
+__device__ float hermite_polynomial(unsigned int order, float x) {
+        switch (order) {
+                case 0:
+                        return 1.0;
+
+                case 1:
+                        return 2.0*x;
+
+                default:
+                        return 2.0*x*hermite_polynomial(order-1, x)
+                                -2.0*(order-1)*hermite_polynomial(order-2, x);
+        }
+}
+
+__device__ unsigned int factorial(unsigned int n)
+{
+        return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
+}
+
+__device__ float hermite_function(unsigned int order, float x) {
+        return hermite_polynomial(order, x) / (
+                        sqrt(pow(2.0, (double) order) * factorial(order) * sqrt(M_PI))
+                        * exp(x*x/2)
+                );
+}
+
+__global__ void PFunctionalHermite_kernel(const float *input,
+                float *output, unsigned int order, int center)
+{
+        // Shared memory
+        extern __shared__ float temp[];
+
+        // Compute the thread dimensions
+        const int col = blockIdx.x;
+        const int cols = gridDim.x;
+        const int row = threadIdx.y;
+        const int rows = blockDim.y;
+
+        // Discretize the [-10, 10] domain to fit the column iterator
+        float stepsize_lower = 10.0 / center;
+        float stepsize_upper = 10.0 / (rows - 1 - center);
+
+        // Calculate z
+        // TODO: debug with test_svd
+        float z;
+        if ((row-1) < center)
+                z = row * stepsize_lower - 10;
+        else
+                z = (row-center) * stepsize_upper;
+
+        // Fetch
+        temp[row] = input[row + col*rows] * hermite_function(order, z);
+        __syncthreads();
+
+        // Scan
+        scan_array(temp, row, rows, SUM);
+
+        // Write back
+        if (row == rows-1)
+                output[col] = temp[rows + row];
+}
+
 //
 // T functionals
 //
@@ -460,5 +522,24 @@ void PFunctionalHermite(const CUDAHelper::GlobalMemory<float> *input,
                 CUDAHelper::GlobalMemory<float> *output, unsigned int order,
                 int center)
 {
+        const int rows = input->size(0);
+        const int cols = input->size(1);
+
+        // Set-up
+        CUDAHelper::Chrono chrono;
+        chrono.start();
+
+        // Launch P1 kernel
+        {
+                dim3 threads(1, rows);
+                dim3 blocks(cols, 1);
+                PFunctionalHermite_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, *output, order, center);
+                CUDAHelper::checkState();
+        }
+
+        // Clean-up
+        chrono.stop();
+        clog(trace) << "Hermite kernel took " << chrono.elapsed() << " ms."
+                        << std::endl;
 
 }
