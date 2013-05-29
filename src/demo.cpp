@@ -10,6 +10,7 @@
 #include <sstream>
 #include <vector>
 #include <cmath>
+#include <chrono>
 
 // Boost
 #include <boost/program_options.hpp>
@@ -52,10 +53,6 @@ int main(int argc, char **argv)
                         "display some more details")
                 ("debug,d",
                         "display even more details")
-                ("input,i",
-                        boost::program_options::value<std::string>()
-                        ->required(),
-                        "image to process")
                 ("t-functional,T",
                         boost::program_options::value<std::vector<TFunctionalWrapper>>(&tfunctionals)
                         ->required(),
@@ -63,6 +60,17 @@ int main(int argc, char **argv)
                 ("p-functional,P",
                         boost::program_options::value<std::vector<PFunctionalWrapper>>(&pfunctionals),
                         "P-functionals")
+                ("mode,i",
+                        boost::program_options::value<std::string>()
+                        ->required(),
+                        "execution mode")
+                ("iterations,n",
+                        boost::program_options::value<unsigned int>(),
+                        "amount of iterations to run")
+                ("input,i",
+                        boost::program_options::value<std::string>()
+                        ->required(),
+                        "image to process")
         ;
 
         // Declare positional options
@@ -169,9 +177,56 @@ int main(int argc, char **argv)
         // Read the image
         Eigen::MatrixXf input = gray2mat(readpgm(vm["input"].as<std::string>()));
 
-        // Transform the image
-        Transformer transformer(input, orthonormal);
-        transformer.getTransform(tfunctionals, pfunctionals);
+        if (vm["mode"].as<std::string>() == "calculate") {
+                Transformer transformer(input, orthonormal);
+                transformer.getTransform(tfunctionals, pfunctionals, true);
+        }
+
+        else if (vm["mode"].as<std::string>() == "benchmark") {
+                // Allocate array for time measurements
+                unsigned int iterations = vm["iterations"].as<unsigned int>();
+                std::vector<std::chrono::time_point<std::chrono::high_resolution_clock>>
+                        timings(iterations + 1);
+
+                // Warm-up
+                Transformer transformer(input, orthonormal);
+                transformer.getTransform(tfunctionals, pfunctionals, false);
+
+                // Transform the image
+                timings[0] = std::chrono::high_resolution_clock::now();
+                std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(timings[0].time_since_epoch()).count() << std::endl;
+                for (unsigned int n = 0; n < iterations; n++) {
+                        transformer.getTransform(tfunctionals, pfunctionals, false);
+                        timings[n + 1] = std::chrono::high_resolution_clock::now();
+                        std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(timings[n+1].time_since_epoch()).count() << std::endl;
+                }
+
+                // Get iteration durations
+                std::vector<long int> durations(iterations);
+                for (unsigned int n = 0; n < iterations; n++) {
+                        durations[n] = std::chrono::duration_cast<std::chrono::milliseconds>
+                                (timings[n + 1] - timings[n]).count();
+                        clog(debug) << "Iteration " << n << ": " << durations[n] << " ms." << std::endl;
+                }
+
+                // Calculate some statistics
+                double sum = std::accumulate(durations.begin(), durations.end(), 0.0);
+                double mean = sum / durations.size();
+                double sq_sum = std::inner_product(durations.begin(), durations.end(),
+                                durations.begin(), 0.0);
+                double stdev = std::sqrt(sq_sum / durations.size() - mean * mean);
+
+                clog(info) << "Total execution time for " << iterations
+                                << " iterations: " << sum << " ms." << std::endl;
+                clog(info) << "Average execution time: " << mean << " +/- " << stdev
+                                << " ms." << std::endl;
+        }
+
+        else {
+                throw boost::program_options::validation_error(
+                                boost::program_options::validation_error::invalid_option_value,
+                                "Invalid execution mode");
+        }
 
         return 0;
 }
