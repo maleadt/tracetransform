@@ -10,10 +10,10 @@
 #include <sstream>
 #include <vector>
 #include <cmath>
+#include <chrono>
 
 // Boost
 #include <boost/program_options.hpp>
-#include <boost/format.hpp>
 
 // Eigen
 #include <Eigen/Dense>
@@ -21,85 +21,7 @@
 // Local
 #include "logger.hpp"
 #include "auxiliary.hpp"
-extern "C" {
-        #include "functionals.h"
-}
-#include "wrapper.hpp"
 #include "transform.hpp"
-
-
-//
-// Program option parsers
-//
-
-std::istream& operator>>(std::istream& in, TFunctional& tfunctional)
-{
-        std::string token;
-        in >> token;
-        if (token == "0") {
-                tfunctional = TFunctional("Radon",
-                                new SimpleFunctionalWrapper(TFunctionalRadon));
-        } else if (token == "1") {
-                tfunctional = TFunctional("T1",
-                                new SimpleFunctionalWrapper(TFunctional1));
-        } else if (token == "2") {
-                tfunctional = TFunctional("T2",
-                                new SimpleFunctionalWrapper(TFunctional2));
-        } else if (token == "3") {
-                tfunctional = TFunctional("T3",
-                                new SimpleFunctionalWrapper(TFunctional3));
-        } else if (token == "4") {
-                tfunctional = TFunctional("T4",
-                                new SimpleFunctionalWrapper(TFunctional4));
-        } else if (token == "5") {
-                tfunctional = TFunctional("T5",
-                                new SimpleFunctionalWrapper(TFunctional5));
-        } else {
-                throw boost::program_options::validation_error(
-                        boost::program_options::validation_error::invalid_option_value,
-                        "Unknown T-functional");
-        }
-        return in;
-}
-
-std::istream& operator>>(std::istream& in, PFunctional& pfunctional)
-{
-        std::string token;
-        in >> token;
-        if (token == "1") {
-                pfunctional = PFunctional("P1",
-                                new SimpleFunctionalWrapper(PFunctional1));
-        } else if (token == "2") {
-                pfunctional = PFunctional("P2",
-                                new SimpleFunctionalWrapper(PFunctional2));
-        } else if (token == "3") {
-                pfunctional = PFunctional("P3",
-                                new SimpleFunctionalWrapper(PFunctional3));
-        } else if (token[0] == 'H') {
-                unsigned int order;
-                if (token.size() < 2)
-                        throw boost::program_options::validation_error(
-                                boost::program_options::validation_error::invalid_option_value,
-                                "Missing order parameter for Hermite P-functional");
-                try {
-                        order = boost::lexical_cast<unsigned int>(token.substr(1));
-                }
-                catch(boost::bad_lexical_cast &) {
-                        throw boost::program_options::validation_error(
-                                boost::program_options::validation_error::invalid_option_value,
-                                "Unparseable order parameter for Hermite P-functional");
-                }
-                pfunctional = PFunctional(boost::str(boost::format("H%d") % order),
-                                new GenericFunctionalWrapper<unsigned int, size_t>(PFunctionalHermite),
-                                PFunctional::Type::HERMITE,
-                                order);
-        } else {
-                throw boost::program_options::validation_error(
-                        boost::program_options::validation_error::invalid_option_value,
-                        "Unknown P-functional");
-        }
-    return in;
-}
 
 
 //
@@ -113,8 +35,8 @@ int main(int argc, char **argv)
         //
         
         // List of functionals
-        std::vector<TFunctional> tfunctionals;
-        std::vector<PFunctional> pfunctionals;
+        std::vector<TFunctionalWrapper> tfunctionals;
+        std::vector<PFunctionalWrapper> pfunctionals;
 
         // Declare named options
         boost::program_options::options_description desc("Allowed options");
@@ -127,21 +49,24 @@ int main(int argc, char **argv)
                         "display some more details")
                 ("debug,d",
                         "display even more details")
+                ("t-functional,T",
+                        boost::program_options::value<std::vector<TFunctionalWrapper>>(&tfunctionals)
+                        ->required(),
+                        "T-functionals")
+                ("p-functional,P",
+                        boost::program_options::value<std::vector<PFunctionalWrapper>>(&pfunctionals),
+                        "P-functionals")
+                ("mode,i",
+                        boost::program_options::value<std::string>()
+                        ->required(),
+                        "execution mode")
+                ("iterations,n",
+                        boost::program_options::value<unsigned int>(),
+                        "amount of iterations to run")
                 ("input,i",
                         boost::program_options::value<std::string>()
                         ->required(),
                         "image to process")
-                ("output,o",
-                        boost::program_options::value<std::string>()
-                        ->default_value("circus.dat"),
-                        "where to write the output circus data")
-                ("t-functional,T",
-                        boost::program_options::value<std::vector<TFunctional>>(&tfunctionals)
-                        ->required(),
-                        "T-functionals")
-                ("p-functional,P",
-                        boost::program_options::value<std::vector<PFunctional>>(&pfunctionals),
-                        "P-functionals")
         ;
 
         // Declare positional options
@@ -177,6 +102,22 @@ int main(int argc, char **argv)
                 std::cout << desc << std::endl;
                 return 1;
         }
+
+        // Check for orthonormal P-functionals
+        unsigned int orthonormal_count = 0;
+        bool orthonormal;
+        for (size_t p = 0; p < pfunctionals.size(); p++) {
+                if (pfunctionals[p].functional == PFunctional::Hermite)
+                        orthonormal_count++;
+        }
+        if (orthonormal_count == 0)
+                orthonormal = false;
+        else if (orthonormal_count == pfunctionals.size())
+                orthonormal = true;
+        else
+                throw boost::program_options::validation_error(
+                        boost::program_options::validation_error::invalid_option_value,
+                        "Cannot mix regular and orthonormal P-functionals");
         
         // Configure logging
         if (vm.count("debug")) {
@@ -194,34 +135,58 @@ int main(int argc, char **argv)
         //
         
         // Read the image
-        Eigen::MatrixXd input = pgmRead(vm["input"].as<std::string>());
-        input = gray2mat(input);
+        Eigen::MatrixXf input = gray2mat(readpgm(vm["input"].as<std::string>()));
 
-        // Transform the image
-        Transformer transformer(input);
-        Eigen::MatrixXd output = transformer.getTransform(tfunctionals, pfunctionals);
-
-        // Save the output data
-        if (pfunctionals.size() > 0) {          
-                std::vector<std::string> headers;
-                for (size_t tp = 0; tp < output.cols(); tp++) {
-                        size_t t = tp / pfunctionals.size();
-                        size_t p = tp % pfunctionals.size();
-                        std::stringstream header;
-                        header << tfunctionals[t].name << "-"
-                                << pfunctionals[p].name;
-                        headers.push_back(header.str());
-
-                        if (clog(debug)) {
-                                // Save individual traces as well
-                                std::stringstream fn_trace_data;
-                                fn_trace_data << "trace_" << header.str() << ".dat";
-                                dataWrite(fn_trace_data.str(), (Eigen::MatrixXd) output.col(tp));
-                        }
-                }
-                dataWrite(vm["output"].as<std::string>(), output, headers);
+        if (vm["mode"].as<std::string>() == "calculate") {
+                Transformer transformer(input, orthonormal);
+                transformer.getTransform(tfunctionals, pfunctionals, true);
         }
 
-        clog(debug) << "Exiting" << std::endl;
+        else if (vm["mode"].as<std::string>() == "benchmark") {
+                // Allocate array for time measurements
+                unsigned int iterations = vm["iterations"].as<unsigned int>();
+                std::vector<std::chrono::time_point<std::chrono::high_resolution_clock>>
+                        timings(iterations + 1);
+
+                // Warm-up
+                Transformer transformer(input, orthonormal);
+                transformer.getTransform(tfunctionals, pfunctionals, false);
+
+                // Transform the image
+                timings[0] = std::chrono::high_resolution_clock::now();
+                std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(timings[0].time_since_epoch()).count() << std::endl;
+                for (unsigned int n = 0; n < iterations; n++) {
+                        transformer.getTransform(tfunctionals, pfunctionals, false);
+                        timings[n + 1] = std::chrono::high_resolution_clock::now();
+                        std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(timings[n+1].time_since_epoch()).count() << std::endl;
+                }
+
+                // Get iteration durations
+                std::vector<long int> durations(iterations);
+                for (unsigned int n = 0; n < iterations; n++) {
+                        durations[n] = std::chrono::duration_cast<std::chrono::milliseconds>
+                                (timings[n + 1] - timings[n]).count();
+                        clog(debug) << "Iteration " << n << ": " << durations[n] << " ms." << std::endl;
+                }
+
+                // Calculate some statistics
+                double sum = std::accumulate(durations.begin(), durations.end(), 0.0);
+                double mean = sum / durations.size();
+                double sq_sum = std::inner_product(durations.begin(), durations.end(),
+                                durations.begin(), 0.0);
+                double stdev = std::sqrt(sq_sum / durations.size() - mean * mean);
+
+                clog(info) << "Total execution time for " << iterations
+                                << " iterations: " << sum << " ms." << std::endl;
+                clog(info) << "Average execution time: " << mean << " +/- " << stdev
+                                << " ms." << std::endl;
+        }
+
+        else {
+                throw boost::program_options::validation_error(
+                                boost::program_options::validation_error::invalid_option_value,
+                                "Invalid execution mode");
+        }
+
         return 0;
 }

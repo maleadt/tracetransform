@@ -26,15 +26,46 @@ extern "C" {
 // Module definitions
 //
 
-Eigen::MatrixXd nearest_orthonormal_sinogram(
-        const Eigen::MatrixXd &input,
+std::istream& operator>>(std::istream& in, PFunctionalWrapper& wrapper)
+{
+        in >> wrapper.name;
+        if (wrapper.name == "1") {
+                wrapper.functional = PFunctional::P1;
+        } else if (wrapper.name == "2") {
+                wrapper.functional = PFunctional::P2;
+        } else if (wrapper.name == "3") {
+                wrapper.functional = PFunctional::P3;
+        } else if (wrapper.name[0] == 'H') {
+                wrapper.functional = PFunctional::Hermite;
+                if (wrapper.name.size() < 2)
+                        throw boost::program_options::validation_error(
+                                boost::program_options::validation_error::invalid_option_value,
+                                "Missing order parameter for Hermite P-functional");
+                try {
+                        wrapper.arguments.order = boost::lexical_cast<unsigned int>(wrapper.name.substr(1));
+                }
+                catch(boost::bad_lexical_cast &) {
+                        throw boost::program_options::validation_error(
+                                boost::program_options::validation_error::invalid_option_value,
+                                "Unparseable order parameter for Hermite P-functional");
+                }
+        } else {
+                throw boost::program_options::validation_error(
+                        boost::program_options::validation_error::invalid_option_value,
+                        "Unknown P-functional");
+        }
+    return in;
+}
+
+Eigen::MatrixXf nearest_orthonormal_sinogram(
+        const Eigen::MatrixXf &input,
         size_t& new_center)
 {
         // Detect the offset of each column to the sinogram center
         assert(input.rows() > 0 && input.cols() > 0);
-        size_t sinogram_center = (size_t) std::floor((input.rows() - 1) / 2.0);
+        int sinogram_center =  std::floor((input.rows() - 1) / 2.0);
         std::vector<int> offset(input.cols());  // TODO: Eigen vector
-        for (size_t p = 0; p < input.cols(); p++) {
+        for (int p = 0; p < input.cols(); p++) {
                 size_t median = findWeighedMedian(
                         input.data() + p*input.rows(),
                         input.rows());
@@ -45,38 +76,51 @@ Eigen::MatrixXd nearest_orthonormal_sinogram(
         int min = *(std::min_element(offset.begin(), offset.end()));
         int max = *(std::max_element(offset.begin(), offset.end()));
         assert(sgn(min) != sgn(max));
-        size_t padding = (size_t) (std::abs(max) + std::abs(min));
+        int padding = (int) (std::abs(max) + std::abs(min));
         new_center = sinogram_center + max;
-        // TODO: zeros?
-        Eigen::MatrixXd aligned(input.rows() + padding, input.cols());
-        for (size_t col = 0; col < input.cols(); col++) {
-                for (size_t row = 0; row < input.rows(); row++) {
+        Eigen::MatrixXf aligned = Eigen::MatrixXf::Zero(input.rows() + padding, input.cols());
+        for (int col = 0; col < input.cols(); col++) {
+                for (int row = 0; row < input.rows(); row++) {
                         aligned(max+row-offset[col], col) = input(row, col);
                 }
         }
 
         // Compute the nearest orthonormal sinogram
-        Eigen::JacobiSVD<Eigen::MatrixXd, Eigen::ColPivHouseholderQRPreconditioner> svd(
+        Eigen::JacobiSVD<Eigen::MatrixXf, Eigen::ColPivHouseholderQRPreconditioner> svd(
                 aligned, Eigen::ComputeFullU | Eigen::ComputeFullV);
-        Eigen::MatrixXd diagonal = Eigen::MatrixXd::Identity(aligned.rows(), aligned.cols());
-        Eigen::MatrixXd nos = svd.matrixU() * diagonal * svd.matrixV().transpose();
+        Eigen::MatrixXf nos = svd.matrixU().block(0, 0, aligned.rows(), aligned.cols()) * svd.matrixV().transpose();
 
         return nos;
 }
 
-Eigen::VectorXd getCircusFunction(
-        const Eigen::MatrixXd &input,
-        FunctionalWrapper *pfunctional)
+Eigen::VectorXf getCircusFunction(
+        const Eigen::MatrixXf &input,
+        const PFunctionalWrapper &pfunctional)
 {
         // Allocate the output matrix
-        Eigen::VectorXd output(input.cols());
+        Eigen::VectorXf output(input.cols());
 
         // Trace all columns
         #pragma omp parallel for
-        for (size_t p = 0; p < input.cols(); p++) {
-                output(p) = (*pfunctional)(
-                        input.data() + p*input.rows(),
-                        input.rows());
+        for (int p = 0; p < input.cols(); p++) {
+                float *data = (float*) (input.data() + p*input.rows());
+                size_t length = input.rows();
+                float result;
+                switch (pfunctional.functional) {
+                        case PFunctional::P1:
+                                result = PFunctional1(data, length);
+                                break;
+                        case PFunctional::P2:
+                                result = PFunctional2(data, length);
+                                break;
+                        case PFunctional::P3:
+                                result = PFunctional3(data, length);
+                                break;
+                        case PFunctional::Hermite:
+                                result = PFunctionalHermite(data, length, *pfunctional.arguments.order, *pfunctional.arguments.center);
+                                break;
+                }
+                output(p) = result;
         }
 
         return output;

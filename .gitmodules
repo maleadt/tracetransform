@@ -1,6 +1,3 @@
-[submodule "lib/hayai"]
-	path = lib/hayai
-	url = git@github.com:maleadt/hayai.git
 [submodule "lib/backward"]
 	path = lib/backward
 	url = git://github.com/bombela/backward-cpp.git

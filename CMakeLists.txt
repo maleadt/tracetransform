@@ -10,7 +10,7 @@ SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 
 # Standard libraries
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
 # Extra warnings
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
@@ -48,8 +48,6 @@ INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIR})
 # Eigen
 FIND_PACKAGE(Eigen3 REQUIRED)
 INCLUDE_DIRECTORIES(SYSTEM ${EIGEN3_INCLUDE_DIR})
-#ADD_DEFINITIONS(-DEIGEN_DEFAULT_DENSE_INDEX_TYPE=std::size_t)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-sign-compare")
 
 # Elfutils
 FIND_PACKAGE(Elfutils)
@@ -78,10 +76,10 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}
 ADD_LIBRARY(functionals src/functionals.h src/functionals.c)
 
 ADD_LIBRARY(sinogram src/sinogram.hpp src/sinogram.cpp)
-TARGET_LINK_LIBRARIES(sinogram ${COMMON_LIBRARIES})
+TARGET_LINK_LIBRARIES(sinogram functionals ${COMMON_LIBRARIES})
 
 ADD_LIBRARY(circus src/circus.hpp src/circus.cpp)
-TARGET_LINK_LIBRARIES(circus ${COMMON_LIBRARIES})
+TARGET_LINK_LIBRARIES(circus functionals ${COMMON_LIBRARIES})
 
 ADD_LIBRARY(transform src/transform.hpp src/transform.cpp)
 TARGET_LINK_LIBRARIES(transform ${COMMON_LIBRARIES} sinogram circus)
@@ -92,15 +90,5 @@ TARGET_LINK_LIBRARIES(transform ${COMMON_LIBRARIES} sinogram circus)
 #
 
 ADD_EXECUTABLE(demo src/demo.cpp)
-TARGET_LINK_LIBRARIES(demo functionals ${COMMON_LIBRARIES} transform ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(demo ${COMMON_LIBRARIES} transform ${Boost_LIBRARIES})
 TARGET_LINK_LIBRARIES(demo debug ${BACKWARD})
-
-ADD_EXECUTABLE(benchmark src/benchmark.cpp)
-TARGET_LINK_LIBRARIES(benchmark functionals ${COMMON_LIBRARIES} transform ${Boost_LIBRARIES})
-
-
-#
-# Resources
-#
-
-FILE(COPY res DESTINATION ${CMAKE_BINARY_DIR})

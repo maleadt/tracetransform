@@ -16,52 +16,8 @@
 #include <Eigen/Dense>
 
 // Local
-#include "wrapper.hpp"
-
-
-//
-// Structs
-//
-
-struct TFunctional {
-        TFunctional()
-                : wrapper(nullptr)
-        {
-        }
-
-        TFunctional(std::string name_, FunctionalWrapper *wrapper_)
-                : name(name_), wrapper(wrapper_)
-        {
-        }
-
-        std::string name;
-        FunctionalWrapper *wrapper;
-};
-
-struct PFunctional
-{
-        enum class Type
-        {
-                REGULAR,
-                HERMITE
-        };
-
-        PFunctional()
-                : wrapper(nullptr)
-        {
-        }
-
-        PFunctional(std::string name_, FunctionalWrapper *wrapper_,
-                        Type type_ = Type::REGULAR, boost::optional<unsigned int> order_ = boost::none)
-                : name(name_), wrapper(wrapper_), type(type_), order(order_)
-        {
-        }
-
-        std::string name;
-        FunctionalWrapper *wrapper;
-        Type type;
-        boost::optional<unsigned int> order;
-};
+#include "sinogram.hpp"
+#include "circus.hpp"
 
 
 //
@@ -71,13 +27,14 @@ struct PFunctional
 class Transformer
 {
 public:
-        Transformer(const Eigen::MatrixXd &image);
+        Transformer(const Eigen::MatrixXf &image, bool orthonormal);
 
-        Eigen::MatrixXd getTransform(const std::vector<TFunctional> &tfunctionals,
-                        const std::vector<PFunctional> &pfunctionals) const;
+        void getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
+                        std::vector<PFunctionalWrapper> &pfunctionals, bool write_data = true) const;
 
 private:
-        Eigen::MatrixXd _image, _image_orthonormal;
+        Eigen::MatrixXf _image;
+        bool _orthonormal;
 };
 
 #endif
