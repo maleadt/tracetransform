@@ -160,6 +160,9 @@ int main(int argc, char **argv)
                 }
 
                 // Get iteration durations
+                // NOTE: although the use of elapsed real time rather than CPU
+                //       time might seem inaccurate, it is necessary because
+                //       some of the ports execute code on non-CPU hardware
                 for (unsigned int n = 0; n < iterations; n++) {
                         clog(info) << "t_" << n+1 << "=" << std::chrono::duration_cast<std::chrono::microseconds>
                                 (timings[n + 1] - timings[n]).count()/1000000.0 << std::endl;
