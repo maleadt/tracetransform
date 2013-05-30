@@ -22,6 +22,6 @@ function trapz(x::Vector, y::Vector)
         return sum * 0.5
 end
 
-mat2gray(input::Matrix) = uint8(clamp(input * 255 / max(input), 0, 255))
+mat2gray(input::Image) = share(input, uint8(clamp(data(input) * 255 / max(data(input)), 0, 255)))
 
-gray2mat(input::Matrix) = input / 255
+gray2mat(input::Image) = share(input, input.data / 255)

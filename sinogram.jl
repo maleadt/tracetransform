@@ -39,9 +39,9 @@ function parse_tfunctionals(args::Vector{String})
 end
 
 function getSinogram(
-        input::Matrix,
+        input::Image,
         tfunctional::TFunctionalWrapper)
-        @assert size(input, 1) == size(input, 2)        # Padded image!
+        @assert rows(input) == cols(input)        # Padded image!
 
         # Get the image origin to rotate around
         origin::Vector = ifloor(flipud([size(input)...] .+ 1) ./ 2)
@@ -56,22 +56,22 @@ function getSinogram(
         # Process all angles
         for a in 0:359
                 # Rotate the image
-                @time input_rotated::Matrix = rotate(input, origin, a)
+                @time input_rotated::Image = rotate(input, origin, a)
 
                 # Process all projection bands
                 for p in 1:cols(input)-1
                         if tfunctional.functional == Radon
-                                output[p, a+1] = t_radon(vec(input_rotated[:, p]))
+                                output[p, a+1] = t_radon(vec(input_rotated.data[:, p]))
                         elseif tfunctional.functional == T1
-                                output[p, a+1] = t_1(vec(input_rotated[:, p]))
+                                output[p, a+1] = t_1(vec(input_rotated.data[:, p]))
                         elseif tfunctional.functional == T2
-                                output[p, a+1] = t_2(vec(input_rotated[:, p]))
+                                output[p, a+1] = t_2(vec(input_rotated.data[:, p]))
                         elseif tfunctional.functional == T3
-                                output[p, a+1] = t_3(vec(input_rotated[:, p]))
+                                output[p, a+1] = t_3(vec(input_rotated.data[:, p]))
                         elseif tfunctional.functional == T4
-                                output[p, a+1] = t_4(vec(input_rotated[:, p]))
+                                output[p, a+1] = t_4(vec(input_rotated.data[:, p]))
                         elseif tfunctional.functional == T5
-                                output[p, a+1] = t_5(vec(input_rotated[:, p]))
+                                output[p, a+1] = t_5(vec(input_rotated.data[:, p]))
                         end
                 end
         end

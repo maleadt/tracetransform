@@ -83,8 +83,7 @@ function main(args::Vector{Any})
         #
 
         # Read the image
-        input::Matrix = data(imread(opts["input"]))
-        input = gray2mat(input)
+        input::Image{Float64} = gray2mat(imread(opts["input"]))
         input = prepare_transform(input, orthonormal)
 
         if opts["mode"] == "calculate"

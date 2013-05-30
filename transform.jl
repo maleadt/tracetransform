@@ -2,7 +2,12 @@ require("functionals")
 require("sinogram")
 require("circus")
 
-function prepare_transform(input, orthonormal)
+using Images
+
+require("Profile")
+using SProfile
+
+function prepare_transform(input::Image, orthonormal::Bool)
         # Orthonormal P-functionals need a stretched image in order to ensure a
         # square sinogram
         if orthonormal
@@ -19,15 +24,16 @@ function prepare_transform(input, orthonormal)
         return input
 end
 
-function get_transform(input, tfunctionals, pfunctionals, orthonormal, write_data::Bool)
+function get_transform(input::Image, tfunctionals, pfunctionals, orthonormal::Bool, write_data::Bool)
         # Process all T-functionals
         for tfunctional in tfunctionals
                 # Calculate the trace transform sinogram
                 print_debug("Calculating sinogram using T-functional $(tfunctional.functional)\n")
-                const sinogram = getSinogram(
+                @sprofile const sinogram = getSinogram(
                         input,
                         tfunctional
                 )
+                sprofile_tree()
 
                 if write_data
                         # Save the sinogram trace
@@ -35,8 +41,8 @@ function get_transform(input, tfunctionals, pfunctionals, orthonormal, write_dat
 
                         if want_log(debug_l)
                                 # Save the sinogram image
-                                imwrite(share(input_image, mat2gray(sinogram)),
-                                        "trace_$(tfunctional.functional).pbm")
+                                imwrite(mat2gray(share(input, sinogram)),
+                                        "trace_$(tfunctional.functional).ppm")
                         end
                 end
 

@@ -1,35 +1,23 @@
-type Point2D{T} <: AbstractVector{T}
-        x::T
-        y::T
-end
+using Images
 
-Point2D() = Point2D(0, 0)
+# TODO: generalize these algorithms, or assert2d/assertgray them
 
-import Base.convert
-convert{T}(::Type{Point2D{T}}, x::AbstractVector{T}) = 
-        Point2D{T}(x[1], x[2])
-convert{T}(::Type{AbstractVector{T}}, p::Point2D{T}) =
-        [p.x p.y]
+rows(input::Image) = size(input, 1)
+cols(input::Image) = size(input, 2)
 
-rows(input::Matrix) = size(input, 1)
-cols(input::Matrix) = size(input, 2)
-
-function interpolate(input::Matrix, p::Vector)
+function interpolate(input::Image, p::Vector)
         # Get fractional and integral part of the coordinates
-        float x_int, y_int;
-        float x_fract = std::modf(p.x(), &x_int);
-        float y_fract = std::modf(p.y(), &y_int);
-        integral::Vector = itrunc(p)
-        fractional::Vector = p - integral
+        (x_fract, x_int) = modf(p[1])
+        (y_fract, y_int) = modf(p[2])
 
         # Bilinear interpolation
-        return   (input[integral[2],   integral[1]]   * (1-fractional[1]) * (1-fractional[2]) + 
-                  input[integral[2],   integral[1]+1] * fractional[1]     * (1-fractional[2]) + 
-                  input[integral[2]+1, integral[1]]   * (1-fractional[1]) * fractional[2] + 
-                  input[integral[2]+1, integral[1]+1] * fractional[1]     * fractional[2])
+        return   (input.data[y_int,   x_int]   * (1-x_fract) * (1-y_fract) + 
+                  input.data[y_int,   x_int+1] * x_fract     * (1-y_fract) + 
+                  input.data[y_int+1, x_int]   * (1-x_fract) * y_fract + 
+                  input.data[y_int+1, x_int+1] * x_fract     * y_fract)
 end
 
-function resize(input::Matrix, new_rows, new_cols)
+function resize(input::Image, new_rows, new_cols)
         # Calculate transform matrix
         transform::Matrix = [
                 rows(input)/new_rows    0;
@@ -59,26 +47,26 @@ function resize(input::Matrix, new_rows, new_cols)
                 end
         end
 
-        return output
+        share(input, output)
 end
 
-function pad(input::Matrix)
+function pad(input::Image)
         origin::Vector = ifloor(flipud([size(input)...] .+ 1) ./ 2)
         rLast::Int = iceil(hypot(([size(input)...] .- 1 - origin)...)) + 1
         rFirst::Int = -rLast
         nBins::Int = rLast - rFirst + 1
-        input_padded::Array = zeros(eltype(input), nBins, nBins)
-        origin_padded::Vector = ifloor(flipud([size(input_padded)...] .+ 1) ./ 2)
+        padded::Array = zeros(eltype(input), nBins, nBins)
+        origin_padded::Vector = ifloor(flipud([size(padded)...] .+ 1) ./ 2)
         offset::Vector = origin_padded - origin
         endpoint::Vector = offset+flipud([size(input)...])
-        input_padded[1+offset[2]:endpoint[2], 1+offset[1]:endpoint[1]] = input
+        padded[1+offset[2]:endpoint[2], 1+offset[1]:endpoint[1]] = input.data
 
-        return input_padded
+        share(input, padded)
 end
 
-function rotate(input::Matrix, origin::Vector, angle)
+function rotate(input::Image, origin::Vector, angle)
         # Calculate transform matrix
-        transform::Matrix = [
+        const transform::Matrix = [
                 cosd(-angle) -sind(-angle);
                 sind(-angle)  cosd(-angle)];
 
@@ -104,5 +92,5 @@ function rotate(input::Matrix, origin::Vector, angle)
                 end
         end
 
-        return output
+        share(input, output)
 end
