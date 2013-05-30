@@ -24,4 +24,4 @@ end
 
 mat2gray(input::Matrix) = uint8(clamp(input * 255 / max(input), 0, 255))
 
-gray2mat(input::Image) = input / 255
+gray2mat(input::Matrix) = input / 255

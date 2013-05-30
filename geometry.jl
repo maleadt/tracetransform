@@ -16,6 +16,9 @@ cols(input::Matrix) = size(input, 2)
 
 function interpolate(input::Matrix, p::Vector)
         # Get fractional and integral part of the coordinates
+        float x_int, y_int;
+        float x_fract = std::modf(p.x(), &x_int);
+        float y_fract = std::modf(p.y(), &y_int);
         integral::Vector = itrunc(p)
         fractional::Vector = p - integral
 
@@ -57,6 +60,20 @@ function resize(input::Matrix, new_rows, new_cols)
         end
 
         return output
+end
+
+function pad(input::Matrix)
+        origin::Vector = ifloor(flipud([size(input)...] .+ 1) ./ 2)
+        rLast::Int = iceil(hypot(([size(input)...] .- 1 - origin)...)) + 1
+        rFirst::Int = -rLast
+        nBins::Int = rLast - rFirst + 1
+        input_padded::Array = zeros(eltype(input), nBins, nBins)
+        origin_padded::Vector = ifloor(flipud([size(input_padded)...] .+ 1) ./ 2)
+        offset::Vector = origin_padded - origin
+        endpoint::Vector = offset+flipud([size(input)...])
+        input_padded[1+offset[2]:endpoint[2], 1+offset[1]:endpoint[1]] = input
+
+        return input_padded
 end
 
 function rotate(input::Matrix, origin::Vector, angle)

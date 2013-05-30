@@ -1,19 +1,15 @@
+#!/usr/local/bin/julia
+
 require("geometry")
 require("transform")
 require("auxiliary")
 require("enum")
+require("log")
 
 using ArgParse
 using Images
 
-@enum LogLevel trace debug info warning error fatal
-VERBOSITY = info
-function want_log(level::LogLevel)
-        return level.n >= VERBOSITY.n
-end
-
-
-function main(args)
+function main(args::Vector{Any})
         #
         # Initialization
         #
@@ -34,26 +30,33 @@ function main(args)
                 "--t-functional", "-T"
                         action = :append_arg
                         help = "T-functionals"
-                        # TODO: arg_type = TFunctional
-                        # TODO; required = true
+                        arg_type = String
+                        required = true
                 "--p-functional", "-P"
                         action = :append_arg
                         help = "P-functionals"
-                        # TODO: arg_type = PFunctional
+                        arg_type = String
+                "--mode", "-m"
+                        help = "execution mode"
+                        arg_type = String
+                        required = true
+                "--iterations", "-n"
+                        help = "amount of iterations to run"
+                        arg_type = Uint
                 "input"
                         help = "image to process"
                         required = true
         end
-        parsed_args = parse_args(args, s)
+        opts = parse_args(args, s)
 
         # Parse the functionals
-        tfunctionals::Vector = parse_tfunctionals(parsed_args["t-functional"])
-        pfunctionals::Vector = parse_pfunctionals(parsed_args["p-functional"])
+        tfunctionals::Vector{TFunctionalWrapper} = parse_tfunctionals(opts["t-functional"])
+        pfunctionals::Vector{PFunctionalWrapper} = parse_pfunctionals(opts["p-functional"])
 
         # Check for orthonormal P-functionals
         orthonormal_count = 0
-        for functional in pfunctionals
-                if isa(functional, HermiteFunctional)
+        for pfunctional in pfunctionals
+                if pfunctional.functional == Hermite
                         orthonormal_count += 1
                 end
         end
@@ -66,26 +69,32 @@ function main(args)
         end
 
         # Configure logging
-        if parsed_args["verbose"]
-                VERBOSITY = debug
-        elseif parsed_args["debug"]
-                VERBOSITY = trace
-        elseif parsed_args["quiet"]
-                VERBOSITY = warning
+        if opts["verbose"]
+                set_threshold(debug_l)
+        elseif opts["debug"]
+                set_threshold(trace_l)
+        elseif opts["quiet"]
+                set_threshold(warning_l)
         end
 
 
         #
-        # Image processing
+        # Execution
         #
 
         # Read the image
-        input_image = imread(parsed_args["input"])
-        input = gray2mat(input_image)
-
-        # Transform the image
+        input::Matrix = data(imread(opts["input"]))
+        input = gray2mat(input)
         input = prepare_transform(input, orthonormal)
-        get_transform(input, tfunctionals, pfunctionals, orthonormal)
+
+        if opts["mode"] == "calculate"
+                get_transform(input, tfunctionals, pfunctionals, orthonormal, true)
+
+        elseif opts["mode"] == "calculate"
+
+        else
+                error("invalid execution mode")
+        end
 end
 
 main(ARGS)

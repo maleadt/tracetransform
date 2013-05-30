@@ -1,7 +1,7 @@
 require("functionals")
 require("enum")
 
-@enum PFunctional NoP Hermite P1 P2 P3
+@enum PFunctional Hermite P1 P2 P3
 
 type PFunctionalArguments
         order::Uint
@@ -10,7 +10,7 @@ type PFunctionalArguments
         function PFunctionalArguments()
                 order = 0
                 center = 0
-                new(functional, arguments)
+                new(order, center)
         end
 end
 
@@ -18,30 +18,26 @@ type PFunctionalWrapper
         functional::PFunctional
         arguments::PFunctionalArguments
 
-        function PFunctionalWrapper()
-                functional = NoP
-                arguments = PFunctionalArguments()
-                new(functional, arguments)
-        end
+        PFunctionalWrapper(functional::PFunctional) =
+                new(functional, PFunctionalArguments())
 end
 
-function parse_pfunctionals(args)
-        pfunctionals::Vector = PFunctionalWrapper[]
+function parse_pfunctionals(args::Vector{String})
+        pfunctionals::Vector{PFunctionalWrapper} = PFunctionalWrapper[]
         for functional in args
-                wrapper = PFunctionalWrapper
                 if functional == "1"
-                        wrapper.functional = P1
+                        wrapper = PFunctionalWrapper(P1)
                 elseif functional == "2"
-                        wrapper.functional = P2
+                        wrapper = PFunctionalWrapper(P2)
                 elseif functional == "3"
-                        wrapper.functional = P3
+                        wrapper = PFunctionalWrapper(P3)
                 elseif functional[1] == 'H'
-                        wrapper.functional = Hermite
-                        wrapper.arguments.order = parse_int(functional[2:])
+                        wrapper = PFunctionalWrapper(Hermite)
+                        wrapper.arguments.order = parseint(functional[2:])
                 else
                         error("unknown P-functional")
                 end
-                push!(tfunctionals, wrapper)
+                push!(pfunctionals, wrapper)
         end
 
         return pfunctionals

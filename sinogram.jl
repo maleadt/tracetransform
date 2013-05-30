@@ -1,7 +1,7 @@
 require("functionals")
 require("enum")
 
-@enum TFunctional NoT Radon T1 T2 T3 T4 T5
+@enum TFunctional Radon T1 T2 T3 T4 T5
 
 type TFunctionalArguments
 end
@@ -10,29 +10,25 @@ type TFunctionalWrapper
         functional::TFunctional
         arguments::TFunctionalArguments
 
-        function TFunctionalWrapper()
-                functional = NoT
-                arguments = TFunctionalArguments()
-                new(functional, arguments)
-        end
+        TFunctionalWrapper(functional::TFunctional) =
+                new(functional, TFunctionalArguments())
 end
 
-function parse_tfunctionals(args)
-        tfunctionals::Vector = TFunctionalWrapper[]
+function parse_tfunctionals(args::Vector{String})
+        tfunctionals::Vector{TFunctionalWrapper} = TFunctionalWrapper[]
         for functional in args
-                wrapper = TFunctionalWrapper()
                 if functional == "0"
-                        wrapper.functional = Radon
+                        wrapper = TFunctionalWrapper(Radon)
                 elseif functional == "1"
-                        wrapper.functional = T1
+                        wrapper = TFunctionalWrapper(T1)
                 elseif functional == "2"
-                        wrapper.functional = T2
+                        wrapper = TFunctionalWrapper(T2)
                 elseif functional == "3"
-                        wrapper.functional = T3
+                        wrapper = TFunctionalWrapper(T3)
                 elseif functional == "4"
-                        wrapper.functional = T4
+                        wrapper = TFunctionalWrapper(T4)
                 elseif functional == "5"
-                        wrapper.functional = T5
+                        wrapper = TFunctionalWrapper(T5)
                 else
                         error("unknown T-functional")
                 end
@@ -60,7 +56,7 @@ function getSinogram(
         # Process all angles
         for a in 0:359
                 # Rotate the image
-                input_rotated::Matrix = rotate(input, origin, a)
+                @time input_rotated::Matrix = rotate(input, origin, a)
 
                 # Process all projection bands
                 for p in 1:cols(input)-1
