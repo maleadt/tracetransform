@@ -5,16 +5,16 @@ using Images
 rows(input::Image) = size(input, 1)
 cols(input::Image) = size(input, 2)
 
-function interpolate(input::Image, p::Vector)
-        # Get fractional and integral part of the coordinates
-        (x_fract, x_int) = modf(p[1])
-        (y_fract, y_int) = modf(p[2])
+function interpolate(input::Image, x::Float64, y::Float64)
+    # Get fractional and integral part of the coordinates
+    (x_fract, x_int) = modf(x)
+    (y_fract, y_int) = modf(y)
 
-        # Bilinear interpolation
-        return   (input.data[y_int,   x_int]   * (1-x_fract) * (1-y_fract) + 
-                  input.data[y_int,   x_int+1] * x_fract     * (1-y_fract) + 
-                  input.data[y_int+1, x_int]   * (1-x_fract) * y_fract + 
-                  input.data[y_int+1, x_int+1] * x_fract     * y_fract)
+    # Bilinear interpolation
+    return   (input.data[y_int,   x_int]   * (1-x_fract) * (1-y_fract) + 
+              input.data[y_int,   x_int+1] * x_fract     * (1-y_fract) + 
+              input.data[y_int+1, x_int]   * (1-x_fract) * y_fract + 
+              input.data[y_int+1, x_int+1] * x_fract     * y_fract)
 end
 
 function resize(input::Image, new_rows, new_cols)
@@ -64,33 +64,31 @@ function pad(input::Image)
         share(input, padded)
 end
 
-function rotate(input::Image, origin::Vector, angle)
-        # Calculate transform matrix
-        const transform::Matrix = [
-                cosd(-angle) -sind(-angle);
-                sind(-angle)  cosd(-angle)];
+function rotate(input::Image, origin::Vector, angle::Real)
+    # Calculate part of transform matrix
+    angle_cos = cosd(-angle)
+    angle_sin = sind(-angle)
 
-        # Allocate output matrix
-        output::Matrix = zeros(
-                eltype(input),
-                size(input)...)
+    # Allocate output matrix
+    output::Matrix{Float64} = zeros(
+        eltype(input),
+        size(input)...)
 
-        # Process all points
-        for col in 1:cols(input)
-                for row in 1:rows(input)
-                        # TODO: RowVector
-                        p::Matrix = [col row]
-                        # TODO: why no pixel center offset?
-                        p -= origin'
-                        p *= transform
-                        p += origin'
+    # Process all pixels
+    for col in 1:cols(input)
+        for row in 1:rows(input)
+            # Get the source pixel
+            xt::Float64 = col - origin[1]
+            yt::Float64 = row - origin[2]
+            x::Float64 =  xt*angle_cos + yt*angle_sin + origin[1]
+            y::Float64 = -xt*angle_sin + yt*angle_cos + origin[2]
 
-                        # FIXME: this discards edge pixels
-                        if 1 <= p[1] < cols(input) && 1 <= p[2] < rows(input)
-                                output[row, col] = interpolate(input, vec(p))
-                        end
-                end
+            # Copy if within bounds
+            if 1 <= x < cols(input) && 1 <= y < rows(input)
+                output[row, col] = interpolate(input, x, y)
+            end
         end
+    end
 
-        share(input, output)
+    share(input, output)
 end
