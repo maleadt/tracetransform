@@ -39,16 +39,16 @@ function parse_tfunctionals(args::Vector{String})
 end
 
 function getSinogram(
-        input::Image,
+        input::Image{Float64},
         tfunctional::TFunctionalWrapper)
         @assert rows(input) == cols(input)        # Padded image!
 
         # Get the image origin to rotate around
-        origin::Vector = ifloor(flipud([size(input)...] .+ 1) ./ 2)
+        origin::Vector{Float64} = floor(flipud([size(input)...] .+ 1) ./ 2)
 
         # Allocate the output matrix
-        output::Matrix = Array(
-                eltype(input),
+        output::Matrix{Float64} = Array(
+                Float64,
                 cols(input),    # rows
                 360             # cols
                 )
@@ -56,7 +56,7 @@ function getSinogram(
         # Process all angles
         for a in 0:359
                 # Rotate the image
-                @time input_rotated::Image = rotate(input, origin, a)
+                input_rotated::Image = rotate(input, origin, a)
 
                 # Process all projection bands
                 for p in 1:cols(input)-1
@@ -76,5 +76,5 @@ function getSinogram(
                 end
         end
 
-        return output
+        return share(input, output)
 end

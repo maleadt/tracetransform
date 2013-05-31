@@ -4,16 +4,13 @@ require("circus")
 
 using Images
 
-require("Profile")
-using SProfile
-
-function prepare_transform(input::Image, orthonormal::Bool)
+function prepare_transform(input::Image{Float64}, orthonormal::Bool)
         # Orthonormal P-functionals need a stretched image in order to ensure a
         # square sinogram
         if orthonormal
                 ndiag = 360
-                nsize = iceil(ndiag / sqrt(2))
-                print_debug("Stretching input image to $nsize squared.\n")
+                nsize::Uint = iceil(ndiag / sqrt(2))
+                print_debug("Stretching input image to $(int(nsize)) squared.\n")
                 input = resize(input, nsize, nsize)
         end
 
@@ -24,24 +21,23 @@ function prepare_transform(input::Image, orthonormal::Bool)
         return input
 end
 
-function get_transform(input::Image, tfunctionals, pfunctionals, orthonormal::Bool, write_data::Bool)
+function get_transform(input::Image{Float64}, tfunctionals::Vector{TFunctionalWrapper}, pfunctionals::Vector{PFunctionalWrapper}, orthonormal::Bool, write_data::Bool)
         # Process all T-functionals
         for tfunctional in tfunctionals
                 # Calculate the trace transform sinogram
                 print_debug("Calculating sinogram using T-functional $(tfunctional.functional)\n")
-                @sprofile const sinogram = getSinogram(
+                sinogram::Image{Float64} = getSinogram(
                         input,
                         tfunctional
                 )
-                sprofile_tree()
 
                 if write_data
                         # Save the sinogram trace
-                        writecsv("trace_$(tfunctional.functional).csv", sinogram);
+                        writecsv("trace_$(tfunctional.functional).csv", sinogram.data);
 
                         if want_log(debug_l)
                                 # Save the sinogram image
-                                imwrite(mat2gray(share(input, sinogram)),
+                                imwrite(mat2gray(sinogram),
                                         "trace_$(tfunctional.functional).ppm")
                         end
                 end
@@ -71,7 +67,7 @@ function get_transform(input::Image, tfunctionals, pfunctionals, orthonormal::Bo
 
                         if write_data
                                 # Save the circus trace
-                                writecsv("trace_$(tfunctional.name)-$(pfunctional.name).csv",
+                                writecsv("trace_$(tfunctional.functional)-$(pfunctional.functional).csv",
                                         normalized);
                         end
                 end

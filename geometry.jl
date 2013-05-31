@@ -5,7 +5,7 @@ using Images
 rows(input::Image) = size(input, 1)
 cols(input::Image) = size(input, 2)
 
-function interpolate(input::Image, x::Float64, y::Float64)
+function interpolate(input::Image{Float64}, x::Float64, y::Float64)
     # Get fractional and integral part of the coordinates
     (x_fract, x_int) = modf(x)
     (y_fract, y_int) = modf(y)
@@ -17,7 +17,7 @@ function interpolate(input::Image, x::Float64, y::Float64)
               input.data[y_int+1, x_int+1] * x_fract     * y_fract)
 end
 
-function resize(input::Image, new_rows, new_cols)
+function resize(input::Image{Float64}, new_rows::Uint, new_cols::Uint)
         # Calculate transform matrix
         transform::Matrix = [
                 rows(input)/new_rows    0;
@@ -42,7 +42,7 @@ function resize(input::Image, new_rows, new_cols)
 
                         # FIXME: this discards edge pixels
                         if 1 <= p[1] < cols(input) && 1 <= p[2] < rows(input)
-                            output[row, col] = interpolate(input, vec(p))
+                            output[row, col] = interpolate(input, p[1], p[2])
                         end
                 end
         end
@@ -50,7 +50,7 @@ function resize(input::Image, new_rows, new_cols)
         share(input, output)
 end
 
-function pad(input::Image)
+function pad(input::Image{Float64})
         origin::Vector = ifloor(flipud([size(input)...] .+ 1) ./ 2)
         rLast::Int = iceil(hypot(([size(input)...] .- 1 - origin)...)) + 1
         rFirst::Int = -rLast
@@ -64,20 +64,22 @@ function pad(input::Image)
         share(input, padded)
 end
 
-function rotate(input::Image, origin::Vector, angle::Real)
+function rotate(input::Image{Float64}, origin::Vector{Float64}, angle::Real)
     # Calculate part of transform matrix
     angle_cos = cosd(-angle)
     angle_sin = sind(-angle)
 
     # Allocate output matrix
     output::Matrix{Float64} = zeros(
-        eltype(input),
+        Float64,
         size(input)...)
 
     # Process all pixels
     for col in 1:cols(input)
         for row in 1:rows(input)
             # Get the source pixel
+            # FIXME: this was a nice matrix multiplication before, but Julia
+            #        can't manage these small-matrix multiplications (issue 3239)
             xt::Float64 = col - origin[1]
             yt::Float64 = row - origin[2]
             x::Float64 =  xt*angle_cos + yt*angle_sin + origin[1]
