@@ -26,7 +26,7 @@ function resize(input::Image{Float64}, new_rows::Uint, new_cols::Uint)
         # Allocate output matrix
         # FIXME: zeros not necessary if we properly handle borders
         output::Matrix = zeros(
-                eltype(input),
+                Float64,
                 new_rows, new_cols)
         
         # Process all points
@@ -55,7 +55,7 @@ function pad(input::Image{Float64})
         rLast::Int = iceil(hypot(([size(input)...] .- 1 - origin)...)) + 1
         rFirst::Int = -rLast
         nBins::Int = rLast - rFirst + 1
-        padded::Array = zeros(eltype(input), nBins, nBins)
+        padded::Array = zeros(Float64, nBins, nBins)
         origin_padded::Vector = ifloor(flipud([size(padded)...] .+ 1) ./ 2)
         offset::Vector = origin_padded - origin
         endpoint::Vector = offset+flipud([size(input)...])

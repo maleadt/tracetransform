@@ -46,7 +46,7 @@ end
 function nearest_orthonormal_sinogram(input::Image{Float64})
         # Detect the offset of each column to the sinogram center
         sinogram_center = ifloor(rows(input) / 2.0);
-        offset::Vector = Array(eltype(input), cols(input))
+        offset::Vector = Array(Float64, cols(input))
         for p in 1:cols(input)
                 median = find_weighted_median(vec(input.data[p, :]))
                 offset[p] = median - sinogram_center
@@ -76,7 +76,7 @@ function getCircusFunction(
 
         # Allocate the output matrix
         output::Vector = Array(
-                eltype(input),
+                Float64,
                 cols(input)
         )
 
