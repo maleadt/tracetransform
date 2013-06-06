@@ -49,6 +49,7 @@ void Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctiona
                 _image,
                 tfunctionals
         );
+        #pragma omp parallel for
         for (size_t t = 0; t < tfunctionals.size(); t++) {
                 if (write_data) {
                         // Save the sinogram trace
