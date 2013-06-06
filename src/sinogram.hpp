@@ -8,6 +8,7 @@
 
 // Standard library
 #include <cstddef>
+#include <vector>
 
 // Boost
 #include <boost/program_options.hpp>
@@ -61,8 +62,8 @@ std::istream& operator>>(std::istream& in, TFunctionalWrapper& wrapper);
 // Module definitions
 //
 
-Eigen::MatrixXf getSinogram(
+std::vector<Eigen::MatrixXf> getSinograms(
         const Eigen::MatrixXf &input,
-        const TFunctionalWrapper &tfunctional);
+        const std::vector<TFunctionalWrapper> &tfunctionals);
 
 #endif
