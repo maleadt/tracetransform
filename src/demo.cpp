@@ -56,7 +56,7 @@ int main(int argc, char **argv)
                 ("p-functional,P",
                         boost::program_options::value<std::vector<PFunctionalWrapper>>(&pfunctionals),
                         "P-functionals")
-                ("mode,i",
+                ("mode,m",
                         boost::program_options::value<std::string>()
                         ->required(),
                         "execution mode")
@@ -131,14 +131,14 @@ int main(int argc, char **argv)
 
 
         //
-        // Image processing
+        // Execution
         //
         
         // Read the image
         Eigen::MatrixXf input = gray2mat(readpgm(vm["input"].as<std::string>()));
+        Transformer transformer(input, orthonormal);
 
         if (vm["mode"].as<std::string>() == "calculate") {
-                Transformer transformer(input, orthonormal);
                 transformer.getTransform(tfunctionals, pfunctionals, true);
         }
 
@@ -149,37 +149,23 @@ int main(int argc, char **argv)
                         timings(iterations + 1);
 
                 // Warm-up
-                Transformer transformer(input, orthonormal);
                 transformer.getTransform(tfunctionals, pfunctionals, false);
 
                 // Transform the image
                 timings[0] = std::chrono::high_resolution_clock::now();
-                std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(timings[0].time_since_epoch()).count() << std::endl;
                 for (unsigned int n = 0; n < iterations; n++) {
                         transformer.getTransform(tfunctionals, pfunctionals, false);
                         timings[n + 1] = std::chrono::high_resolution_clock::now();
-                        std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(timings[n+1].time_since_epoch()).count() << std::endl;
                 }
 
                 // Get iteration durations
-                std::vector<long int> durations(iterations);
+                // NOTE: although the use of elapsed real time rather than CPU
+                //       time might seem inaccurate, it is necessary because
+                //       some of the ports execute code on non-CPU hardware
                 for (unsigned int n = 0; n < iterations; n++) {
-                        durations[n] = std::chrono::duration_cast<std::chrono::milliseconds>
-                                (timings[n + 1] - timings[n]).count();
-                        clog(debug) << "Iteration " << n << ": " << durations[n] << " ms." << std::endl;
+                        clog(info) << "t_" << n+1 << "=" << std::chrono::duration_cast<std::chrono::microseconds>
+                                (timings[n + 1] - timings[n]).count()/1000000.0 << std::endl;
                 }
-
-                // Calculate some statistics
-                double sum = std::accumulate(durations.begin(), durations.end(), 0.0);
-                double mean = sum / durations.size();
-                double sq_sum = std::inner_product(durations.begin(), durations.end(),
-                                durations.begin(), 0.0);
-                double stdev = std::sqrt(sq_sum / durations.size() - mean * mean);
-
-                clog(info) << "Total execution time for " << iterations
-                                << " iterations: " << sum << " ms." << std::endl;
-                clog(info) << "Average execution time: " << mean << " +/- " << stdev
-                                << " ms." << std::endl;
         }
 
         else {
