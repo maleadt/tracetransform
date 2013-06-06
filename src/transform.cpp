@@ -55,13 +55,13 @@ void Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctiona
                 if (write_data) {
                         // Save the sinogram trace
                         std::stringstream fn_trace_data;
-                        fn_trace_data << "trace_T" << tfunctionals[t].name << ".csv";
+                        fn_trace_data << "trace_" << tfunctionals[t].name << ".csv";
                         writecsv(fn_trace_data.str(), sinogram);
 
                         if (clog(debug)) {
                                 // Save the sinogram image
                                 std::stringstream fn_trace_image;
-                                fn_trace_image << "trace_T" << tfunctionals[t].name << ".pgm";
+                                fn_trace_image << "trace_" << tfunctionals[t].name << ".pgm";
                                 writepgm(fn_trace_image.str(), mat2gray(sinogram));
                         }
                 }
@@ -81,10 +81,9 @@ void Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctiona
                 // Process all P-functionals
                 for (size_t p = 0; p < pfunctionals.size(); p++) {
                         // Calculate the circus function
-                        clog(debug) << "Calculating " << pfunctionals[p].name
-                                        << " circus function for "
-                                        << tfunctionals[t].name
-                                        << " sinogram" << std::endl;
+                        clog(debug) << "Calculating circus function using P-functional "
+                                        << pfunctionals[p].name
+                                        << std::endl;
                         Eigen::VectorXf circus = getCircusFunction(
                                 sinogram,
                                 pfunctionals[p]
@@ -96,8 +95,8 @@ void Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctiona
                         if (write_data) {
                                 // Save the circus trace
                                 std::stringstream fn_trace_data;
-                                fn_trace_data << "trace_T" << tfunctionals[t].name
-                                                << "-P" << pfunctionals[p].name << ".csv";
+                                fn_trace_data << "trace_" << tfunctionals[t].name
+                                                << "-" << pfunctionals[p].name << ".csv";
                                 writecsv(fn_trace_data.str(), normalized);
                         }
                 }

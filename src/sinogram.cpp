@@ -28,16 +28,22 @@ std::istream& operator>>(std::istream& in, TFunctionalWrapper& wrapper)
 {
         in >> wrapper.name;
         if (wrapper.name == "0") {
+                wrapper.name = "Radon";
                 wrapper.functional = TFunctional::Radon;
         } else if (wrapper.name == "1") {
+                wrapper.name = "T1";
                 wrapper.functional = TFunctional::T1;
         } else if (wrapper.name == "2") {
+                wrapper.name = "T2";
                 wrapper.functional = TFunctional::T2;
         } else if (wrapper.name == "3") {
+                wrapper.name = "T3";
                 wrapper.functional = TFunctional::T3;
         } else if (wrapper.name == "4") {
+                wrapper.name = "T4";
                 wrapper.functional = TFunctional::T4;
         } else if (wrapper.name == "5") {
+                wrapper.name = "T5";
                 wrapper.functional = TFunctional::T5;
         } else {
                 throw boost::program_options::validation_error(

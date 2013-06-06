@@ -56,7 +56,7 @@ int main(int argc, char **argv)
                 ("p-functional,P",
                         boost::program_options::value<std::vector<PFunctionalWrapper>>(&pfunctionals),
                         "P-functionals")
-                ("mode,i",
+                ("mode,m",
                         boost::program_options::value<std::string>()
                         ->required(),
                         "execution mode")
@@ -131,14 +131,14 @@ int main(int argc, char **argv)
 
 
         //
-        // Image processing
+        // Execution
         //
         
         // Read the image
         Eigen::MatrixXf input = gray2mat(readpgm(vm["input"].as<std::string>()));
+        Transformer transformer(input, orthonormal);
 
         if (vm["mode"].as<std::string>() == "calculate") {
-                Transformer transformer(input, orthonormal);
                 transformer.getTransform(tfunctionals, pfunctionals, true);
         }
 
@@ -149,7 +149,6 @@ int main(int argc, char **argv)
                         timings(iterations + 1);
 
                 // Warm-up
-                Transformer transformer(input, orthonormal);
                 transformer.getTransform(tfunctionals, pfunctionals, false);
 
                 // Transform the image

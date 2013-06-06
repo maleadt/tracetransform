@@ -30,10 +30,13 @@ std::istream& operator>>(std::istream& in, PFunctionalWrapper& wrapper)
 {
         in >> wrapper.name;
         if (wrapper.name == "1") {
+                wrapper.name = "P1";
                 wrapper.functional = PFunctional::P1;
         } else if (wrapper.name == "2") {
+                wrapper.name = "P2";
                 wrapper.functional = PFunctional::P2;
         } else if (wrapper.name == "3") {
+                wrapper.name = "P3";
                 wrapper.functional = PFunctional::P3;
         } else if (wrapper.name[0] == 'H') {
                 wrapper.functional = PFunctional::Hermite;
