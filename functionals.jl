@@ -20,9 +20,9 @@ function hermite_polynomial(order::Uint, x::Number)
         if order == 0
                 return 1;
         elseif order == 1
-                return 2.0*x;
+                return 2x;
         else
-                return 2*x*hermite_polynomial(order-1, x) -
+                return 2x*hermite_polynomial(order-1, x) -
                         2*(order-1)*hermite_polynomial(order-2, x);
         end
 end

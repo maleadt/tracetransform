@@ -45,7 +45,7 @@ end
 
 function nearest_orthonormal_sinogram(input::Image{Float64})
         # Detect the offset of each column to the sinogram center
-        sinogram_center = ifloor(rows(input) / 2.0);
+        sinogram_center = ifloor(rows(input) / 2);
         offset::Vector = Array(Float64, cols(input))
         for p in 1:cols(input)
                 median = find_weighted_median(vec(input.data[p, :]))
