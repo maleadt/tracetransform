@@ -60,7 +60,7 @@ int main(int argc, char **argv)
                 ("p-functional,P",
                         boost::program_options::value<std::vector<PFunctionalWrapper>>(&pfunctionals),
                         "P-functionals")
-                ("mode,i",
+                ("mode,m",
                         boost::program_options::value<std::string>()
                         ->required(),
                         "execution mode")
@@ -135,7 +135,7 @@ int main(int argc, char **argv)
 
 
         //
-        // Image processing
+        // Execution
         //
         
         // Check for CUDA devices
@@ -176,9 +176,9 @@ int main(int argc, char **argv)
 
         // Read the image
         Eigen::MatrixXf input = gray2mat(readpgm(vm["input"].as<std::string>()));
+        Transformer transformer(input, orthonormal);
 
         if (vm["mode"].as<std::string>() == "calculate") {
-                Transformer transformer(input, orthonormal);
                 transformer.getTransform(tfunctionals, pfunctionals, true);
         }
 
@@ -189,7 +189,6 @@ int main(int argc, char **argv)
                         timings(iterations + 1);
 
                 // Warm-up
-                Transformer transformer(input, orthonormal);
                 transformer.getTransform(tfunctionals, pfunctionals, false);
 
                 // Transform the image
@@ -200,6 +199,9 @@ int main(int argc, char **argv)
                 }
 
                 // Get iteration durations
+                // NOTE: although the use of elapsed real time rather than CPU
+                //       time might seem inaccurate, it is necessary because
+                //       some of the ports execute code on non-CPU hardware
                 for (unsigned int n = 0; n < iterations; n++) {
                         clog(info) << "t_" << n+1 << "=" << std::chrono::duration_cast<std::chrono::microseconds>
                                 (timings[n + 1] - timings[n]).count()/1000000.0 << std::endl;
