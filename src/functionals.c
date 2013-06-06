@@ -50,6 +50,15 @@ size_t findWeighedMedianSqrt(const float* data, const size_t length)
         return length-1;
 }
 
+float trapz(const float* x, const float* y, const size_t length)
+{
+        float sum = 0;
+        for (size_t i = 0; i < length-1; i++) {
+                sum += (x[i+1] - x[i]) * (y[i+1] + y[i]);
+        }
+        return sum * 0.5;
+}
+
 float hermite_polynomial(unsigned int order, float x) {
         switch (order) {
                 case 0:
@@ -188,24 +197,32 @@ float PFunctional2(const float* data, const size_t length)
 
 float PFunctional3(const float* data, const size_t length)
 {
-        // Calculate the Fourier transform
-        float complex *fourier = (float complex *) malloc(length * sizeof(float complex));
-        for(size_t i = 0; i < length; i++) {
-                fourier[i] = 0 + 0*I;
+        // Calculate the discrete Fourier transform
+        float *fourier_real = (float*) calloc(length, sizeof(float));
+        float *fourier_imag = (float*) calloc(length, sizeof(float));
+        for (size_t i = 0; i < length; i++) {
+                fourier_real[i] = 0;
+                fourier_imag[i] = 0;
                 float arg = -2.0 * M_PI * (float)i / (float)length;
-                for(size_t j = 0; j < length; j++) {
+                for (size_t j = 0; j < length; j++) {
                         float cosarg = cos(j * arg);
                         float sinarg = sin(j * arg);
-                        fourier[i] += (float)data[j] * cosarg
-                                + (float)data[j] * sinarg * I;
+                        fourier_real[i] += data[j] * cosarg;
+                        fourier_imag[i] += data[j] * sinarg;
                 }
         }
 
         // Integrate
-        float sum = 0;
-        for (size_t p = 0; p < length; p++)
-                sum += pow(cabs(fourier[p]), 4);
-        free(fourier);
+        // NOTE: we abuse previously allocated vectors fourier_real and
+        //       fourier_imag to respectively save the linear space (x) and
+        //       modifier Fourier values (y)
+        for (size_t p = 0; p < length; p++) {
+                fourier_imag[p] = pow(hypot(fourier_real[p]/length, fourier_imag[p]/length), 4);
+                fourier_real[p] = -1 + p*2.0/(length-1);
+        }
+        float sum = trapz(fourier_real, fourier_imag, length);
+        free(fourier_real);
+        free(fourier_imag);
         return sum;
 }
 
