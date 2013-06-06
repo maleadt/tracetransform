@@ -5,36 +5,76 @@ elseif exist('tfunctionals') == 0
         error('tfunctionals not defined');
 elseif exist('pfunctionals') == 0
         error('pfunctionals not defined');
-end
-
-% Gather data
-image = mat2gray(imread(imageFile, 'pgm'));
-[sinogram circus] = OrthTraceSign(image, tfunctionals, pfunctionals, 1, 0); % TODO: flag
-
-% Save sinograms
-for t_i = 1:length(tfunctionals)
-    t = tfunctionals(t_i);
-    
-    trace = sinogram(:, :, t_i);
-    csvwrite(sprintf('trace_T%d.csv', t), trace);
-    % TODO: debug flag
-    imwrite(mat2gray(trace), sprintf('trace_T%d.pgm', t));
-end
-
-% Save circus functions
-for t_i = 1:length(tfunctionals)
-    t = tfunctionals(t_i);
-    for p_i = 1:length(pfunctionals)
-        p = pfunctionals(p_i);
-        if p >= 4
-            p_real = p - 3;
-            type = 'H';
-        else
-            p_real = p;
-            type = 'P';
+elseif exist('mode') == 0
+        error('mode not defined');
+        if strcmp(mode, 'benchmark')
+            if exist('iterations') == 0
+                    error('iterations not defined');
+            end
         end
-        
-        trace = circus(:, p_i + (t_i-1)*length(pfunctionals));
-        csvwrite(sprintf('trace_T%d-%s%d.csv', t, type, p_real), trace);
+end
+
+% Check orthonormal
+orthonormal_count = 0;
+for i=1:length(pfunctionals)
+        if pfunctionals(i) > 3
+                orthonormal_count = orthonormal_count + 1;
+        end
+end
+if orthonormal_count == 0
+        orthonormal = false;
+elseif orthonormal_count == length(pfunctionals)
+        orthonormal = true;
+else
+        error('cannot mix orthonormal with non-orthonormal pfunctionals')
+end
+
+% Gather input data
+image = mat2gray(imread(imageFile, 'pgm'));
+
+if strcmp(mode, 'calculate')
+    % Get output data
+    [sinogram circus] = OrthTraceSign(image, tfunctionals, pfunctionals, 1, orthonormal);
+
+    % Save sinograms
+    for t_i = 1:length(tfunctionals)
+        t = tfunctionals(t_i);
+
+        trace = sinogram(:, :, t_i);
+        csvwrite(sprintf('trace_T%d.csv', t), trace);
+        % TODO: debug flag
+        imwrite(mat2gray(trace), sprintf('trace_T%d.pgm', t));
     end
+
+    % Save circus functions
+    for t_i = 1:length(tfunctionals)
+        t = tfunctionals(t_i);
+        for p_i = 1:length(pfunctionals)
+            p = pfunctionals(p_i);
+            if p >= 4
+                p_real = p - 3;
+                type = 'H';
+            else
+                p_real = p;
+                type = 'P';
+            end
+
+            trace = circus(:, p_i + (t_i-1)*length(pfunctionals));
+            csvwrite(sprintf('trace_T%d-%s%d.csv', t, type, p_real), trace);
+        end
+    end
+
+elseif strcmp(mode, 'benchmark')
+    % Warm-up
+    OrthTraceSign(image, tfunctionals, pfunctionals, 1, orthonormal);
+
+    for i=1:iterations
+       tstart = tic;
+       OrthTraceSign(image, tfunctionals, pfunctionals, 1, orthonormal);
+       telapsed = toc(tstart);
+       fprintf(1, 't_%g=%g\n', i, telapsed)
+    end
+
+else
+    error('invalid execution mode')
 end
