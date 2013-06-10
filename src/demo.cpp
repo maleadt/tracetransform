@@ -143,6 +143,10 @@ int main(int argc, char **argv)
         }
 
         else if (vm["mode"].as<std::string>() == "benchmark") {
+                if (!vm.count("iterations"))
+                        throw boost::program_options::required_option(
+                                        "iterations");
+
                 // Allocate array for time measurements
                 unsigned int iterations = vm["iterations"].as<unsigned int>();
                 std::vector<std::chrono::time_point<std::chrono::high_resolution_clock>>

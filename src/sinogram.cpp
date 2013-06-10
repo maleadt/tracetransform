@@ -8,6 +8,7 @@
 // Standard library
 #include <cassert>
 #include <cmath>
+#include <complex>
 
 // Boost
 #include <boost/optional.hpp>
@@ -67,6 +68,37 @@ Eigen::MatrixXf getSinogram(
         int p_steps = input.cols();
         Eigen::MatrixXf output(p_steps, a_steps);
 
+        // Pre-calculate
+        int length = input.rows();
+        float *precalc_real = new float[length];
+        float *precalc_imag = new float[length];
+        switch (tfunctional.functional) {
+                case TFunctional::T3:
+                {
+                        for (int r = 1; r < length; r++) {
+                                precalc_real[r] = r*cos(5.0*log(r));
+                                precalc_imag[r] = r*sin(5.0*log(r));
+                        }
+                        break;
+                }
+                case TFunctional::T4:
+                {
+                        for (int r = 1; r < length; r++) {
+                                precalc_real[r] = cos(3.0*log(r));
+                                precalc_imag[r] = sin(3.0*log(r));
+                        }
+                        break;
+                }
+                case TFunctional::T5:
+                {
+                        for (int r = 1; r < length; r++) {
+                                precalc_real[r] = sqrt(r)*cos(4.0*log(r));
+                                precalc_imag[r] = sqrt(r)*sin(4.0*log(r));
+                        }
+                        break;
+                }
+        }
+
         // Process all angles
         for (int a = 0; a < a_steps; a++) {
                 // Rotate the image
@@ -75,7 +107,6 @@ Eigen::MatrixXf getSinogram(
                 // Process all projection bands
                 for (int p = 0; p < p_steps; p++) {
                         float *data = input_rotated.data() + p * input.rows();
-                        int length = input.rows();
                         float result;
                         switch (tfunctional.functional) {
                                 case TFunctional::Radon:
@@ -88,13 +119,13 @@ Eigen::MatrixXf getSinogram(
                                         result = TFunctional2(data, length);
                                         break;
                                 case TFunctional::T3:
-                                        result = TFunctional3(data, length);
+                                        result = TFunctional3(data, precalc_real, precalc_imag, length);
                                         break;
                                 case TFunctional::T4:
-                                        result = TFunctional4(data, length);
+                                        result = TFunctional4(data, precalc_real, precalc_imag, length);
                                         break;
                                 case TFunctional::T5:
-                                        result = TFunctional5(data, length);
+                                        result = TFunctional5(data, precalc_real, precalc_imag, length);
                                         break;
                         }
                         output(
