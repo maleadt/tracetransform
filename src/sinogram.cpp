@@ -120,13 +120,9 @@ Eigen::MatrixXf getSinogram(
                                         result = TFunctional2(data, length);
                                         break;
                                 case TFunctional::T3:
-                                        result = TFunctional3(data, precalc_real, precalc_imag, length);
-                                        break;
                                 case TFunctional::T4:
-                                        result = TFunctional4(data, precalc_real, precalc_imag, length);
-                                        break;
                                 case TFunctional::T5:
-                                        result = TFunctional5(data, precalc_real, precalc_imag, length);
+                                        result = TFunctional345(data, precalc_real, precalc_imag, length);
                                         break;
                         }
                         output(
@@ -136,5 +132,6 @@ Eigen::MatrixXf getSinogram(
                 }
         }
 
+        delete[] precalc_real, precalc_real;
         return output;
 }

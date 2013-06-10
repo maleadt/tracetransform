@@ -123,7 +123,7 @@ float TFunctional2(const float* data, const size_t length)
         return integral;                
 }
 
-float TFunctional3(const float* data, const float *precalc_real, const float *precalc_imag, const size_t length)
+float TFunctional345(const float* data, const float *precalc_real, const float *precalc_imag, const size_t length)
 {
         // Transform the domain from t to r1
         size_t squaredmedian = findWeighedMedianSqrt(data, length);
@@ -135,36 +135,6 @@ float TFunctional3(const float* data, const float *precalc_real, const float *pr
                 integral_real += precalc_real[r1] * data[r1+squaredmedian];
                 integral_imag += precalc_imag[r1] * data[r1+squaredmedian];
 
-        }
-        return hypot(integral_real, integral_imag)/150;
-}
-
-float TFunctional4(const float* data, const float *precalc_real, const float *precalc_imag, const size_t length)
-{
-        // Transform the domain from t to r1
-        size_t squaredmedian = findWeighedMedianSqrt(data, length);
-
-        // Integrate
-        float integral_real = 0, integral_imag = 0;
-        for (size_t r1 = 1; r1 < length-squaredmedian; r1++) {
-                // From 1, since exp(i*log(0)) == 0
-                integral_real += precalc_real[r1] * data[r1+squaredmedian];
-                integral_imag += precalc_imag[r1] * data[r1+squaredmedian];
-        }
-        return hypot(integral_real, integral_imag);
-}
-
-float TFunctional5(const float* data, const float *precalc_real, const float *precalc_imag, const size_t length)
-{
-        // Transform the domain from t to r1
-        size_t squaredmedian = findWeighedMedianSqrt(data, length);
-
-        // Integrate
-        float integral_real = 0, integral_imag = 0;
-        for (size_t r1 = 1; r1 < length-squaredmedian; r1++) {
-                // From 1, since exp(i*log(0)) == 0
-                integral_real += precalc_real[r1] * data[r1+squaredmedian];
-                integral_imag += precalc_imag[r1] * data[r1+squaredmedian];
         }
         return hypot(integral_real, integral_imag);
 }
