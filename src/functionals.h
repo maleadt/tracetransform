@@ -22,9 +22,9 @@ size_t findWeighedMedianSquared(const float* data, const size_t length);
 float TFunctionalRadon(const float* data, const size_t length);
 float TFunctional1(const float* data, const size_t length);
 float TFunctional2(const float* data, const size_t length);
-float TFunctional3(const float* data, const size_t length);
+float TFunctional3(const float* data, const float *precalc_real, const float *precalc_imag, const size_t length);
 float TFunctional4(const float* data, const float *precalc_real, const float *precalc_imag, const size_t length);
-float TFunctional5(const float* data, const size_t length);
+float TFunctional5(const float* data, const float *precalc_real, const float *precalc_imag, const size_t length);
 
 // P-functionals
 float PFunctional1(const float* data, const size_t length);
