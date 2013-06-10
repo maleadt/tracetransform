@@ -43,24 +43,26 @@ void Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctiona
                 std::vector<PFunctionalWrapper> &pfunctionals, bool write_data) const
 {
         // Process all T-functionals
-        clog(debug) << "Calculating sinograms for given T-functionals"
-                        << std::endl;
-        std::vector<Eigen::MatrixXf> sinograms = getSinograms(
-                _image,
-                tfunctionals
-        );
         for (size_t t = 0; t < tfunctionals.size(); t++) {
+                // Calculate the trace transform sinogram
+                clog(debug) << "Calculating sinogram using T-functional "
+                                << tfunctionals[t].name << std::endl;
+                Eigen::MatrixXf sinogram = getSinogram(
+                        _image,
+                        tfunctionals[t]
+                );
+
                 if (write_data) {
                         // Save the sinogram trace
                         std::stringstream fn_trace_data;
                         fn_trace_data << "trace_" << tfunctionals[t].name << ".csv";
-                        writecsv(fn_trace_data.str(), sinograms[t]);
+                        writecsv(fn_trace_data.str(), sinogram);
 
                         if (clog(debug)) {
                                 // Save the sinogram image
                                 std::stringstream fn_trace_image;
                                 fn_trace_image << "trace_" << tfunctionals[t].name << ".pgm";
-                                writepgm(fn_trace_image.str(), mat2gray(sinograms[t]));
+                                writepgm(fn_trace_image.str(), mat2gray(sinogram));
                         }
                 }
 
@@ -68,7 +70,7 @@ void Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctiona
                 if (_orthonormal) {
                         clog(trace) << "Orthonormalizing sinogram" << std::endl;
                         size_t sinogram_center;
-                        sinograms[t] = nearest_orthonormal_sinogram(sinograms[t], sinogram_center);
+                        sinogram = nearest_orthonormal_sinogram(sinogram, sinogram_center);
                         for (size_t p = 0; p < pfunctionals.size(); p++) {
                                 if (pfunctionals[p].functional == PFunctional::Hermite) {
                                         pfunctionals[p].arguments.center = sinogram_center;
@@ -83,7 +85,7 @@ void Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctiona
                                         << pfunctionals[p].name
                                         << std::endl;
                         Eigen::VectorXf circus = getCircusFunction(
-                                sinograms[t],
+                                sinogram,
                                 pfunctionals[p]
                         );
 
