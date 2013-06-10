@@ -419,19 +419,7 @@ void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
                         << std::endl;
 }
 
-void TFunctional3(const CUDAHelper::GlobalMemory<float> *input,
-                CUDAHelper::GlobalMemory<float> *output, int a)
-{
-
-}
-
-void TFunctional4(const CUDAHelper::GlobalMemory<float> *input,
-                CUDAHelper::GlobalMemory<float> *output, int a)
-{
-
-}
-
-void TFunctional5(const CUDAHelper::GlobalMemory<float> *input,
+void TFunctional345(const CUDAHelper::GlobalMemory<float> *input,
                 CUDAHelper::GlobalMemory<float> *output, int a)
 {
 

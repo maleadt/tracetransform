@@ -118,13 +118,9 @@ CUDAHelper::GlobalMemory<float> *getSinogram(
                                 TFunctional2(input_rotated, output, a);
                                 break;
                         case TFunctional::T3:
-                                TFunctional3(input_rotated, output, a);
-                                break;
                         case TFunctional::T4:
-                                TFunctional4(input_rotated, output, a);
-                                break;
                         case TFunctional::T5:
-                                TFunctional5(input_rotated, output, a);
+                                TFunctional345(input_rotated, output, a);
                                 break;
                 }
         }
