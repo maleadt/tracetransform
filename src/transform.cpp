@@ -43,7 +43,6 @@ void Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctiona
                 std::vector<PFunctionalWrapper> &pfunctionals, bool write_data) const
 {
         // Process all T-functionals
-        #pragma omp parallel for
         for (size_t t = 0; t < tfunctionals.size(); t++) {
                 // Calculate the trace transform sinogram
                 clog(debug) << "Calculating sinogram using T-functional "
