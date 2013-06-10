@@ -8,6 +8,7 @@
 // Standard library
 #include <cassert>
 #include <cmath>
+#include <complex>
 
 // Boost
 #include <boost/optional.hpp>
@@ -53,20 +54,49 @@ std::istream& operator>>(std::istream& in, TFunctionalWrapper& wrapper)
         return in;
 }
 
-std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
+CUDAHelper::GlobalMemory<float> *getSinogram(
         const CUDAHelper::GlobalMemory<float> *input,
-        const std::vector<TFunctionalWrapper> &tfunctionals)
+        const TFunctionalWrapper &tfunctional)
 {
-        assert(input->size(0) == input->size(1));   // padded image!
+        assert(input->size(0) == input->size(1)); // padded image!
         const int rows = input->size(0);
         const int cols = input->size(1);
 
         // Calculate and allocate the output matrix
         int a_steps = 360;
         int p_steps = cols;
-        std::vector<CUDAHelper::GlobalMemory<float>*> outputs(tfunctionals.size());
-        for (size_t t = 0; t < tfunctionals.size(); t++)
-                outputs[t] = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(p_steps, a_steps), 0);
+        CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(p_steps, a_steps), 0);
+
+        // Pre-calculate
+        int length = rows;
+        float *precalc_real = new float[length];
+        float *precalc_imag = new float[length];
+        switch (tfunctional.functional) {
+                case TFunctional::T3:
+                {
+                        for (int r = 1; r < length; r++) {
+                                precalc_real[r] = r*cos(5.0*log(r));
+                                precalc_imag[r] = r*sin(5.0*log(r));
+                        }
+                        break;
+                }
+                case TFunctional::T4:
+                {
+                        for (int r = 1; r < length; r++) {
+                                precalc_real[r] = cos(3.0*log(r));
+                                precalc_imag[r] = sin(3.0*log(r));
+                        }
+                        break;
+                }
+                case TFunctional::T5:
+                {
+                        for (int r = 1; r < length; r++) {
+                                precalc_real[r] = sqrt(r)*cos(4.0*log(r));
+                                precalc_imag[r] = sqrt(r)*sin(4.0*log(r));
+                        }
+                        break;
+                }
+        }
 
         // Allocate intermediary matrix for rotated image
         CUDAHelper::GlobalMemory<float> *input_rotated = new CUDAHelper::GlobalMemory<float>(input->sizes());
@@ -76,32 +106,29 @@ std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
                 // Rotate the image
                 rotate(input, input_rotated, -deg2rad(a));
 
-                // Process all T-functionals
-                for (size_t t = 0; t < tfunctionals.size(); t++) {
-                        // Process all projection bands
-                        switch (tfunctionals[t].functional) {
-                                case TFunctional::Radon:
-                                        TFunctionalRadon(input_rotated, outputs[t], a);
-                                        break;
-                                case TFunctional::T1:
-                                        TFunctional1(input_rotated, outputs[t], a);
-                                        break;
-                                case TFunctional::T2:
-                                        TFunctional2(input_rotated, outputs[t], a);
-                                        break;
-                                case TFunctional::T3:
-                                        TFunctional3(input_rotated, outputs[t], a);
-                                        break;
-                                case TFunctional::T4:
-                                        TFunctional4(input_rotated, outputs[t], a);
-                                        break;
-                                case TFunctional::T5:
-                                        TFunctional5(input_rotated, outputs[t], a);
-                                        break;
-                        }
+                // Process all projection bands
+                switch (tfunctional.functional) {
+                        case TFunctional::Radon:
+                                TFunctionalRadon(input_rotated, output, a);
+                                break;
+                        case TFunctional::T1:
+                                TFunctional1(input_rotated, output, a);
+                                break;
+                        case TFunctional::T2:
+                                TFunctional2(input_rotated, output, a);
+                                break;
+                        case TFunctional::T3:
+                                TFunctional3(input_rotated, output, a);
+                                break;
+                        case TFunctional::T4:
+                                TFunctional4(input_rotated, output, a);
+                                break;
+                        case TFunctional::T5:
+                                TFunctional5(input_rotated, output, a);
+                                break;
                 }
         }
 
         delete input_rotated;
-        return outputs;
+        return output;
 }
