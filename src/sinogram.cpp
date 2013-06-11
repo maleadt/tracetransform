@@ -91,9 +91,9 @@ std::istream& operator>>(std::istream& in, TFunctionalWrapper& wrapper)
         return in;
 }
 
-CUDAHelper::GlobalMemory<float> *getSinogram(
+std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
         const CUDAHelper::GlobalMemory<float> *input,
-        const TFunctionalWrapper &tfunctional)
+        const std::vector<TFunctionalWrapper> &tfunctionals)
 {
         assert(input->size(0) == input->size(1)); // padded image!
         const int rows = input->size(0);
@@ -102,30 +102,35 @@ CUDAHelper::GlobalMemory<float> *getSinogram(
         // Calculate and allocate the output matrix
         int a_steps = 360;
         int p_steps = cols;
-        CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(p_steps, a_steps), 0);
+        std::vector<CUDAHelper::GlobalMemory<float>*> outputs(tfunctionals.size());
+        for (size_t t = 0; t < tfunctionals.size(); t++)
+                outputs[t] = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(p_steps, a_steps), 0);
 
         // Pre-calculate
         int length = rows;
         TFunctional345Precalculation *t345precalc = 0;
-        if (tfunctional.functional == TFunctional::T3
-                        || tfunctional.functional == TFunctional::T4
-                        || tfunctional.functional == TFunctional::T5) {
-                t345precalc = new TFunctional345Precalculation(length);
+        for (size_t t = 0; t < tfunctionals.size(); t++) {
+                if (t345precalc == 0 && (
+                                tfunctionals[t].functional == TFunctional::T3 ||
+                                tfunctionals[t].functional == TFunctional::T4 ||
+                                tfunctionals[t].functional == TFunctional::T5)) {
+                        t345precalc = new TFunctional345Precalculation(length);
 
-                if (tfunctional.functional == TFunctional::T3) {
-                        for (int r = 1; r < length; r++) {
-                                t345precalc->real[r] = r*cos(5.0*log(r));
-                                t345precalc->imag[r] = r*sin(5.0*log(r));
-                        }
-                } else if (tfunctional.functional == TFunctional::T4) {
-                        for (int r = 1; r < length; r++) {
-                                t345precalc->real[r] = cos(3.0*log(r));
-                                t345precalc->imag[r] = sin(3.0*log(r));
-                        }
-                } else if (tfunctional.functional == TFunctional::T5) {
-                        for (int r = 1; r < length; r++) {
-                                t345precalc->real[r] = sqrt(r)*cos(4.0*log(r));
-                                t345precalc->imag[r] = sqrt(r)*sin(4.0*log(r));
+                        if (tfunctionals[t].functional == TFunctional::T3) {
+                                for (int r = 1; r < length; r++) {
+                                        t345precalc->real[r] = r*cos(5.0*log(r));
+                                        t345precalc->imag[r] = r*sin(5.0*log(r));
+                                }
+                        } else if (tfunctionals[t].functional == TFunctional::T4) {
+                                for (int r = 1; r < length; r++) {
+                                        t345precalc->real[r] = cos(3.0*log(r));
+                                        t345precalc->imag[r] = sin(3.0*log(r));
+                                }
+                        } else if (tfunctionals[t].functional == TFunctional::T5) {
+                                for (int r = 1; r < length; r++) {
+                                        t345precalc->real[r] = sqrt(r)*cos(4.0*log(r));
+                                        t345precalc->imag[r] = sqrt(r)*sin(4.0*log(r));
+                                }
                         }
                 }
 
@@ -135,32 +140,36 @@ CUDAHelper::GlobalMemory<float> *getSinogram(
         // Allocate intermediary matrix for rotated image
         CUDAHelper::GlobalMemory<float> *input_rotated = new CUDAHelper::GlobalMemory<float>(input->sizes());
 
+
         // Process all angles
         for (int a = 0; a < a_steps; a++) {
                 // Rotate the image
                 rotate(input, input_rotated, -deg2rad(a));
 
-                // Process all projection bands
-                switch (tfunctional.functional) {
-                        case TFunctional::Radon:
-                                TFunctionalRadon(input_rotated, output, a);
-                                break;
-                        case TFunctional::T1:
-                                TFunctional1(input_rotated, output, a);
-                                break;
-                        case TFunctional::T2:
-                                TFunctional2(input_rotated, output, a);
-                                break;
-                        case TFunctional::T3:
-                        case TFunctional::T4:
-                        case TFunctional::T5:
-                                TFunctional345(input_rotated, t345precalc->real_mem, t345precalc->imag_mem, output, a);
-                                break;
+                // Process all T-functionals
+                for (size_t t = 0; t < tfunctionals.size(); t++) {
+                        // Process all projection bands
+                        switch (tfunctionals[t].functional) {
+                                case TFunctional::Radon:
+                                        TFunctionalRadon(input_rotated, outputs[t], a);
+                                        break;
+                                case TFunctional::T1:
+                                        TFunctional1(input_rotated, outputs[t], a);
+                                        break;
+                                case TFunctional::T2:
+                                        TFunctional2(input_rotated, outputs[t], a);
+                                        break;
+                                case TFunctional::T3:
+                                case TFunctional::T4:
+                                case TFunctional::T5:
+                                        TFunctional345(input_rotated, t345precalc->real_mem, t345precalc->imag_mem, outputs[t], a);
+                                        break;
+                        }
                 }
         }
 
         delete input_rotated;
         if (t345precalc != 0)
                 delete t345precalc;
-        return output;
+        return outputs;
 }

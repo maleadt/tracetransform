@@ -8,6 +8,7 @@
 
 // Standard library
 #include <cstddef>
+#include <vector>
 
 // Boost
 #include <boost/program_options.hpp>
@@ -64,9 +65,8 @@ std::istream& operator>>(std::istream& in, TFunctionalWrapper& wrapper);
 // Module definitions
 //
 
-
-CUDAHelper::GlobalMemory<float> *getSinogram(
+std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
         const CUDAHelper::GlobalMemory<float> *input,
-        const TFunctionalWrapper &tfunctional);
+        const std::vector<TFunctionalWrapper> &tfunctionals);
 
 #endif
