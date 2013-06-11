@@ -17,17 +17,9 @@ SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 SET(CUDA_NVCC_FLAGS "-Xcompiler -Wall,-Wextra -arch sm_35 --ptxas-options=-v")
 
-# Test execution string
-SEPARATE_ARGUMENTS(TEST_EXECUTION UNIX_COMMAND "-T 1 -P H1 ../res/Cam1_V1.pgm")
-
 # Profile build
-SET(CMAKE_CXX_FLAGS_PROFILE "-O2 -g -DNDEBUG")
-SET(CMAKE_C_FLAGS_PROFILE "-O2 -g -DNDEBUG")
-
-# Profile target
-ADD_CUSTOM_TARGET(profile
-    COMMAND valgrind --tool=callgrind ./transform ${TEST_EXECUTION}
-    DEPENDS transform)
+SET(CMAKE_CXX_FLAGS_PROFILE "-O2 -g -DNDEBUG -fno-omit-frame-pointer -fno-inline")
+SET(CMAKE_C_FLAGS_PROFILE "-O2 -g -DNDEBUG -fno-omit-frame-pointer -fno-inline")
 
 
 #
