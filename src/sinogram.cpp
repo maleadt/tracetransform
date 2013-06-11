@@ -132,9 +132,9 @@ std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
                                         t345precalc->imag[r] = sqrt(r)*sin(4.0*log(r));
                                 }
                         }
-                }
 
-                t345precalc->upload();
+                        t345precalc->upload();
+                }
         }
 
         // Allocate intermediary matrix for rotated image
