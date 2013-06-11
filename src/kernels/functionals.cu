@@ -203,6 +203,57 @@ __global__ void TFunctional2_kernel(const float *input, const int *medians,
                 output[col + a*rows] = temp[rows + row];
 }
 
+__global__ void TFunctional345_kernel(const float *input, const int *medians,
+                const float *precalc_real, const float *precalc_imag,
+                float *output, const int a)
+{
+        // Shared memory
+        extern __shared__ float temp[];
+        __shared__ int median;
+
+        // Compute the thread dimensions
+        const int col = blockIdx.x;
+        const int cols = gridDim.x;
+        const int row = threadIdx.y;
+        const int rows = blockDim.y;
+
+        // Fetch index
+        if (row == 0)
+                median = medians[col];
+        __syncthreads();
+
+        // Fetch real part
+        if (row > 0 && row < rows-median)
+                temp[row] = precalc_real[row] * input[row+median + col*rows];
+        else
+                temp[row] = 0;
+        __syncthreads();
+
+        // Scan
+        scan_array(temp, row, rows, SUM);
+
+        // Write temporary
+        float real;
+        if (row == rows-1)
+                real = temp[rows + row];
+
+        // Fetch imaginary part
+        if (row > 0 && row < rows-median)
+                temp[row] = precalc_imag[row] * input[row+median + col*rows];
+        else
+                temp[row] = 0;
+        __syncthreads();
+
+        // Scan
+        scan_array(temp, row, rows, SUM);
+
+        // Write back
+        if (row == rows-1) {
+                float imag = temp[rows + row];
+                output[col + a*rows] = hypot(real, imag);
+        }
+}
+
 __global__ void PFunctional1_kernel(const float *input,
                 float *output)
 {
@@ -420,9 +471,49 @@ void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
 }
 
 void TFunctional345(const CUDAHelper::GlobalMemory<float> *input,
+                const CUDAHelper::GlobalMemory<float> *precalc_real,
+                const CUDAHelper::GlobalMemory<float> *precalc_imag,
                 CUDAHelper::GlobalMemory<float> *output, int a)
 {
+        const int rows = input->size(0);
+        const int cols = input->size(1);
 
+        // Set-up
+        CUDAHelper::Chrono chrono;
+        chrono.start();
+
+        // Launch prefix sum kernel
+        CUDAHelper::GlobalMemory<float> *prescan = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
+        {
+                dim3 threads(1, rows);
+                dim3 blocks(cols, 1);
+                prescan_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, *prescan, SQRT);
+                CUDAHelper::checkState();
+        }
+
+        // Launch weighed median kernel
+        CUDAHelper::GlobalMemory<int> *medians = new CUDAHelper::GlobalMemory<int>(CUDAHelper::size_1d(cols), 0);
+        {
+                dim3 threads(1, rows);
+                dim3 blocks(cols, 1);
+                findWeighedMedian_kernel<<<blocks, threads, rows*sizeof(float)>>>(*input, *prescan, *medians);
+                CUDAHelper::checkState();
+        }
+        delete prescan;
+
+        // Launch T345 kernel
+        {
+                dim3 threads(1, rows);
+                dim3 blocks(cols, 1);
+                TFunctional345_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, *medians, *precalc_real, *precalc_imag, *output, a);
+                CUDAHelper::checkState();
+        }
+        delete medians;
+
+        // Clean-up
+        chrono.stop();
+        clog(trace) << "T345 kernel took " << chrono.elapsed() << " ms."
+                        << std::endl;
 }
 
 

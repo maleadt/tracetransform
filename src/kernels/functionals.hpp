@@ -23,6 +23,8 @@ extern void TFunctional1(const CUDAHelper::GlobalMemory<float> *input,
 extern void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
                 CUDAHelper::GlobalMemory<float> *output, int a);
 extern void TFunctional345(const CUDAHelper::GlobalMemory<float> *input,
+                const CUDAHelper::GlobalMemory<float> *precalc_real,
+                const CUDAHelper::GlobalMemory<float> *precalc_imag,
                 CUDAHelper::GlobalMemory<float> *output, int a);
 
 // P-functionals

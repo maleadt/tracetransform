@@ -97,6 +97,10 @@ CUDAHelper::GlobalMemory<float> *getSinogram(
                         break;
                 }
         }
+        CUDAHelper::GlobalMemory<float> *precalc_real_mem = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(length));
+        precalc_real_mem->upload(precalc_real);
+        CUDAHelper::GlobalMemory<float> *precalc_imag_mem = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(length));
+        precalc_imag_mem->upload(precalc_imag);
 
         // Allocate intermediary matrix for rotated image
         CUDAHelper::GlobalMemory<float> *input_rotated = new CUDAHelper::GlobalMemory<float>(input->sizes());
@@ -120,11 +124,13 @@ CUDAHelper::GlobalMemory<float> *getSinogram(
                         case TFunctional::T3:
                         case TFunctional::T4:
                         case TFunctional::T5:
-                                TFunctional345(input_rotated, output, a);
+                                TFunctional345(input_rotated, precalc_real_mem, precalc_imag_mem, output, a);
                                 break;
                 }
         }
 
         delete input_rotated;
+        delete precalc_real_mem, precalc_real_mem;
+        delete[] precalc_real, precalc_real;
         return output;
 }
