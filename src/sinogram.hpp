@@ -63,7 +63,7 @@ std::istream& operator>>(std::istream& in, TFunctionalWrapper& wrapper);
 //
 
 std::vector<Eigen::MatrixXf> getSinograms(
-        const Eigen::MatrixXf &input,
+        const Eigen::MatrixXf &input, unsigned int angle_stepsize,
         const std::vector<TFunctionalWrapper> &tfunctionals);
 
 #endif

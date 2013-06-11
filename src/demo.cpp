@@ -56,6 +56,10 @@ int main(int argc, char **argv)
                 ("p-functional,P",
                         boost::program_options::value<std::vector<PFunctionalWrapper>>(&pfunctionals),
                         "P-functionals")
+                ("angle,a",
+                        boost::program_options::value<unsigned int>()
+                        ->default_value(1),
+                        "angle stepsize")
                 ("mode,m",
                         boost::program_options::value<std::string>()
                         ->required(),
@@ -136,7 +140,7 @@ int main(int argc, char **argv)
         
         // Read the image
         Eigen::MatrixXf input = gray2mat(readpgm(vm["input"].as<std::string>()));
-        Transformer transformer(input, orthonormal);
+        Transformer transformer(input, vm["angle"].as<unsigned int>(), orthonormal);
 
         if (vm["mode"].as<std::string>() == "calculate") {
                 transformer.getTransform(tfunctionals, pfunctionals, true);

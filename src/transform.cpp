@@ -22,13 +22,14 @@
 // Module definitions
 //
 
-Transformer::Transformer(const Eigen::MatrixXf &image, bool orthonormal)
-                : _image(image), _orthonormal(orthonormal)
+Transformer::Transformer(const Eigen::MatrixXf &image,
+                unsigned int angle_stepsize, bool orthonormal)
+                : _image(image), _orthonormal(orthonormal), _angle_stepsize(angle_stepsize)
 {
         // Orthonormal P-functionals need a stretched image in order to ensure a
         // square sinogram
         if (_orthonormal) {
-                size_t ndiag = 360;
+                size_t ndiag = (int) std::ceil(360.0/angle_stepsize);
                 size_t nsize = (int) std::ceil(ndiag/std::sqrt(2));
                 clog(debug) << "Stretching input image to " << nsize << " squared." << std::endl;
                 _image = resize(_image, nsize, nsize);
@@ -47,6 +48,7 @@ void Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctiona
                         << std::endl;
         std::vector<Eigen::MatrixXf> sinograms = getSinograms(
                 _image,
+                _angle_stepsize,
                 tfunctionals
         );
         for (size_t t = 0; t < tfunctionals.size(); t++) {
