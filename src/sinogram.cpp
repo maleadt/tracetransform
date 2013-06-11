@@ -92,7 +92,7 @@ std::istream& operator>>(std::istream& in, TFunctionalWrapper& wrapper)
 }
 
 std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
-        const CUDAHelper::GlobalMemory<float> *input,
+        const CUDAHelper::GlobalMemory<float> *input, unsigned int angle_stepsize,
         const std::vector<TFunctionalWrapper> &tfunctionals)
 {
         assert(input->size(0) == input->size(1)); // padded image!
@@ -100,7 +100,7 @@ std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
         const int cols = input->size(1);
 
         // Calculate and allocate the output matrix
-        int a_steps = 360;
+        int a_steps = (int) std::floor(360 / angle_stepsize);
         int p_steps = cols;
         std::vector<CUDAHelper::GlobalMemory<float>*> outputs(tfunctionals.size());
         for (size_t t = 0; t < tfunctionals.size(); t++)
@@ -142,8 +142,9 @@ std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
 
 
         // Process all angles
-        for (int a = 0; a < a_steps; a++) {
+        for (size_t a_stepsize = 0; a_stepsize < a_steps; a_stepsize++) {
                 // Rotate the image
+                float a = a_stepsize * angle_stepsize;
                 rotate(input, input_rotated, -deg2rad(a));
 
                 // Process all T-functionals

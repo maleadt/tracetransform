@@ -66,7 +66,7 @@ std::istream& operator>>(std::istream& in, TFunctionalWrapper& wrapper);
 //
 
 std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
-        const CUDAHelper::GlobalMemory<float> *input,
+        const CUDAHelper::GlobalMemory<float> *input, unsigned int angle_stepsize,
         const std::vector<TFunctionalWrapper> &tfunctionals);
 
 #endif
