@@ -24,17 +24,9 @@ IF (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang" AND NOT ${CMAKE_CXX_COMPILER_VERSIO
     SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O1 -fsanitize=address -fno-omit-frame-pointer") 
 ENDIF()
 
-# Test execution string
-SEPARATE_ARGUMENTS(TEST_EXECUTION UNIX_COMMAND "-T 1 -P H1 ../res/Cam1_V1.pgm")
-
 # Profile build
-SET(CMAKE_CXX_FLAGS_PROFILE "-O2 -g -DNDEBUG")
-SET(CMAKE_C_FLAGS_PROFILE "-O2 -g -DNDEBUG")
-
-# Profile target
-ADD_CUSTOM_TARGET(profile
-    COMMAND valgrind --tool=callgrind ./transform ${TEST_EXECUTION}
-    DEPENDS transform)
+SET(CMAKE_CXX_FLAGS_PROFILE "-O2 -g -DNDEBUG -fno-omit-frame-pointer -fno-inline")
+SET(CMAKE_C_FLAGS_PROFILE "-O2 -g -DNDEBUG -fno-omit-frame-pointer -fno-inline")
 
 
 #
