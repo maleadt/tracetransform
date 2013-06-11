@@ -22,6 +22,28 @@ extern "C" {
 
 
 //
+// Structures
+//
+
+struct TFunctional345Precalculation {
+        TFunctional345Precalculation(size_t length)
+        {
+                real = new float[length];
+                imag = new float[length];
+        }
+
+        ~TFunctional345Precalculation()
+        {
+                delete[] real;
+                delete[] imag;
+        }
+
+        float *real;
+        float *imag;
+};
+
+
+//
 // Module definitions
 //
 
@@ -70,32 +92,27 @@ Eigen::MatrixXf getSinogram(
 
         // Pre-calculate
         int length = input.rows();
-        float *precalc_real = new float[length];
-        float *precalc_imag = new float[length];
-        switch (tfunctional.functional) {
-                case TFunctional::T3:
-                {
+        TFunctional345Precalculation *t345precalc = 0;
+        if (tfunctional.functional == TFunctional::T3
+                        || tfunctional.functional == TFunctional::T4
+                        || tfunctional.functional == TFunctional::T5) {
+                t345precalc = new TFunctional345Precalculation(length);
+
+                if (tfunctional.functional == TFunctional::T3) {
                         for (int r = 1; r < length; r++) {
-                                precalc_real[r] = r*cos(5.0*log(r));
-                                precalc_imag[r] = r*sin(5.0*log(r));
+                                t345precalc->real[r] = r*cos(5.0*log(r));
+                                t345precalc->imag[r] = r*sin(5.0*log(r));
                         }
-                        break;
-                }
-                case TFunctional::T4:
-                {
+                } else if (tfunctional.functional == TFunctional::T4) {
                         for (int r = 1; r < length; r++) {
-                                precalc_real[r] = cos(3.0*log(r));
-                                precalc_imag[r] = sin(3.0*log(r));
+                                t345precalc->real[r] = cos(3.0*log(r));
+                                t345precalc->imag[r] = sin(3.0*log(r));
                         }
-                        break;
-                }
-                case TFunctional::T5:
-                {
+                } else if (tfunctional.functional == TFunctional::T5) {
                         for (int r = 1; r < length; r++) {
-                                precalc_real[r] = sqrt(r)*cos(4.0*log(r));
-                                precalc_imag[r] = sqrt(r)*sin(4.0*log(r));
+                                t345precalc->real[r] = sqrt(r)*cos(4.0*log(r));
+                                t345precalc->imag[r] = sqrt(r)*sin(4.0*log(r));
                         }
-                        break;
                 }
         }
 
@@ -121,7 +138,7 @@ Eigen::MatrixXf getSinogram(
                                 case TFunctional::T3:
                                 case TFunctional::T4:
                                 case TFunctional::T5:
-                                        result = TFunctional345(data, precalc_real, precalc_imag, length);
+                                        result = TFunctional345(data, t345precalc->real, t345precalc->imag, length);
                                         break;
                         }
                         output(
@@ -131,6 +148,7 @@ Eigen::MatrixXf getSinogram(
                 }
         }
 
-        delete[] precalc_real, precalc_real;
+        if (t345precalc != 0)
+                delete t345precalc;
         return output;
 }
