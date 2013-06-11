@@ -63,7 +63,7 @@ int main(int argc, char **argv)
                 ("mode,m",
                         boost::program_options::value<std::string>()
                         ->required(),
-                        "execution mode")
+                        "execution mode ('calculate' or 'benchmark')")
                 ("iterations,n",
                         boost::program_options::value<unsigned int>(),
                         "amount of iterations to run")

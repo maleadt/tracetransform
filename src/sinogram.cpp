@@ -22,6 +22,43 @@
 
 
 //
+// Structures
+//
+
+struct TFunctional345Precalculation {
+        TFunctional345Precalculation(size_t length)
+        {
+                real = new float[length];
+                imag = new float[length];
+
+                real_mem = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(length));
+                imag_mem = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(length));
+        }
+
+        ~TFunctional345Precalculation()
+        {
+                delete[] real;
+                delete[] imag;
+
+                delete real_mem;
+                delete imag_mem;
+        }
+
+        void upload ()
+        {
+                real_mem->upload(real);
+                imag_mem->upload(imag);
+        }
+
+        float *real;
+        float *imag;
+
+        CUDAHelper::GlobalMemory<float> *real_mem;
+        CUDAHelper::GlobalMemory<float> *imag_mem;
+};
+
+
+//
 // Module definitions
 //
 
@@ -69,38 +106,31 @@ CUDAHelper::GlobalMemory<float> *getSinogram(
 
         // Pre-calculate
         int length = rows;
-        float *precalc_real = new float[length];
-        float *precalc_imag = new float[length];
-        switch (tfunctional.functional) {
-                case TFunctional::T3:
-                {
+        TFunctional345Precalculation *t345precalc = 0;
+        if (tfunctional.functional == TFunctional::T3
+                        || tfunctional.functional == TFunctional::T4
+                        || tfunctional.functional == TFunctional::T5) {
+                t345precalc = new TFunctional345Precalculation(length);
+
+                if (tfunctional.functional == TFunctional::T3) {
                         for (int r = 1; r < length; r++) {
-                                precalc_real[r] = r*cos(5.0*log(r));
-                                precalc_imag[r] = r*sin(5.0*log(r));
+                                t345precalc->real[r] = r*cos(5.0*log(r));
+                                t345precalc->imag[r] = r*sin(5.0*log(r));
                         }
-                        break;
-                }
-                case TFunctional::T4:
-                {
+                } else if (tfunctional.functional == TFunctional::T4) {
                         for (int r = 1; r < length; r++) {
-                                precalc_real[r] = cos(3.0*log(r));
-                                precalc_imag[r] = sin(3.0*log(r));
+                                t345precalc->real[r] = cos(3.0*log(r));
+                                t345precalc->imag[r] = sin(3.0*log(r));
                         }
-                        break;
-                }
-                case TFunctional::T5:
-                {
+                } else if (tfunctional.functional == TFunctional::T5) {
                         for (int r = 1; r < length; r++) {
-                                precalc_real[r] = sqrt(r)*cos(4.0*log(r));
-                                precalc_imag[r] = sqrt(r)*sin(4.0*log(r));
+                                t345precalc->real[r] = sqrt(r)*cos(4.0*log(r));
+                                t345precalc->imag[r] = sqrt(r)*sin(4.0*log(r));
                         }
-                        break;
                 }
+
+                t345precalc->upload();
         }
-        CUDAHelper::GlobalMemory<float> *precalc_real_mem = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(length));
-        precalc_real_mem->upload(precalc_real);
-        CUDAHelper::GlobalMemory<float> *precalc_imag_mem = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(length));
-        precalc_imag_mem->upload(precalc_imag);
 
         // Allocate intermediary matrix for rotated image
         CUDAHelper::GlobalMemory<float> *input_rotated = new CUDAHelper::GlobalMemory<float>(input->sizes());
@@ -124,13 +154,13 @@ CUDAHelper::GlobalMemory<float> *getSinogram(
                         case TFunctional::T3:
                         case TFunctional::T4:
                         case TFunctional::T5:
-                                TFunctional345(input_rotated, precalc_real_mem, precalc_imag_mem, output, a);
+                                TFunctional345(input_rotated, t345precalc->real_mem, t345precalc->imag_mem, output, a);
                                 break;
                 }
         }
 
         delete input_rotated;
-        delete precalc_real_mem, precalc_real_mem;
-        delete[] precalc_real, precalc_real;
+        if (t345precalc != 0)
+                delete t345precalc;
         return output;
 }
