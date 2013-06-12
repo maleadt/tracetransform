@@ -20,6 +20,8 @@
 #include "kernels/rotate.hpp"
 #include "kernels/functionals.hpp"
 
+#define CONCURRENCY 16
+
 
 //
 // Structures
@@ -139,7 +141,6 @@ std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
 
         // Allocate intermediary matrix for rotated image
         CUDAHelper::GlobalMemory<float> *input_rotated = new CUDAHelper::GlobalMemory<float>(input->sizes());
-
 
         // Process all angles
         for (int a_step = 0; a_step < a_steps; a_step++) {

@@ -74,11 +74,14 @@ void rotate(const CUDAHelper::GlobalMemory<float> *input,
         const int cols = input->size(1);
 
         // Calculate transform matrix
-        Eigen::Matrix2f transform_data;
-        transform_data <<       std::cos(angle), -std::sin(angle),
-                                std::sin(angle),  std::cos(angle);
+        CUDAHelper::HostMemory<float> *transform_data = new CUDAHelper::HostMemory<float>(CUDAHelper::size_2d(2, 2));
+        // FIXME: leak
+        (*transform_data)[0] = std::cos(angle);
+        (*transform_data)[1] = std::sin(angle);
+        (*transform_data)[2] = -std::sin(angle);
+        (*transform_data)[3] = std::cos(angle);
         CUDAHelper::ConstantMemory<float> *transform = new CUDAHelper::ConstantMemory<float>(_transform, CUDAHelper::size_2d(2, 2));
-        transform->upload(transform_data.data());
+        transform->upload(*transform_data);
 
         // Launch
         dim3 threads(1, rows);
