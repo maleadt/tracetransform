@@ -15,7 +15,6 @@
 // Local
 #include "../global.hpp"
 #include "../logger.hpp"
-#include "../cudahelper/chrono.hpp"
 #include "functionals.cu"
 
 
@@ -89,10 +88,6 @@ CUDAHelper::GlobalMemory<float> *nearest_orthonormal_sinogram(
         int rows = input->size(0);
         const int cols = input->size(1);
 
-        // Set-up
-        CUDAHelper::Chrono chrono;
-        chrono.start();
-
         // Launch prefix sum kernel
         CUDAHelper::GlobalMemory<float> *prescan = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
         {
@@ -159,10 +154,5 @@ CUDAHelper::GlobalMemory<float> *nearest_orthonormal_sinogram(
         }
         delete matrixU;
         delete matrixVT;
-
-        // Clean-up
-        chrono.stop();
-        clog(trace) << "NOS kernel took " << chrono.elapsed() << " ms."
-                        << std::endl;
         return nos;
 }

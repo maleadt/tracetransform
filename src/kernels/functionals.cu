@@ -11,7 +11,6 @@
 // Local
 #include "../global.hpp"
 #include "../logger.hpp"
-#include "../cudahelper/chrono.hpp"
 
 
 //
@@ -364,10 +363,6 @@ void TFunctionalRadon(const CUDAHelper::GlobalMemory<float> *input,
         const int rows = input->size(0);
         const int cols = input->size(1);
 
-        // Set-up
-        CUDAHelper::Chrono chrono;
-        chrono.start();
-
         // Launch radon kernel
         {
                 dim3 threads(1, rows);
@@ -375,11 +370,6 @@ void TFunctionalRadon(const CUDAHelper::GlobalMemory<float> *input,
                 TFunctionalRadon_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, *output, a);
                 CUDAHelper::checkState();
         }
-
-        // Clean-up
-        chrono.stop();
-        clog(trace) << "Radon kernel took " << chrono.elapsed() << " ms."
-                        << std::endl;
 }
 
 void TFunctional1(const CUDAHelper::GlobalMemory<float> *input,
@@ -387,10 +377,6 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input,
 {
         const int rows = input->size(0);
         const int cols = input->size(1);
-
-        // Set-up
-        CUDAHelper::Chrono chrono;
-        chrono.start();
 
         // Launch prefix sum kernel
         CUDAHelper::GlobalMemory<float> *prescan = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
@@ -419,11 +405,6 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input,
                 CUDAHelper::checkState();
         }
         delete medians;
-
-        // Clean-up
-        chrono.stop();
-        clog(trace) << "T1 kernel took " << chrono.elapsed() << " ms."
-                        << std::endl;
 }
 
 void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
@@ -431,10 +412,6 @@ void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
 {
         const int rows = input->size(0);
         const int cols = input->size(1);
-
-        // Set-up
-        CUDAHelper::Chrono chrono;
-        chrono.start();
 
         // Launch prefix sum kernel
         CUDAHelper::GlobalMemory<float> *prescan = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
@@ -463,11 +440,6 @@ void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
                 CUDAHelper::checkState();
         }
         delete medians;
-
-        // Clean-up
-        chrono.stop();
-        clog(trace) << "T2 kernel took " << chrono.elapsed() << " ms."
-                        << std::endl;
 }
 
 void TFunctional345(const CUDAHelper::GlobalMemory<float> *input,
@@ -477,10 +449,6 @@ void TFunctional345(const CUDAHelper::GlobalMemory<float> *input,
 {
         const int rows = input->size(0);
         const int cols = input->size(1);
-
-        // Set-up
-        CUDAHelper::Chrono chrono;
-        chrono.start();
 
         // Launch prefix sum kernel
         CUDAHelper::GlobalMemory<float> *prescan = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
@@ -509,11 +477,6 @@ void TFunctional345(const CUDAHelper::GlobalMemory<float> *input,
                 CUDAHelper::checkState();
         }
         delete medians;
-
-        // Clean-up
-        chrono.stop();
-        clog(trace) << "T345 kernel took " << chrono.elapsed() << " ms."
-                        << std::endl;
 }
 
 
@@ -527,10 +490,6 @@ void PFunctional1(const CUDAHelper::GlobalMemory<float> *input,
         const int rows = input->size(0);
         const int cols = input->size(1);
 
-        // Set-up
-        CUDAHelper::Chrono chrono;
-        chrono.start();
-
         // Launch P1 kernel
         {
                 dim3 threads(1, rows);
@@ -538,12 +497,6 @@ void PFunctional1(const CUDAHelper::GlobalMemory<float> *input,
                 PFunctional1_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, *output);
                 CUDAHelper::checkState();
         }
-
-        // Clean-up
-        chrono.stop();
-        clog(trace) << "P1 kernel took " << chrono.elapsed() << " ms."
-                        << std::endl;
-
 }
 
 void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
@@ -551,10 +504,6 @@ void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
 {
         const int rows = input->size(0);
         const int cols = input->size(1);
-
-        // Set-up
-        CUDAHelper::Chrono chrono;
-        chrono.start();
 
         // Launch prefix sum kernel
         CUDAHelper::GlobalMemory<float> *prescan = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
@@ -583,12 +532,6 @@ void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
                 CUDAHelper::checkState();
         }
         delete medians;
-
-        // Clean-up
-        chrono.stop();
-        clog(trace) << "P2 kernel took " << chrono.elapsed() << " ms."
-                        << std::endl;
-
 }
 
 void PFunctional3(const CUDAHelper::GlobalMemory<float> *input,
@@ -604,10 +547,6 @@ void PFunctionalHermite(const CUDAHelper::GlobalMemory<float> *input,
         const int rows = input->size(0);
         const int cols = input->size(1);
 
-        // Set-up
-        CUDAHelper::Chrono chrono;
-        chrono.start();
-
         // Launch P1 kernel
         {
                 dim3 threads(1, rows);
@@ -615,10 +554,4 @@ void PFunctionalHermite(const CUDAHelper::GlobalMemory<float> *input,
                 PFunctionalHermite_kernel<<<blocks, threads, 2*rows*sizeof(float)>>>(*input, *output, order, center);
                 CUDAHelper::checkState();
         }
-
-        // Clean-up
-        chrono.stop();
-        clog(trace) << "Hermite kernel took " << chrono.elapsed() << " ms."
-                        << std::endl;
-
 }

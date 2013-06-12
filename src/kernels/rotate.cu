@@ -11,7 +11,6 @@
 // Local
 #include "../global.hpp"
 #include "../logger.hpp"
-#include "../cudahelper/chrono.hpp"
 
 
 //
@@ -74,10 +73,6 @@ void rotate(const CUDAHelper::GlobalMemory<float> *input,
         const int rows = input->size(0);
         const int cols = input->size(1);
 
-        // Set-up
-        CUDAHelper::Chrono chrono;
-        chrono.start();
-
         // Calculate transform matrix
         Eigen::Matrix2f transform_data;
         transform_data <<       std::cos(angle), -std::sin(angle),
@@ -90,8 +85,4 @@ void rotate(const CUDAHelper::GlobalMemory<float> *input,
         dim3 blocks(cols, 1);
         rotate_kernel<<<blocks, threads>>>(*input, *output);
         CUDAHelper::checkState();
-
-        // Clean-up
-        chrono.stop();
-        clog(trace) << "Rotation kernel took " << chrono.elapsed() << " ms." << std::endl;
 }
