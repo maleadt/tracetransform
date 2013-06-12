@@ -122,7 +122,7 @@ std::vector<Eigen::MatrixXf> getSinograms(
         }
 
         // Process all angles
-        for (size_t a_step = 0; a_step < a_steps; a_step++) {
+        for (int a_step = 0; a_step < a_steps; a_step++) {
                 // Rotate the image
                 float a = a_step * angle_stepsize;
                 Eigen::MatrixXf input_rotated = rotate(input, origin, -deg2rad(a));
