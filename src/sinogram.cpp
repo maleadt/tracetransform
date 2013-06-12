@@ -142,7 +142,7 @@ std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
 
 
         // Process all angles
-        for (size_t a_step = 0; a_step < a_steps; a_step++) {
+        for (int a_step = 0; a_step < a_steps; a_step++) {
                 // Rotate the image
                 float a = a_step * angle_stepsize;
                 rotate(input, input_rotated, -deg2rad(a));
