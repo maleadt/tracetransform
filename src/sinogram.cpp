@@ -122,9 +122,9 @@ std::vector<Eigen::MatrixXf> getSinograms(
         }
 
         // Process all angles
-        for (size_t a_stepsize = 0; a_stepsize < a_steps; a_stepsize++) {
+        for (size_t a_step = 0; a_step < a_steps; a_step++) {
                 // Rotate the image
-                float a = a_stepsize * angle_stepsize;
+                float a = a_step * angle_stepsize;
                 Eigen::MatrixXf input_rotated = rotate(input, origin, -deg2rad(a));
 
                 // Process all projection bands
@@ -152,7 +152,7 @@ std::vector<Eigen::MatrixXf> getSinograms(
                                 }
                                 outputs[t](
                                         p,      // row
-                                        a       // column
+                                        a_step  // column
                                 ) = result;
                         }
                 }
