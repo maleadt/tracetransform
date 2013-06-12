@@ -142,9 +142,9 @@ std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
 
 
         // Process all angles
-        for (size_t a_stepsize = 0; a_stepsize < a_steps; a_stepsize++) {
+        for (size_t a_step = 0; a_step < a_steps; a_step++) {
                 // Rotate the image
-                float a = a_stepsize * angle_stepsize;
+                float a = a_step * angle_stepsize;
                 rotate(input, input_rotated, -deg2rad(a));
 
                 // Process all T-functionals
@@ -152,18 +152,18 @@ std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
                         // Process all projection bands
                         switch (tfunctionals[t].functional) {
                                 case TFunctional::Radon:
-                                        TFunctionalRadon(input_rotated, outputs[t], a);
+                                        TFunctionalRadon(input_rotated, outputs[t], a_step);
                                         break;
                                 case TFunctional::T1:
-                                        TFunctional1(input_rotated, outputs[t], a);
+                                        TFunctional1(input_rotated, outputs[t], a_step);
                                         break;
                                 case TFunctional::T2:
-                                        TFunctional2(input_rotated, outputs[t], a);
+                                        TFunctional2(input_rotated, outputs[t], a_step);
                                         break;
                                 case TFunctional::T3:
                                 case TFunctional::T4:
                                 case TFunctional::T5:
-                                        TFunctional345(input_rotated, t345precalc->real_mem, t345precalc->imag_mem, outputs[t], a);
+                                        TFunctional345(input_rotated, t345precalc->real_mem, t345precalc->imag_mem, outputs[t], a_step);
                                         break;
                         }
                 }
