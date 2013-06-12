@@ -206,11 +206,29 @@ namespace CUDAHelper
                                                         cudaMemcpyDeviceToHost));
                 }
 
+                void downloadAsync(const HostMemory<MemType> hostMem) const
+                {
+                        clog(trace) << "Asynchronously downloading " << this->bytes() << " bytes from global memory." << std::endl;
+                        checkError(
+                                        cudaMemcpy(hostMem, _devicePtr,
+                                                        this->bytes(),
+                                                        cudaMemcpyDeviceToHost));
+                }
+
                 void upload(const MemType* hostPtr)
                 {
                         clog(trace) << "Uploading " << this->bytes() << " bytes to global memory." << std::endl;
                         checkError(
                                         cudaMemcpy(_devicePtr, hostPtr,
+                                                        this->bytes(),
+                                                        cudaMemcpyHostToDevice));
+                }
+
+                void uploadAsync(const HostMemory<MemType> hostMem)
+                {
+                        clog(trace) << "Asynchronously uploading " << this->bytes() << " bytes to global memory." << std::endl;
+                        checkError(
+                                        cudaMemcpyAsync(_devicePtr, hostMem,
                                                         this->bytes(),
                                                         cudaMemcpyHostToDevice));
                 }
@@ -242,6 +260,14 @@ namespace CUDAHelper
                 {
                         checkError(
                                         cudaMemcpyToSymbol(_symbol, hostPtr,
+                                                        this->bytes(), 0,
+                                                        cudaMemcpyHostToDevice));
+                }
+
+                void uploadAsync(const HostMemory<MemType> hostMem)
+                {
+                        checkError(
+                                        cudaMemcpyToSymbolAsync(_symbol, hostMem,
                                                         this->bytes(), 0,
                                                         cudaMemcpyHostToDevice));
                 }

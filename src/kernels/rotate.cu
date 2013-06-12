@@ -81,7 +81,7 @@ void rotate(const CUDAHelper::GlobalMemory<float> *input,
         (*transform_data)[2] = -std::sin(angle);
         (*transform_data)[3] = std::cos(angle);
         CUDAHelper::ConstantMemory<float> *transform = new CUDAHelper::ConstantMemory<float>(_transform, CUDAHelper::size_2d(2, 2));
-        transform->upload(*transform_data);
+        transform->uploadAsync(*transform_data);
 
         // Launch
         dim3 threads(1, rows);
