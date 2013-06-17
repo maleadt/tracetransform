@@ -24,17 +24,9 @@ IF (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang" AND NOT ${CMAKE_CXX_COMPILER_VERSIO
     SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O1 -fsanitize=address -fno-omit-frame-pointer") 
 ENDIF()
 
-# Test execution string
-SEPARATE_ARGUMENTS(TEST_EXECUTION UNIX_COMMAND "-T 1 -P H1 ../res/Cam1_V1.pgm")
-
 # Profile build
-SET(CMAKE_CXX_FLAGS_PROFILE "-O2 -g -DNDEBUG")
-SET(CMAKE_C_FLAGS_PROFILE "-O2 -g -DNDEBUG")
-
-# Profile target
-ADD_CUSTOM_TARGET(profile
-    COMMAND valgrind --tool=callgrind ./transform ${TEST_EXECUTION}
-    DEPENDS transform)
+SET(CMAKE_CXX_FLAGS_PROFILE "-O2 -g -DNDEBUG -fno-omit-frame-pointer -fno-inline")
+SET(CMAKE_C_FLAGS_PROFILE "-O2 -g -DNDEBUG -fno-omit-frame-pointer -fno-inline")
 
 
 #
@@ -54,6 +46,14 @@ FIND_PACKAGE(Elfutils)
 IF (Elfutils_FOUND)
 	ADD_DEFINITIONS(-DBACKWARD_HAS_DW=1)
 ENDIF (Elfutils_FOUND)
+
+# Intel MKL
+#FIND_PACKAGE(MKL)
+IF (MKL_FOUND)
+        ADD_DEFINITIONS(-DEIGEN_USE_MKL_ALL)
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -openmp -DMKL_ILP64")
+        SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lmkl_core -lmkl_intel_ilp64 -lmkl_intel_thread")
+ENDIF (MKL_FOUND)
 
 
 #

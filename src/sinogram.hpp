@@ -8,6 +8,7 @@
 
 // Standard library
 #include <cstddef>
+#include <vector>
 
 // Boost
 #include <boost/program_options.hpp>
@@ -20,7 +21,8 @@
 // Functionals
 //
 
-enum class TFunctional
+// TODO: make this an enum class when ICC 14 is released
+enum TFunctional
 {
         Radon,
         T1,
@@ -61,8 +63,8 @@ std::istream& operator>>(std::istream& in, TFunctionalWrapper& wrapper);
 // Module definitions
 //
 
-Eigen::MatrixXf getSinogram(
-        const Eigen::MatrixXf &input,
-        const TFunctionalWrapper &tfunctional);
+std::vector<Eigen::MatrixXf> getSinograms(
+        const Eigen::MatrixXf &input, unsigned int angle_stepsize,
+        const std::vector<TFunctionalWrapper> &tfunctionals);
 
 #endif

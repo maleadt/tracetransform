@@ -22,6 +22,28 @@ extern "C" {
 
 
 //
+// Structures
+//
+
+struct TFunctional345Precalculation {
+        TFunctional345Precalculation(size_t length)
+        {
+                real = new float[length];
+                imag = new float[length];
+        }
+
+        ~TFunctional345Precalculation()
+        {
+                delete[] real;
+                delete[] imag;
+        }
+
+        float *real;
+        float *imag;
+};
+
+
+//
 // Module definitions
 //
 
@@ -54,9 +76,9 @@ std::istream& operator>>(std::istream& in, TFunctionalWrapper& wrapper)
         return in;
 }
 
-Eigen::MatrixXf getSinogram(
-        const Eigen::MatrixXf &input,
-        const TFunctionalWrapper &tfunctional)
+std::vector<Eigen::MatrixXf> getSinograms(
+        const Eigen::MatrixXf &input, unsigned int angle_stepsize,
+        const std::vector<TFunctionalWrapper> &tfunctionals)
 {
         assert(input.rows() == input.cols());   // padded image!
 
@@ -64,74 +86,80 @@ Eigen::MatrixXf getSinogram(
         Point<float>::type origin((input.cols()-1)/2.0, (input.rows()-1)/2.0);
 
         // Calculate and allocate the output matrix
-        int a_steps = 360;
+        int a_steps = (int) std::floor(360 / angle_stepsize);
         int p_steps = input.cols();
-        Eigen::MatrixXf output(p_steps, a_steps);
+        std::vector<Eigen::MatrixXf> outputs(tfunctionals.size());
+        for (size_t t = 0; t < tfunctionals.size(); t++)
+                outputs[t] = Eigen::MatrixXf(p_steps, a_steps);
 
         // Pre-calculate
         int length = input.rows();
-        float *precalc_real = new float[length];
-        float *precalc_imag = new float[length];
-        switch (tfunctional.functional) {
-                case TFunctional::T3:
-                {
-                        for (int r = 1; r < length; r++) {
-                                precalc_real[r] = r*cos(5.0*log(r));
-                                precalc_imag[r] = r*sin(5.0*log(r));
+        TFunctional345Precalculation *t345precalc = 0;
+        for (size_t t = 0; t < tfunctionals.size(); t++) {
+                if (t345precalc == 0 && (
+                                tfunctionals[t].functional == TFunctional::T3 ||
+                                tfunctionals[t].functional == TFunctional::T4 ||
+                                tfunctionals[t].functional == TFunctional::T5)) {
+                        t345precalc = new TFunctional345Precalculation(length);
+
+                        if (tfunctionals[t].functional == TFunctional::T3) {
+                                for (int r = 1; r < length; r++) {
+                                        t345precalc->real[r] = r*cos(5.0*log(r));
+                                        t345precalc->imag[r] = r*sin(5.0*log(r));
+                                }
+                        } else if (tfunctionals[t].functional == TFunctional::T4) {
+                                for (int r = 1; r < length; r++) {
+                                        t345precalc->real[r] = cos(3.0*log(r));
+                                        t345precalc->imag[r] = sin(3.0*log(r));
+                                }
+                        } else if (tfunctionals[t].functional == TFunctional::T5) {
+                                for (int r = 1; r < length; r++) {
+                                        t345precalc->real[r] = sqrt(r)*cos(4.0*log(r));
+                                        t345precalc->imag[r] = sqrt(r)*sin(4.0*log(r));
+                                }
                         }
-                        break;
-                }
-                case TFunctional::T4:
-                {
-                        for (int r = 1; r < length; r++) {
-                                precalc_real[r] = cos(3.0*log(r));
-                                precalc_imag[r] = sin(3.0*log(r));
-                        }
-                        break;
-                }
-                case TFunctional::T5:
-                {
-                        for (int r = 1; r < length; r++) {
-                                precalc_real[r] = sqrt(r)*cos(4.0*log(r));
-                                precalc_imag[r] = sqrt(r)*sin(4.0*log(r));
-                        }
-                        break;
                 }
         }
 
         // Process all angles
         #pragma omp parallel for
-        for (int a = 0; a < a_steps; a++) {
+        for (int a_step = 0; a_step < a_steps; a_step++) {
                 // Rotate the image
+                float a = a_step * angle_stepsize;
                 Eigen::MatrixXf input_rotated = rotate(input, origin, -deg2rad(a));
 
                 // Process all projection bands
                 for (int p = 0; p < p_steps; p++) {
                         float *data = input_rotated.data() + p * input.rows();
-                        float result;
-                        switch (tfunctional.functional) {
-                                case TFunctional::Radon:
-                                        result = TFunctionalRadon(data, length);
-                                        break;
-                                case TFunctional::T1:
-                                        result = TFunctional1(data, length);
-                                        break;
-                                case TFunctional::T2:
-                                        result = TFunctional2(data, length);
-                                        break;
-                                case TFunctional::T3:
-                                case TFunctional::T4:
-                                case TFunctional::T5:
-                                        result = TFunctional345(data, precalc_real, precalc_imag, length);
-                                        break;
+
+                        // Process all T-functionals
+                        for (size_t t = 0; t < tfunctionals.size(); t++) {
+                                float result;
+                                switch (tfunctionals[t].functional) {
+                                        case TFunctional::Radon:
+                                                result = TFunctionalRadon(data, length);
+                                                break;
+                                        case TFunctional::T1:
+                                                result = TFunctional1(data, length);
+                                                break;
+                                        case TFunctional::T2:
+                                                result = TFunctional2(data, length);
+                                                break;
+                                        case TFunctional::T3:
+                                        case TFunctional::T4:
+                                        case TFunctional::T5:
+                                                result = TFunctional345(data, t345precalc->real, t345precalc->imag, length);
+                                                break;
+                                }
+                                outputs[t](
+                                        p,      // row
+                                        a_step  // column
+                                ) = result;
                         }
-                        output(
-                                p,      // row
-                                a       // column
-                        ) = result;
                 }
         }
 
-        delete[] precalc_real, precalc_real;
-        return output;
+        if (t345precalc != 0)
+                delete t345precalc;
+        return outputs;
 }
