@@ -53,6 +53,7 @@ namespace CUDAHelper
 
                 std::size_t size(unsigned int dim) const
                 {
+                        assert(dim < _sizes.size());
                         return _sizes[dim];
                 }
 
@@ -69,6 +70,16 @@ namespace CUDAHelper
                         return size() * sizeof(MemType);
                 }
 
+                std::size_t rows() const
+                {
+                        return size(0);
+                }
+
+                std::size_t cols() const
+                {
+                        return size(1);
+                }
+
         private:
                 Memory(const Memory&);
                 Memory& operator=(const Memory&);
@@ -76,6 +87,7 @@ namespace CUDAHelper
                 std::vector<std::size_t> _sizes;
         };
 
+        __attribute__((unused))
         static std::vector<std::size_t> size_1d(std::size_t dim1)
         {
                 std::vector<std::size_t> sizes(1);
@@ -83,6 +95,7 @@ namespace CUDAHelper
                 return sizes;
         }
 
+        __attribute__((unused))
         static std::vector<std::size_t> size_2d(std::size_t dim1, std::size_t dim2)
         {
                 std::vector<std::size_t> sizes(2);
@@ -91,6 +104,7 @@ namespace CUDAHelper
                 return sizes;
         }
 
+        __attribute__((unused))
         static std::vector<std::size_t> size_3d(std::size_t dim1, std::size_t dim2, std::size_t dim3)
         {
                 std::vector<std::size_t> sizes(3);

@@ -62,11 +62,8 @@ CUDAHelper::GlobalMemory<float> *getCircusFunction(
         const CUDAHelper::GlobalMemory<float> *input,
         const PFunctionalWrapper &pfunctional)
 {
-        const int rows = input->size(0);
-        const int cols = input->size(1);
-
         // Allocate the output matrix
-        CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(cols));
+        CUDAHelper::GlobalMemory<float> *output = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(input->cols()));
 
         // Trace all columns
         switch (pfunctional.functional) {
