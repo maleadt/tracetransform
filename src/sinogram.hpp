@@ -21,7 +21,8 @@
 // Functionals
 //
 
-enum class TFunctional
+// TODO: make this an enum class when ICC 14 is released
+enum TFunctional
 {
         Radon,
         T1,
