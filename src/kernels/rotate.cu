@@ -34,9 +34,7 @@ __device__ float interpolate_kernel(
 
 }
 
-__constant__ float _transform[4];
-
-__global__ void rotate_kernel(const float *_input, float *_output)
+__global__ void rotate_kernel(const float *_input, float *_output, float angle)
 {
         // Compute the thread dimensions
         const int col = blockIdx.x;
@@ -47,7 +45,11 @@ __global__ void rotate_kernel(const float *_input, float *_output)
         // Construct Eigen objects
         Eigen::Map<const Eigen::MatrixXf> input(_input, rows, cols);
         Eigen::Map<Eigen::MatrixXf> output(_output, rows, cols);
-        Eigen::Map<const Eigen::Matrix2f> transform(_transform);
+
+        // Calculate transform matrix
+        Eigen::Matrix2f transform;
+        transform <<    std::cos(angle), -std::sin(angle),
+                        std::sin(angle),  std::cos(angle);
 
         // Calculate the source location
         Point<float>::type origin(cols / 2.0, rows / 2.0);
@@ -72,20 +74,9 @@ void rotate(const CUDAHelper::GlobalMemory<float> *input,
 {
         const int rows = input->size(0);
         const int cols = input->size(1);
-
-        // Calculate transform matrix
-        CUDAHelper::HostMemory<float> *transform_data = new CUDAHelper::HostMemory<float>(CUDAHelper::size_2d(2, 2));
-        // FIXME: leak
-        (*transform_data)[0] = std::cos(angle);
-        (*transform_data)[1] = std::sin(angle);
-        (*transform_data)[2] = -std::sin(angle);
-        (*transform_data)[3] = std::cos(angle);
-        CUDAHelper::ConstantMemory<float> *transform = new CUDAHelper::ConstantMemory<float>(_transform, CUDAHelper::size_2d(2, 2));
-        transform->uploadAsync(*transform_data);
-
         // Launch
         dim3 threads(1, rows);
         dim3 blocks(cols, 1);
-        rotate_kernel<<<blocks, threads>>>(*input, *output);
+        rotate_kernel<<<blocks, threads>>>(*input, *output, angle);
         CUDAHelper::checkState();
 }
