@@ -178,7 +178,7 @@ int main(int argc, char **argv)
                         clog(trace) << "     Maximum grid dimensions: (" << prop.maxGridSize[0] << ", " << prop.maxGridSize[1] << ", " << prop.maxGridSize[2] << ")" << std::endl;
                 }
         }
-        cudaDeviceSynchronize();
+        CUDAHelper::checkError(cudaDeviceSynchronize());
 
         // Read the image
         Eigen::MatrixXf input = gray2mat(readpgm(vm["input"].as<std::string>()));
