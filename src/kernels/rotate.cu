@@ -18,23 +18,23 @@
 //
 
 __device__ float interpolate_kernel(
-                const Eigen::Map<const Eigen::MatrixXf> &source,
-                const Point<float>::type &p)
+                const float *source, const int rows,
+                const float x, const float y)
 {
         // Get fractional and integral part of the coordinates
-        const int x_int = (int) p.x();
-        const int y_int = (int) p.y();
-        const float x_fract = p.x() - x_int;
-        const float y_fract = p.y() - y_int;
+        const int x_int = (int) x;
+        const int y_int = (int) y;
+        const float x_fract = x - x_int;
+        const float y_fract = y - y_int;
 
-        return    source(y_int, x_int)     * (1-x_fract)*(1-y_fract)
-                + source(y_int, x_int+1)   * x_fract*(1-y_fract)
-                + source(y_int+1, x_int)   * (1-x_fract)*y_fract
-                + source(y_int+1, x_int+1) * x_fract*y_fract;
+        return    source[y_int + x_int*rows]       * (1-x_fract)*(1-y_fract)
+                + source[y_int + (x_int+1)*rows]   * x_fract*(1-y_fract)
+                + source[y_int+1 + x_int*rows]     * (1-x_fract)*y_fract
+                + source[y_int+1 + (x_int+1)*rows] * x_fract*y_fract;
 
 }
 
-__global__ void rotate_kernel(const float *_input, float *_output, float angle)
+__global__ void rotate_kernel(const float *input, float *output, float angle)
 {
         // Compute the thread dimensions
         const int col = blockIdx.x;
@@ -42,26 +42,26 @@ __global__ void rotate_kernel(const float *_input, float *_output, float angle)
         const int row = threadIdx.y;
         const int rows = blockDim.y;
 
-        // Construct Eigen objects
-        Eigen::Map<const Eigen::MatrixXf> input(_input, rows, cols);
-        Eigen::Map<Eigen::MatrixXf> output(_output, rows, cols);
+        // Calculate transform matrix values
+        float angle_cos = std::cos(angle);
+        float angle_sin = std::sin(angle);
 
-        // Calculate transform matrix
-        Eigen::Matrix2f transform;
-        transform <<    std::cos(angle), -std::sin(angle),
-                        std::sin(angle),  std::cos(angle);
+        // Calculate origin
+        float xo = cols / 2.0;
+        float yo = rows / 2.0;
 
         // Calculate the source location
-        Point<float>::type origin(cols / 2.0, rows / 2.0);
-        Point<float>::type p(col, row);
-        Point<float>::type q = ((p - origin) * transform) + origin;
+        float xt = col - xo;
+        float yt = row - yo;
+        float x = xt*angle_cos + yt*angle_sin + xo;
+        float y = -xt*angle_sin + yt*angle_cos + yo;
 
         // Interpolate the source value
-        if (q.x() >= 0 && q.x() < cols - 1 && q.y() >= 0
-                        && q.y() < rows - 1)
-                output(row, col) = interpolate_kernel(input, q);
+        if (x >= 0 && x < cols - 1 && y >= 0
+                        && y < rows - 1)
+                output[row + col*rows] = interpolate_kernel(input, rows, x, y);
         else if (col < cols && row < rows)
-                output(row, col) = 0;
+                output[row + col*rows] = 0;
 }
 
 
