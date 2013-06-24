@@ -72,11 +72,9 @@ __global__ void rotate_kernel(const float *_input, float *_output, float angle)
 void rotate(const CUDAHelper::GlobalMemory<float> *input,
                 CUDAHelper::GlobalMemory<float> *output, float angle)
 {
-        const int rows = input->size(0);
-        const int cols = input->size(1);
         // Launch
-        dim3 threads(1, rows);
-        dim3 blocks(cols, 1);
+        dim3 threads(1, input->rows());
+        dim3 blocks(input->cols(), 1);
         rotate_kernel<<<blocks, threads>>>(*input, *output, angle);
         CUDAHelper::checkState();
 }
