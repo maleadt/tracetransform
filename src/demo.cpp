@@ -20,6 +20,7 @@
 
 // CUDA
 #include <cuda_runtime.h>
+#include <cuda_profiler_api.h>
 
 // Local
 #include "logger.hpp"
@@ -185,6 +186,12 @@ int main(int argc, char **argv)
 
         if (vm["mode"].as<std::string>() == "calculate") {
                 transformer.getTransform(tfunctionals, pfunctionals, true);
+        }
+
+        else if (vm["mode"].as<std::string>() == "profile") {
+                cudaProfilerStart();
+                transformer.getTransform(tfunctionals, pfunctionals, true);
+                cudaProfilerStop();
         }
 
         else if (vm["mode"].as<std::string>() == "benchmark") {
