@@ -20,8 +20,6 @@
 #include "kernels/rotate.hpp"
 #include "kernels/functionals.hpp"
 
-#define CONCURRENCY 16
-
 
 //
 // Structures
