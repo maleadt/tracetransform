@@ -9,7 +9,6 @@
 #include <stdio.h>
 
 // Local
-#include "../global.hpp"
 #include "../logger.hpp"
 
 

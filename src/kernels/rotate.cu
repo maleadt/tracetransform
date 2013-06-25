@@ -9,7 +9,6 @@
 #include <iostream>
 
 // Local
-#include "../global.hpp"
 #include "../logger.hpp"
 
 

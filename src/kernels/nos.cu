@@ -13,7 +13,6 @@
 #include <cula_lapack_device.hpp>
 
 // Local
-#include "../global.hpp"
 #include "../logger.hpp"
 #include "functionals.cu"
 
