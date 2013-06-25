@@ -190,7 +190,7 @@ int main(int argc, char **argv)
 
         else if (vm["mode"].as<std::string>() == "profile") {
                 cudaProfilerStart();
-                transformer.getTransform(tfunctionals, pfunctionals, true);
+                transformer.getTransform(tfunctionals, pfunctionals, false);
                 cudaProfilerStop();
         }
 
