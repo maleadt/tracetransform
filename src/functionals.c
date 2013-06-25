@@ -16,7 +16,8 @@
 #endif
 
 
-//
+
+////////////////////////////////////////////////////////////////////////////////
 // Auxiliary
 //
 
@@ -86,11 +87,15 @@ float hermite_function(unsigned int order, float x) {
 }
 
 
-//
-// T functionals
+
+////////////////////////////////////////////////////////////////////////////////
+// T-functionals
 //
 
-// T-functional for the Radon transform.
+//
+// Radon
+//
+
 float TFunctionalRadon(const float* data, const size_t length)
 {
         float integral = 0;
@@ -98,6 +103,11 @@ float TFunctionalRadon(const float* data, const size_t length)
                 integral += data[t];
         return integral;                
 }
+
+
+//
+// T1
+//
 
 float TFunctional1(const float* data, const size_t length)
 {
@@ -110,6 +120,11 @@ float TFunctional1(const float* data, const size_t length)
                 integral += data[r+median] * r;
         return integral;                
 }
+
+
+//
+// T2
+//
 
 float TFunctional2(const float* data, const size_t length)
 {
@@ -197,8 +212,13 @@ void TFunctional345_destroy(TFunctional345_precalc_t *precalc)
 }
 
 
-//
+
+////////////////////////////////////////////////////////////////////////////////
 // P-functionals
+//
+
+//
+// P1
 //
 
 float PFunctional1(const float* data, const size_t length)
@@ -213,11 +233,19 @@ float PFunctional1(const float* data, const size_t length)
         return sum;
 }
 
+//
+// P2
+//
+
 float PFunctional2(const float* data, const size_t length)
 {
         size_t median = findWeighedMedian(data, length);
         return data[median];
 }
+
+//
+// P3
+//
 
 float PFunctional3(const float* data, const size_t length)
 {
@@ -249,6 +277,10 @@ float PFunctional3(const float* data, const size_t length)
         free(fourier_imag);
         return sum;
 }
+
+//
+// Hermite P-functionals
+//
 
 float PFunctionalHermite(const float* data, const size_t length, unsigned int order, size_t center)
 {
