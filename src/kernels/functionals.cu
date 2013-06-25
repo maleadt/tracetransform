@@ -379,20 +379,20 @@ __global__ void TFunctional345_kernel(const float *input, const int *medians,
         }
 }
 
-TFunctional345_precalc_t *TFunctional3_prepare(size_t length)
+TFunctional345_precalc_t *TFunctional3_prepare(size_t rows, size_t cols)
 {
         TFunctional345_precalc_t *precalc = (TFunctional345_precalc_t*) malloc(sizeof(TFunctional345_precalc_t));
 
-        float *real_data = (float*) malloc(length*sizeof(float));
-        float *imag_data = (float*) malloc(length*sizeof(float));
+        float *real_data = (float*) malloc(rows*sizeof(float));
+        float *imag_data = (float*) malloc(rows*sizeof(float));
 
-        for (unsigned int r = 1; r < length; r++) {
+        for (unsigned int r = 1; r < rows; r++) {
                 real_data[r] = r*cos(5.0*log(r));
                 imag_data[r] = r*sin(5.0*log(r));
         }
 
-        precalc->real = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(length));
-        precalc->imag = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(length));
+        precalc->real = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(rows));
+        precalc->imag = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(rows));
 
         precalc->real->upload(real_data);
         precalc->imag->upload(imag_data);
@@ -403,20 +403,20 @@ TFunctional345_precalc_t *TFunctional3_prepare(size_t length)
         return precalc;
 }
 
-TFunctional345_precalc_t *TFunctional4_prepare(size_t length)
+TFunctional345_precalc_t *TFunctional4_prepare(size_t rows, size_t cols)
 {
         TFunctional345_precalc_t *precalc = (TFunctional345_precalc_t*) malloc(sizeof(TFunctional345_precalc_t));
 
-        float *real_data = (float*) malloc(length*sizeof(float));
-        float *imag_data = (float*) malloc(length*sizeof(float));
+        float *real_data = (float*) malloc(rows*sizeof(float));
+        float *imag_data = (float*) malloc(rows*sizeof(float));
 
-        for (unsigned int r = 1; r < length; r++) {
+        for (unsigned int r = 1; r < rows; r++) {
                 real_data[r] = cos(3.0*log(r));
                 imag_data[r] = sin(3.0*log(r));
         }
 
-        precalc->real = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(length));
-        precalc->imag = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(length));
+        precalc->real = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(rows));
+        precalc->imag = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(rows));
 
         precalc->real->upload(real_data);
         precalc->imag->upload(imag_data);
@@ -427,20 +427,20 @@ TFunctional345_precalc_t *TFunctional4_prepare(size_t length)
         return precalc;
 }
 
-TFunctional345_precalc_t *TFunctional5_prepare(size_t length)
+TFunctional345_precalc_t *TFunctional5_prepare(size_t rows, size_t cols)
 {
         TFunctional345_precalc_t *precalc = (TFunctional345_precalc_t*) malloc(sizeof(TFunctional345_precalc_t));
 
-        float *real_data = (float*) malloc(length*sizeof(float));
-        float *imag_data = (float*) malloc(length*sizeof(float));
+        float *real_data = (float*) malloc(rows*sizeof(float));
+        float *imag_data = (float*) malloc(rows*sizeof(float));
 
-        for (unsigned int r = 1; r < length; r++) {
+        for (unsigned int r = 1; r < rows; r++) {
                 real_data[r] = sqrt(r)*cos(4.0*log(r));
                 imag_data[r] = sqrt(r)*sin(4.0*log(r));
         }
 
-        precalc->real = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(length));
-        precalc->imag = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(length));
+        precalc->real = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(rows));
+        precalc->imag = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(rows));
 
         precalc->real->upload(real_data);
         precalc->imag->upload(imag_data);

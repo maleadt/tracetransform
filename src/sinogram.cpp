@@ -69,19 +69,18 @@ std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
                 outputs[t] = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(p_steps, a_steps), 0);
 
         // Pre-calculate
-        int length = rows;
         std::map<TFunctional, void*> precalculations;
         for (size_t t = 0; t < tfunctionals.size(); t++) {
                 TFunctional tfunctional = tfunctionals[t].functional;
                 switch (tfunctional) {
                         case TFunctional::T3:
-                                precalculations[tfunctional] = TFunctional3_prepare(length);
+                                precalculations[tfunctional] = TFunctional3_prepare(input->rows(), input->cols());
                                 break;
                         case TFunctional::T4:
-                                precalculations[tfunctional] = TFunctional4_prepare(length);
+                                precalculations[tfunctional] = TFunctional4_prepare(input->rows(), input->cols());
                                 break;
                         case TFunctional::T5:
-                                precalculations[tfunctional] = TFunctional5_prepare(length);
+                                precalculations[tfunctional] = TFunctional5_prepare(input->rows(), input->cols());
                                 break;
                 }
         }

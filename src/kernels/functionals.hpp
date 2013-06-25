@@ -31,9 +31,9 @@ typedef struct {
         CUDAHelper::GlobalMemory<float> *real;
         CUDAHelper::GlobalMemory<float> *imag;
 } TFunctional345_precalc_t;
-TFunctional345_precalc_t *TFunctional3_prepare(size_t length);
-TFunctional345_precalc_t *TFunctional4_prepare(size_t length);
-TFunctional345_precalc_t *TFunctional5_prepare(size_t length);
+TFunctional345_precalc_t *TFunctional3_prepare(size_t rows, size_t cols);
+TFunctional345_precalc_t *TFunctional4_prepare(size_t rows, size_t cols);
+TFunctional345_precalc_t *TFunctional5_prepare(size_t rows, size_t cols);
 extern void TFunctional345(const CUDAHelper::GlobalMemory<float> *input,
                 TFunctional345_precalc_t *precalc,
                 CUDAHelper::GlobalMemory<float> *output, int a);
