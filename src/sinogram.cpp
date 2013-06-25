@@ -98,7 +98,6 @@ std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
                 // Process all T-functionals
                 for (size_t t = 0; t < tfunctionals.size(); t++) {
                         TFunctional tfunctional = tfunctionals[t].functional;
-                        // Process all projection bands
                         switch (tfunctionals[t].functional) {
                                 case TFunctional::Radon:
                                         TFunctionalRadon(input_rotated, outputs[t], a_step);
