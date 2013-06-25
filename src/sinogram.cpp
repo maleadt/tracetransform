@@ -20,44 +20,6 @@
 #include "kernels/rotate.hpp"
 #include "kernels/functionals.hpp"
 
-
-//
-// Structures
-//
-
-struct TFunctional345Precalculation {
-        TFunctional345Precalculation(size_t length)
-        {
-                real = new float[length];
-                imag = new float[length];
-
-                real_mem = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(length));
-                imag_mem = new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_1d(length));
-        }
-
-        ~TFunctional345Precalculation()
-        {
-                delete[] real;
-                delete[] imag;
-
-                delete real_mem;
-                delete imag_mem;
-        }
-
-        void upload ()
-        {
-                real_mem->upload(real);
-                imag_mem->upload(imag);
-        }
-
-        float *real;
-        float *imag;
-
-        CUDAHelper::GlobalMemory<float> *real_mem;
-        CUDAHelper::GlobalMemory<float> *imag_mem;
-};
-
-
 //
 // Module definitions
 //
@@ -108,32 +70,19 @@ std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
 
         // Pre-calculate
         int length = rows;
-        TFunctional345Precalculation *t345precalc = 0;
+        std::map<TFunctional, void*> precalculations;
         for (size_t t = 0; t < tfunctionals.size(); t++) {
-                if (t345precalc == 0 && (
-                                tfunctionals[t].functional == TFunctional::T3 ||
-                                tfunctionals[t].functional == TFunctional::T4 ||
-                                tfunctionals[t].functional == TFunctional::T5)) {
-                        t345precalc = new TFunctional345Precalculation(length);
-
-                        if (tfunctionals[t].functional == TFunctional::T3) {
-                                for (int r = 1; r < length; r++) {
-                                        t345precalc->real[r] = r*cos(5.0*log(r));
-                                        t345precalc->imag[r] = r*sin(5.0*log(r));
-                                }
-                        } else if (tfunctionals[t].functional == TFunctional::T4) {
-                                for (int r = 1; r < length; r++) {
-                                        t345precalc->real[r] = cos(3.0*log(r));
-                                        t345precalc->imag[r] = sin(3.0*log(r));
-                                }
-                        } else if (tfunctionals[t].functional == TFunctional::T5) {
-                                for (int r = 1; r < length; r++) {
-                                        t345precalc->real[r] = sqrt(r)*cos(4.0*log(r));
-                                        t345precalc->imag[r] = sqrt(r)*sin(4.0*log(r));
-                                }
-                        }
-
-                        t345precalc->upload();
+                TFunctional tfunctional = tfunctionals[t].functional;
+                switch (tfunctional) {
+                        case TFunctional::T3:
+                                precalculations[tfunctional] = TFunctional3_prepare(length);
+                                break;
+                        case TFunctional::T4:
+                                precalculations[tfunctional] = TFunctional4_prepare(length);
+                                break;
+                        case TFunctional::T5:
+                                precalculations[tfunctional] = TFunctional5_prepare(length);
+                                break;
                 }
         }
 
@@ -148,6 +97,7 @@ std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
 
                 // Process all T-functionals
                 for (size_t t = 0; t < tfunctionals.size(); t++) {
+                        TFunctional tfunctional = tfunctionals[t].functional;
                         // Process all projection bands
                         switch (tfunctionals[t].functional) {
                                 case TFunctional::Radon:
@@ -162,14 +112,27 @@ std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
                                 case TFunctional::T3:
                                 case TFunctional::T4:
                                 case TFunctional::T5:
-                                        TFunctional345(input_rotated, t345precalc->real_mem, t345precalc->imag_mem, outputs[t], a_step);
+                                        TFunctional345(input_rotated, (TFunctional345_precalc_t*) precalculations[tfunctional], outputs[t], a_step);
                                         break;
                         }
                 }
         }
 
         delete input_rotated;
-        if (t345precalc != 0)
-                delete t345precalc;
+
+        // Destroy pre-calculations
+        std::map<TFunctional, void*>::iterator it = precalculations.begin();
+        while (it != precalculations.end()) {
+                switch (it->first) {
+                        case TFunctional::T3:
+                        case TFunctional::T4:
+                        case TFunctional::T5:
+                                TFunctional345_precalc_t *precalc = (TFunctional345_precalc_t*) it->second;
+                                TFunctional345_destroy(precalc);
+                                break;
+                }
+                ++it;
+        }
+
         return outputs;
 }
