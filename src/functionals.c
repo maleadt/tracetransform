@@ -130,12 +130,12 @@ float TFunctional2(const float* data, const size_t length)
 
 TFunctional345_precalc_t *TFunctional3_prepare(size_t length)
 {
-        TFunctional345_precalc_t *precalc = malloc(sizeof(TFunctional345_precalc_t));
+        TFunctional345_precalc_t *precalc = (TFunctional345_precalc_t*) malloc(sizeof(TFunctional345_precalc_t));
 
         precalc->real = (float*) malloc(length*sizeof(float));
         precalc->imag = (float*) malloc(length*sizeof(float));
 
-        for (int r = 1; r < length; r++) {
+        for (unsigned int r = 1; r < length; r++) {
                 precalc->real[r] = r*cos(5.0*log(r));
                 precalc->imag[r] = r*sin(5.0*log(r));
         }
@@ -145,12 +145,12 @@ TFunctional345_precalc_t *TFunctional3_prepare(size_t length)
 
 TFunctional345_precalc_t *TFunctional4_prepare(size_t length)
 {
-        TFunctional345_precalc_t *precalc = malloc(sizeof(TFunctional345_precalc_t));
+        TFunctional345_precalc_t *precalc = (TFunctional345_precalc_t*) malloc(sizeof(TFunctional345_precalc_t));
 
         precalc->real = (float*) malloc(length*sizeof(float));
         precalc->imag = (float*) malloc(length*sizeof(float));
 
-        for (int r = 1; r < length; r++) {
+        for (unsigned int r = 1; r < length; r++) {
                 precalc->real[r] = cos(3.0*log(r));
                 precalc->imag[r] = sin(3.0*log(r));
         }
@@ -160,12 +160,12 @@ TFunctional345_precalc_t *TFunctional4_prepare(size_t length)
 
 TFunctional345_precalc_t *TFunctional5_prepare(size_t length)
 {
-        TFunctional345_precalc_t *precalc = malloc(sizeof(TFunctional345_precalc_t));
+        TFunctional345_precalc_t *precalc = (TFunctional345_precalc_t*) malloc(sizeof(TFunctional345_precalc_t));
 
         precalc->real = (float*) malloc(length*sizeof(float));
         precalc->imag = (float*) malloc(length*sizeof(float));
 
-        for (int r = 1; r < length; r++) {
+        for (unsigned int r = 1; r < length; r++) {
                 precalc->real[r] = sqrt(r)*cos(4.0*log(r));
                 precalc->imag[r] = sqrt(r)*sin(4.0*log(r));
         }
