@@ -76,19 +76,18 @@ std::vector<Eigen::MatrixXf> getSinograms(
                 outputs[t] = Eigen::MatrixXf(p_steps, a_steps);
 
         // Pre-calculate
-        int length = input.rows();
         std::map<TFunctional, void*> precalculations;
         for (size_t t = 0; t < tfunctionals.size(); t++) {
                 TFunctional tfunctional = tfunctionals[t].functional;
                 switch (tfunctional) {
                         case TFunctional::T3:
-                                precalculations[tfunctional] = TFunctional3_prepare(length);
+                                precalculations[tfunctional] = TFunctional3_prepare(input.rows(), input.cols());
                                 break;
                         case TFunctional::T4:
-                                precalculations[tfunctional] = TFunctional4_prepare(length);
+                                precalculations[tfunctional] = TFunctional4_prepare(input.rows(), input.cols());
                                 break;
                         case TFunctional::T5:
-                                precalculations[tfunctional] = TFunctional5_prepare(length);
+                                precalculations[tfunctional] = TFunctional5_prepare(input.rows(), input.cols());
                                 break;
                 }
         }
@@ -109,18 +108,18 @@ std::vector<Eigen::MatrixXf> getSinograms(
                                 float result;
                                 switch (tfunctional) {
                                         case TFunctional::Radon:
-                                                result = TFunctionalRadon(data, length);
+                                                result = TFunctionalRadon(data, input.rows());
                                                 break;
                                         case TFunctional::T1:
-                                                result = TFunctional1(data, length);
+                                                result = TFunctional1(data, input.rows());
                                                 break;
                                         case TFunctional::T2:
-                                                result = TFunctional2(data, length);
+                                                result = TFunctional2(data, input.rows());
                                                 break;
                                         case TFunctional::T3:
                                         case TFunctional::T4:
                                         case TFunctional::T5:
-                                                result = TFunctional345(data, length, (TFunctional345_precalc_t*) precalculations[tfunctional]);
+                                                result = TFunctional345(data, input.rows(), (TFunctional345_precalc_t*) precalculations[tfunctional]);
                                                 break;
                                 }
                                 outputs[t](

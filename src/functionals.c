@@ -143,14 +143,14 @@ float TFunctional2(const float* data, const size_t length)
 // T3, T4 and T5
 //
 
-TFunctional345_precalc_t *TFunctional3_prepare(size_t length)
+TFunctional345_precalc_t *TFunctional3_prepare(size_t rows, size_t cols)
 {
         TFunctional345_precalc_t *precalc = (TFunctional345_precalc_t*) malloc(sizeof(TFunctional345_precalc_t));
 
-        precalc->real = (float*) malloc(length*sizeof(float));
-        precalc->imag = (float*) malloc(length*sizeof(float));
+        precalc->real = (float*) malloc(rows*sizeof(float));
+        precalc->imag = (float*) malloc(rows*sizeof(float));
 
-        for (unsigned int r = 1; r < length; r++) {
+        for (unsigned int r = 1; r < rows; r++) {
                 precalc->real[r] = r*cos(5.0*log(r));
                 precalc->imag[r] = r*sin(5.0*log(r));
         }
@@ -158,14 +158,14 @@ TFunctional345_precalc_t *TFunctional3_prepare(size_t length)
         return precalc;
 }
 
-TFunctional345_precalc_t *TFunctional4_prepare(size_t length)
+TFunctional345_precalc_t *TFunctional4_prepare(size_t rows, size_t cols)
 {
         TFunctional345_precalc_t *precalc = (TFunctional345_precalc_t*) malloc(sizeof(TFunctional345_precalc_t));
 
-        precalc->real = (float*) malloc(length*sizeof(float));
-        precalc->imag = (float*) malloc(length*sizeof(float));
+        precalc->real = (float*) malloc(rows*sizeof(float));
+        precalc->imag = (float*) malloc(rows*sizeof(float));
 
-        for (unsigned int r = 1; r < length; r++) {
+        for (unsigned int r = 1; r < rows; r++) {
                 precalc->real[r] = cos(3.0*log(r));
                 precalc->imag[r] = sin(3.0*log(r));
         }
@@ -173,14 +173,14 @@ TFunctional345_precalc_t *TFunctional4_prepare(size_t length)
         return precalc;
 }
 
-TFunctional345_precalc_t *TFunctional5_prepare(size_t length)
+TFunctional345_precalc_t *TFunctional5_prepare(size_t rows, size_t cols)
 {
         TFunctional345_precalc_t *precalc = (TFunctional345_precalc_t*) malloc(sizeof(TFunctional345_precalc_t));
 
-        precalc->real = (float*) malloc(length*sizeof(float));
-        precalc->imag = (float*) malloc(length*sizeof(float));
+        precalc->real = (float*) malloc(rows*sizeof(float));
+        precalc->imag = (float*) malloc(rows*sizeof(float));
 
-        for (unsigned int r = 1; r < length; r++) {
+        for (unsigned int r = 1; r < rows; r++) {
                 precalc->real[r] = sqrt(r)*cos(4.0*log(r));
                 precalc->imag[r] = sqrt(r)*sin(4.0*log(r));
         }
