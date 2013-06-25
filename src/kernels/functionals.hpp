@@ -14,7 +14,7 @@
 //
 
 // Radon
-extern void TFunctionalRadon(const CUDAHelper::GlobalMemory<float> *input,
+void TFunctionalRadon(const CUDAHelper::GlobalMemory<float> *input,
                 CUDAHelper::GlobalMemory<float> *output,
                 int a);
 
@@ -24,13 +24,13 @@ typedef struct {
         CUDAHelper::GlobalMemory<int> *medians;
 } TFunctional12_precalc_t;
 TFunctional12_precalc_t *TFunctional12_prepare(size_t rows, size_t cols);
-extern void TFunctional1(const CUDAHelper::GlobalMemory<float> *input,
+void TFunctional1(const CUDAHelper::GlobalMemory<float> *input,
                 TFunctional12_precalc_t *precalc,
                 CUDAHelper::GlobalMemory<float> *output, int a);
 void TFunctional12_destroy(TFunctional12_precalc_t *precalc);
 
 // T2
-extern void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
+void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
                 TFunctional12_precalc_t *precalc,
                 CUDAHelper::GlobalMemory<float> *output, int a);
 
@@ -45,7 +45,7 @@ typedef struct {
 TFunctional345_precalc_t *TFunctional3_prepare(size_t rows, size_t cols);
 TFunctional345_precalc_t *TFunctional4_prepare(size_t rows, size_t cols);
 TFunctional345_precalc_t *TFunctional5_prepare(size_t rows, size_t cols);
-extern void TFunctional345(const CUDAHelper::GlobalMemory<float> *input,
+void TFunctional345(const CUDAHelper::GlobalMemory<float> *input,
                 TFunctional345_precalc_t *precalc,
                 CUDAHelper::GlobalMemory<float> *output, int a);
 void TFunctional345_destroy(TFunctional345_precalc_t *precalc);
@@ -55,19 +55,19 @@ void TFunctional345_destroy(TFunctional345_precalc_t *precalc);
 //
 
 // P1
-extern void PFunctional1(const CUDAHelper::GlobalMemory<float> *input,
+void PFunctional1(const CUDAHelper::GlobalMemory<float> *input,
                 CUDAHelper::GlobalMemory<float> *output);
 
 // P2
-extern void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
+void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
                 CUDAHelper::GlobalMemory<float> *output);
 
 // P3
-extern void PFunctional3(const CUDAHelper::GlobalMemory<float> *input,
+void PFunctional3(const CUDAHelper::GlobalMemory<float> *input,
                 CUDAHelper::GlobalMemory<float> *output);
 
 // Hermite P-functionals
-extern void PFunctionalHermite(const CUDAHelper::GlobalMemory<float> *input,
+void PFunctionalHermite(const CUDAHelper::GlobalMemory<float> *input,
                 CUDAHelper::GlobalMemory<float> *output, unsigned int order,
                 int center);
 
