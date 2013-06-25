@@ -12,8 +12,8 @@
 #include "../logger.hpp"
 
 
-//
-// Kernels
+////////////////////////////////////////////////////////////////////////////////
+// Auxiliary
 //
 
 enum scan_operation_t {
@@ -113,6 +113,48 @@ __global__ void findWeighedMedian_kernel(const float *input,
         }
 }
 
+__device__ float hermite_polynomial(unsigned int order, float x) {
+        switch (order) {
+                case 0:
+                        return 1.0;
+
+                case 1:
+                        return 2.0*x;
+
+                default:
+                        return 2.0*x*hermite_polynomial(order-1, x)
+                                -2.0*(order-1)*hermite_polynomial(order-2, x);
+        }
+}
+
+__device__ unsigned int factorial(unsigned int n)
+{
+        return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
+}
+
+__device__ float hermite_function(unsigned int order, float x) {
+        return hermite_polynomial(order, x) / (
+                        sqrt(pow(2.0, (double) order) * factorial(order) * sqrt(M_PI))
+                        * exp(x*x/2)
+                );
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// T-functionals
+//
+
+// Data
+// FIXME: yes, this leaks. Long-term solution: use some LRU allocator, maybe the one
+//        from mGPU
+CUDAHelper::GlobalMemory<float> *prescan = 0;
+CUDAHelper::GlobalMemory<int> *medians = 0;
+
+//
+// Radon
+//
+
 __global__ void TFunctionalRadon_kernel(const float *input,
                 float *output, const int a)
 {
@@ -135,6 +177,23 @@ __global__ void TFunctionalRadon_kernel(const float *input,
         if (row == rows-1)
                 output[col + a*rows] = temp[rows + row];
 }
+
+void TFunctionalRadon(const CUDAHelper::GlobalMemory<float> *input,
+                CUDAHelper::GlobalMemory<float> *output, int a)
+{
+        // Launch radon kernel
+        {
+                dim3 threads(1, input->rows());
+                dim3 blocks(input->cols(), 1);
+                TFunctionalRadon_kernel<<<blocks, threads, 2*input->rows()*sizeof(float)>>>(*input, *output, a);
+                CUDAHelper::checkState();
+        }
+}
+
+
+//
+// T1
+//
 
 __global__ void TFunctional1_kernel(const float *input, const int *medians,
                 float *output, const int a)
@@ -166,6 +225,43 @@ __global__ void TFunctional1_kernel(const float *input, const int *medians,
                 output[col + a*rows] = temp[rows + row];
 }
 
+void TFunctional1(const CUDAHelper::GlobalMemory<float> *input,
+                CUDAHelper::GlobalMemory<float> *output, int a)
+{
+        // Launch prefix sum kernel
+        if (prescan == 0)
+                prescan = new CUDAHelper::GlobalMemory<float>(input->sizes());
+        {
+                dim3 threads(1, input->rows());
+                dim3 blocks(input->cols(), 1);
+                prescan_kernel<<<blocks, threads, 2*input->rows()*sizeof(float)>>>(*input, *prescan, NONE);
+                CUDAHelper::checkState();
+        }
+
+        // Launch weighed median kernel
+        if (medians == 0)
+                medians = new CUDAHelper::GlobalMemory<int>(CUDAHelper::size_1d(input->cols()), 0);
+        {
+                dim3 threads(1, input->rows());
+                dim3 blocks(input->cols(), 1);
+                findWeighedMedian_kernel<<<blocks, threads, input->rows()*sizeof(float)>>>(*input, *prescan, *medians);
+                CUDAHelper::checkState();
+        }
+
+        // Launch T1 kernel
+        {
+                dim3 threads(1, input->rows());
+                dim3 blocks(input->cols(), 1);
+                TFunctional1_kernel<<<blocks, threads, 2*input->rows()*sizeof(float)>>>(*input, *medians, *output, a);
+                CUDAHelper::checkState();
+        }
+}
+
+
+//
+// T2
+//
+
 __global__ void TFunctional2_kernel(const float *input, const int *medians,
                 float *output, const int a)
 {
@@ -195,6 +291,43 @@ __global__ void TFunctional2_kernel(const float *input, const int *medians,
         if (row == rows-1)
                 output[col + a*rows] = temp[rows + row];
 }
+
+void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
+                CUDAHelper::GlobalMemory<float> *output, int a)
+{
+        // Launch prefix sum kernel
+        if (prescan == 0)
+                prescan = new CUDAHelper::GlobalMemory<float>(input->sizes());
+        {
+                dim3 threads(1, input->rows());
+                dim3 blocks(input->cols(), 1);
+                prescan_kernel<<<blocks, threads, 2*input->rows()*sizeof(float)>>>(*input, *prescan, NONE);
+                CUDAHelper::checkState();
+        }
+
+        // Launch weighed median kernel
+        if (medians == 0)
+                medians = new CUDAHelper::GlobalMemory<int>(CUDAHelper::size_1d(input->cols()), 0);
+        {
+                dim3 threads(1, input->rows());
+                dim3 blocks(input->cols(), 1);
+                findWeighedMedian_kernel<<<blocks, threads, input->rows()*sizeof(float)>>>(*input, *prescan, *medians);
+                CUDAHelper::checkState();
+        }
+
+        // Launch T2 kernel
+        {
+                dim3 threads(1, input->rows());
+                dim3 blocks(input->cols(), 1);
+                TFunctional2_kernel<<<blocks, threads, 2*input->rows()*sizeof(float)>>>(*input, *medians, *output, a);
+                CUDAHelper::checkState();
+        }
+}
+
+
+//
+// T3, T4 and T5
+//
 
 __global__ void TFunctional345_kernel(const float *input, const int *medians,
                 const float *precalc_real, const float *precalc_imag,
@@ -245,194 +378,6 @@ __global__ void TFunctional345_kernel(const float *input, const int *medians,
                 output[col + a*rows] = hypot(real, imag);
         }
 }
-
-__global__ void PFunctional1_kernel(const float *input,
-                float *output)
-{
-        // Shared memory
-        extern __shared__ float temp[];
-
-        // Compute the thread dimensions
-        const int col = blockIdx.x;
-        const int row = threadIdx.y;
-        const int rows = blockDim.y;
-
-        // Fetch
-        if (row == 0)
-                temp[row] = 0;
-        else
-                temp[row] = fabs(input[row + col*rows] - input[row + col*rows - 1]);
-        __syncthreads();
-
-        // Scan
-        scan_array(temp, row, rows, SUM);
-
-        // Write back
-        if (row == rows-1)
-                output[col] = temp[rows + row];
-}
-
-__global__ void PFunctional2_kernel(const float *input, const int *medians,
-                float *output, int rows)
-{
-        // Compute the thread dimensions
-        const int col = blockIdx.x;
-
-        // This is almost useless, isn't it
-        output[col] = input[medians[col] + col*rows];
-}
-
-__device__ float hermite_polynomial(unsigned int order, float x) {
-        switch (order) {
-                case 0:
-                        return 1.0;
-
-                case 1:
-                        return 2.0*x;
-
-                default:
-                        return 2.0*x*hermite_polynomial(order-1, x)
-                                -2.0*(order-1)*hermite_polynomial(order-2, x);
-        }
-}
-
-__device__ unsigned int factorial(unsigned int n)
-{
-        return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
-}
-
-__device__ float hermite_function(unsigned int order, float x) {
-        return hermite_polynomial(order, x) / (
-                        sqrt(pow(2.0, (double) order) * factorial(order) * sqrt(M_PI))
-                        * exp(x*x/2)
-                );
-}
-
-__global__ void PFunctionalHermite_kernel(const float *input,
-                float *output, unsigned int order, int center)
-{
-        // Shared memory
-        extern __shared__ float temp[];
-
-        // Compute the thread dimensions
-        const int col = blockIdx.x;
-        const int row = threadIdx.y;
-        const int rows = blockDim.y;
-
-        // Discretize the [-10, 10] domain to fit the column iterator
-        float stepsize_lower = 10.0 / center;
-        float stepsize_upper = 10.0 / (rows - 1 - center);
-
-        // Calculate z
-        // TODO: debug with test_svd
-        float z;
-        if ((row-1) < center)
-                z = row * stepsize_lower - 10;
-        else
-                z = (row-center) * stepsize_upper;
-
-        // Fetch
-        temp[row] = input[row + col*rows] * hermite_function(order, z);
-        __syncthreads();
-
-        // Scan
-        scan_array(temp, row, rows, SUM);
-
-        // Write back
-        if (row == rows-1)
-                output[col] = temp[rows + row];
-}
-
-//
-// T functionals
-//
-
-// Data
-// FIXME: yes, this leaks. Long-term solution: use some LRU allocator, maybe the one
-//        from mGPU
-CUDAHelper::GlobalMemory<float> *prescan = 0;
-CUDAHelper::GlobalMemory<int> *medians = 0;
-
-void TFunctionalRadon(const CUDAHelper::GlobalMemory<float> *input,
-                CUDAHelper::GlobalMemory<float> *output, int a)
-{
-        // Launch radon kernel
-        {
-                dim3 threads(1, input->rows());
-                dim3 blocks(input->cols(), 1);
-                TFunctionalRadon_kernel<<<blocks, threads, 2*input->rows()*sizeof(float)>>>(*input, *output, a);
-                CUDAHelper::checkState();
-        }
-}
-
-void TFunctional1(const CUDAHelper::GlobalMemory<float> *input,
-                CUDAHelper::GlobalMemory<float> *output, int a)
-{
-        // Launch prefix sum kernel
-        if (prescan == 0)
-                prescan = new CUDAHelper::GlobalMemory<float>(input->sizes());
-        {
-                dim3 threads(1, input->rows());
-                dim3 blocks(input->cols(), 1);
-                prescan_kernel<<<blocks, threads, 2*input->rows()*sizeof(float)>>>(*input, *prescan, NONE);
-                CUDAHelper::checkState();
-        }
-
-        // Launch weighed median kernel
-        if (medians == 0)
-                medians = new CUDAHelper::GlobalMemory<int>(CUDAHelper::size_1d(input->cols()), 0);
-        {
-                dim3 threads(1, input->rows());
-                dim3 blocks(input->cols(), 1);
-                findWeighedMedian_kernel<<<blocks, threads, input->rows()*sizeof(float)>>>(*input, *prescan, *medians);
-                CUDAHelper::checkState();
-        }
-
-        // Launch T1 kernel
-        {
-                dim3 threads(1, input->rows());
-                dim3 blocks(input->cols(), 1);
-                TFunctional1_kernel<<<blocks, threads, 2*input->rows()*sizeof(float)>>>(*input, *medians, *output, a);
-                CUDAHelper::checkState();
-        }
-}
-
-void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
-                CUDAHelper::GlobalMemory<float> *output, int a)
-{
-        // Launch prefix sum kernel
-        if (prescan == 0)
-                prescan = new CUDAHelper::GlobalMemory<float>(input->sizes());
-        {
-                dim3 threads(1, input->rows());
-                dim3 blocks(input->cols(), 1);
-                prescan_kernel<<<blocks, threads, 2*input->rows()*sizeof(float)>>>(*input, *prescan, NONE);
-                CUDAHelper::checkState();
-        }
-
-        // Launch weighed median kernel
-        if (medians == 0)
-                medians = new CUDAHelper::GlobalMemory<int>(CUDAHelper::size_1d(input->cols()), 0);
-        {
-                dim3 threads(1, input->rows());
-                dim3 blocks(input->cols(), 1);
-                findWeighedMedian_kernel<<<blocks, threads, input->rows()*sizeof(float)>>>(*input, *prescan, *medians);
-                CUDAHelper::checkState();
-        }
-
-        // Launch T2 kernel
-        {
-                dim3 threads(1, input->rows());
-                dim3 blocks(input->cols(), 1);
-                TFunctional2_kernel<<<blocks, threads, 2*input->rows()*sizeof(float)>>>(*input, *medians, *output, a);
-                CUDAHelper::checkState();
-        }
-}
-
-
-//
-// T3, T4 and T5
-//
 
 TFunctional345_precalc_t *TFunctional3_prepare(size_t length)
 {
@@ -540,9 +485,40 @@ void TFunctional345_destroy(TFunctional345_precalc_t *precalc)
 }
 
 
-//
+
+////////////////////////////////////////////////////////////////////////////////
 // P-functionals
 //
+
+//
+// P1
+//
+
+__global__ void PFunctional1_kernel(const float *input,
+                float *output)
+{
+        // Shared memory
+        extern __shared__ float temp[];
+
+        // Compute the thread dimensions
+        const int col = blockIdx.x;
+        const int row = threadIdx.y;
+        const int rows = blockDim.y;
+
+        // Fetch
+        if (row == 0)
+                temp[row] = 0;
+        else
+                temp[row] = fabs(input[row + col*rows] - input[row + col*rows - 1]);
+        __syncthreads();
+
+        // Scan
+        scan_array(temp, row, rows, SUM);
+
+        // Write back
+        if (row == rows-1)
+                output[col] = temp[rows + row];
+}
 
 void PFunctional1(const CUDAHelper::GlobalMemory<float> *input,
                 CUDAHelper::GlobalMemory<float> *output)
@@ -554,6 +530,20 @@ void PFunctional1(const CUDAHelper::GlobalMemory<float> *input,
                 PFunctional1_kernel<<<blocks, threads, 2*input->rows()*sizeof(float)>>>(*input, *output);
                 CUDAHelper::checkState();
         }
+}
+
+//
+// P2
+//
+
+__global__ void PFunctional2_kernel(const float *input, const int *medians,
+                float *output, int rows)
+{
+        // Compute the thread dimensions
+        const int col = blockIdx.x;
+
+        // This is almost useless, isn't it
+        output[col] = input[medians[col] + col*rows];
 }
 
 void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
@@ -588,17 +578,60 @@ void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
         }
 }
 
+//
+// P3
+//
+
 void PFunctional3(const CUDAHelper::GlobalMemory<float> *input,
                 CUDAHelper::GlobalMemory<float> *output)
 {
 
 }
 
+//
+// Hermite P-functionals
+//
+
+__global__ void PFunctionalHermite_kernel(const float *input,
+                float *output, unsigned int order, int center)
+{
+        // Shared memory
+        extern __shared__ float temp[];
+
+        // Compute the thread dimensions
+        const int col = blockIdx.x;
+        const int row = threadIdx.y;
+        const int rows = blockDim.y;
+
+        // Discretize the [-10, 10] domain to fit the column iterator
+        float stepsize_lower = 10.0 / center;
+        float stepsize_upper = 10.0 / (rows - 1 - center);
+
+        // Calculate z
+        // TODO: debug with test_svd
+        float z;
+        if ((row-1) < center)
+                z = row * stepsize_lower - 10;
+        else
+                z = (row-center) * stepsize_upper;
+
+        // Fetch
+        temp[row] = input[row + col*rows] * hermite_function(order, z);
+        __syncthreads();
+
+        // Scan
+        scan_array(temp, row, rows, SUM);
+
+        // Write back
+        if (row == rows-1)
+                output[col] = temp[rows + row];
+}
+
 void PFunctionalHermite(const CUDAHelper::GlobalMemory<float> *input,
                 CUDAHelper::GlobalMemory<float> *output, unsigned int order,
                 int center)
 {
-        // Launch P1 kernel
+        // Launch Hermite kernel
         {
                 dim3 threads(1, input->rows());
                 dim3 blocks(input->cols(), 1);
