@@ -28,11 +28,8 @@ extern void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
 
 /// T3, T4 and T5
 typedef struct {
-        float *real;
-        float *imag;
-
-        CUDAHelper::GlobalMemory<float> *real_mem;
-        CUDAHelper::GlobalMemory<float> *imag_mem;
+        CUDAHelper::GlobalMemory<float> *real;
+        CUDAHelper::GlobalMemory<float> *imag;
 } TFunctional345_precalc_t;
 TFunctional345_precalc_t *TFunctional3_prepare(size_t length);
 TFunctional345_precalc_t *TFunctional4_prepare(size_t length);
