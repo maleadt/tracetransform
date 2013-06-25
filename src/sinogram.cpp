@@ -73,6 +73,10 @@ std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
         for (size_t t = 0; t < tfunctionals.size(); t++) {
                 TFunctional tfunctional = tfunctionals[t].functional;
                 switch (tfunctional) {
+                        case TFunctional::T1:
+                        case TFunctional::T2:
+                                precalculations[tfunctional] = TFunctional12_prepare(input->rows(), input->cols());
+                                break;
                         case TFunctional::T3:
                                 precalculations[tfunctional] = TFunctional3_prepare(input->rows(), input->cols());
                                 break;
@@ -102,10 +106,10 @@ std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
                                         TFunctionalRadon(input_rotated, outputs[t], a_step);
                                         break;
                                 case TFunctional::T1:
-                                        TFunctional1(input_rotated, outputs[t], a_step);
+                                        TFunctional1(input_rotated, (TFunctional12_precalc_t*) precalculations[tfunctional], outputs[t], a_step);
                                         break;
                                 case TFunctional::T2:
-                                        TFunctional2(input_rotated, outputs[t], a_step);
+                                        TFunctional2(input_rotated, (TFunctional12_precalc_t*) precalculations[tfunctional], outputs[t], a_step);
                                         break;
                                 case TFunctional::T3:
                                 case TFunctional::T4:
@@ -122,12 +126,21 @@ std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
         std::map<TFunctional, void*>::iterator it = precalculations.begin();
         while (it != precalculations.end()) {
                 switch (it->first) {
+                        case TFunctional::T1:
+                        case TFunctional::T2:
+                        {
+                                TFunctional12_precalc_t *precalc = (TFunctional12_precalc_t*) it->second;
+                                TFunctional12_destroy(precalc);
+                                break;
+                        }
                         case TFunctional::T3:
                         case TFunctional::T4:
                         case TFunctional::T5:
+                        {
                                 TFunctional345_precalc_t *precalc = (TFunctional345_precalc_t*) it->second;
                                 TFunctional345_destroy(precalc);
                                 break;
+                        }
                 }
                 ++it;
         }
