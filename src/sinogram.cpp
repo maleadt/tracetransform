@@ -137,9 +137,11 @@ std::vector<Eigen::MatrixXf> getSinograms(
                         case TFunctional::T3:
                         case TFunctional::T4:
                         case TFunctional::T5:
+                        {
                                 TFunctional345_precalc_t *precalc = (TFunctional345_precalc_t*) it->second;
                                 TFunctional345_destroy(precalc);
                                 break;
+                        }
                 }
                 ++it;
         }
