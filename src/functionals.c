@@ -123,7 +123,57 @@ float TFunctional2(const float* data, const size_t length)
         return integral;                
 }
 
-float TFunctional345(const float* data, const float *precalc_real, const float *precalc_imag, const size_t length)
+
+//
+// T3, T4 and T5
+//
+
+TFunctional345_precalc_t *TFunctional3_prepare(size_t length)
+{
+        TFunctional345_precalc_t *precalc = malloc(sizeof(TFunctional345_precalc_t));
+
+        precalc->real = (float*) malloc(length*sizeof(float));
+        precalc->imag = (float*) malloc(length*sizeof(float));
+
+        for (int r = 1; r < length; r++) {
+                precalc->real[r] = r*cos(5.0*log(r));
+                precalc->imag[r] = r*sin(5.0*log(r));
+        }
+
+        return precalc;
+}
+
+TFunctional345_precalc_t *TFunctional4_prepare(size_t length)
+{
+        TFunctional345_precalc_t *precalc = malloc(sizeof(TFunctional345_precalc_t));
+
+        precalc->real = (float*) malloc(length*sizeof(float));
+        precalc->imag = (float*) malloc(length*sizeof(float));
+
+        for (int r = 1; r < length; r++) {
+                precalc->real[r] = cos(3.0*log(r));
+                precalc->imag[r] = sin(3.0*log(r));
+        }
+
+        return precalc;
+}
+
+TFunctional345_precalc_t *TFunctional5_prepare(size_t length)
+{
+        TFunctional345_precalc_t *precalc = malloc(sizeof(TFunctional345_precalc_t));
+
+        precalc->real = (float*) malloc(length*sizeof(float));
+        precalc->imag = (float*) malloc(length*sizeof(float));
+
+        for (int r = 1; r < length; r++) {
+                precalc->real[r] = sqrt(r)*cos(4.0*log(r));
+                precalc->imag[r] = sqrt(r)*sin(4.0*log(r));
+        }
+
+        return precalc;
+}
+
+float TFunctional345(const float* data, const size_t length, TFunctional345_precalc_t *precalc)
 {
         // Transform the domain from t to r1
         size_t squaredmedian = findWeighedMedianSqrt(data, length);
@@ -132,11 +182,18 @@ float TFunctional345(const float* data, const float *precalc_real, const float *
         float integral_real = 0, integral_imag = 0;
         for (size_t r1 = 1; r1 < length-squaredmedian; r1++) {
                 // From 1, since exp(i*log(0)) == 0
-                integral_real += precalc_real[r1] * data[r1+squaredmedian];
-                integral_imag += precalc_imag[r1] * data[r1+squaredmedian];
+                integral_real += precalc->real[r1] * data[r1+squaredmedian];
+                integral_imag += precalc->imag[r1] * data[r1+squaredmedian];
 
         }
         return hypot(integral_real, integral_imag);
+}
+
+void TFunctional345_destroy(TFunctional345_precalc_t *precalc)
+{
+        free(precalc->real);
+        free(precalc->imag);
+        free(precalc);
 }
 
 
