@@ -13,8 +13,12 @@ SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
 # Extra warnings
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+IF (${CMAKE_C_COMPILER_ID} MATCHES "GCC" OR ${CMAKE_C_COMPILER_ID} MATCHES "Clang")
+	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
+ENDIF()
+IF (${CMAKE_CXX_COMPILER_ID} MATCHES "GCC" OR ${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+ENDIF()
 
 # Add address sanitizer to debug build
 IF (${CMAKE_C_COMPILER_ID} MATCHES "Clang" AND NOT ${CMAKE_C_COMPILER_VERSION} LESS "3.2")
@@ -34,6 +38,9 @@ SET(CMAKE_C_FLAGS_PROFILE "-O2 -g -DNDEBUG -fno-omit-frame-pointer -fno-inline")
 #
 
 # Boost
+IF (WIN32)
+	SET(Boost_USE_STATIC_LIBS ON)
+ENDIF (WIN32)
 FIND_PACKAGE(Boost REQUIRED COMPONENTS program_options)
 INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIR})
 
@@ -60,9 +67,11 @@ ENDIF (MKL_FOUND)
 # Libraries
 #
 
-ADD_LIBRARY(backward lib/backward/backward.hpp lib/backward/backward.cpp)
-TARGET_LINK_LIBRARIES(backward ${DW_LIBRARY})
-SET(BACKWARD -Wl,--whole-archive backward -Wl,--no-whole-archive)
+IF (Elfutils_FOUND)
+	ADD_LIBRARY(backward lib/backward/backward.hpp lib/backward/backward.cpp)
+	TARGET_LINK_LIBRARIES(backward ${DW_LIBRARY})
+	SET(BACKWARD -Wl,--whole-archive backward -Wl,--no-whole-archive)
+ENDIF (Elfutils_FOUND)
 
 ADD_LIBRARY(auxiliary src/auxiliary.hpp src/auxiliary.cpp)
 ADD_LIBRARY(logger src/logger.hpp src/logger.cpp)
@@ -86,4 +95,6 @@ TARGET_LINK_LIBRARIES(transform ${COMMON_LIBRARIES} sinogram circus)
 
 ADD_EXECUTABLE(demo src/demo.cpp)
 TARGET_LINK_LIBRARIES(demo ${COMMON_LIBRARIES} transform ${Boost_LIBRARIES})
-TARGET_LINK_LIBRARIES(demo debug ${BACKWARD})
+IF (Elfutils_FOUND)
+	TARGET_LINK_LIBRARIES(demo debug ${BACKWARD})
+ENDIF (Elfutils_FOUND)
