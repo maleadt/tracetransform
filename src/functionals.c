@@ -16,7 +16,8 @@
 #endif
 
 
-//
+
+////////////////////////////////////////////////////////////////////////////////
 // Auxiliary
 //
 
@@ -86,11 +87,15 @@ float hermite_function(unsigned int order, float x) {
 }
 
 
-//
-// T functionals
+
+////////////////////////////////////////////////////////////////////////////////
+// T-functionals
 //
 
-// T-functional for the Radon transform.
+//
+// Radon
+//
+
 float TFunctionalRadon(const float* data, const size_t length)
 {
         float integral = 0;
@@ -98,6 +103,11 @@ float TFunctionalRadon(const float* data, const size_t length)
                 integral += data[t];
         return integral;                
 }
+
+
+//
+// T1
+//
 
 float TFunctional1(const float* data, const size_t length)
 {
@@ -111,6 +121,11 @@ float TFunctional1(const float* data, const size_t length)
         return integral;                
 }
 
+
+//
+// T2
+//
+
 float TFunctional2(const float* data, const size_t length)
 {
         // Transform the domain from t to r
@@ -123,7 +138,57 @@ float TFunctional2(const float* data, const size_t length)
         return integral;                
 }
 
-float TFunctional345(const float* data, const float *precalc_real, const float *precalc_imag, const size_t length)
+
+//
+// T3, T4 and T5
+//
+
+TFunctional345_precalc_t *TFunctional3_prepare(size_t rows, size_t cols)
+{
+        TFunctional345_precalc_t *precalc = (TFunctional345_precalc_t*) malloc(sizeof(TFunctional345_precalc_t));
+
+        precalc->real = (float*) malloc(rows*sizeof(float));
+        precalc->imag = (float*) malloc(rows*sizeof(float));
+
+        for (unsigned int r = 1; r < rows; r++) {
+                precalc->real[r] = r*cos(5.0*log(r));
+                precalc->imag[r] = r*sin(5.0*log(r));
+        }
+
+        return precalc;
+}
+
+TFunctional345_precalc_t *TFunctional4_prepare(size_t rows, size_t cols)
+{
+        TFunctional345_precalc_t *precalc = (TFunctional345_precalc_t*) malloc(sizeof(TFunctional345_precalc_t));
+
+        precalc->real = (float*) malloc(rows*sizeof(float));
+        precalc->imag = (float*) malloc(rows*sizeof(float));
+
+        for (unsigned int r = 1; r < rows; r++) {
+                precalc->real[r] = cos(3.0*log(r));
+                precalc->imag[r] = sin(3.0*log(r));
+        }
+
+        return precalc;
+}
+
+TFunctional345_precalc_t *TFunctional5_prepare(size_t rows, size_t cols)
+{
+        TFunctional345_precalc_t *precalc = (TFunctional345_precalc_t*) malloc(sizeof(TFunctional345_precalc_t));
+
+        precalc->real = (float*) malloc(rows*sizeof(float));
+        precalc->imag = (float*) malloc(rows*sizeof(float));
+
+        for (unsigned int r = 1; r < rows; r++) {
+                precalc->real[r] = sqrt(r)*cos(4.0*log(r));
+                precalc->imag[r] = sqrt(r)*sin(4.0*log(r));
+        }
+
+        return precalc;
+}
+
+float TFunctional345(const float* data, const size_t length, TFunctional345_precalc_t *precalc)
 {
         // Transform the domain from t to r1
         size_t squaredmedian = findWeighedMedianSqrt(data, length);
@@ -132,16 +197,28 @@ float TFunctional345(const float* data, const float *precalc_real, const float *
         float integral_real = 0, integral_imag = 0;
         for (size_t r1 = 1; r1 < length-squaredmedian; r1++) {
                 // From 1, since exp(i*log(0)) == 0
-                integral_real += precalc_real[r1] * data[r1+squaredmedian];
-                integral_imag += precalc_imag[r1] * data[r1+squaredmedian];
+                integral_real += precalc->real[r1] * data[r1+squaredmedian];
+                integral_imag += precalc->imag[r1] * data[r1+squaredmedian];
 
         }
         return hypot(integral_real, integral_imag);
 }
 
+void TFunctional345_destroy(TFunctional345_precalc_t *precalc)
+{
+        free(precalc->real);
+        free(precalc->imag);
+        free(precalc);
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// P-functionals
+//
 
 //
-// P-functionals
+// P1
 //
 
 float PFunctional1(const float* data, const size_t length)
@@ -156,11 +233,19 @@ float PFunctional1(const float* data, const size_t length)
         return sum;
 }
 
+//
+// P2
+//
+
 float PFunctional2(const float* data, const size_t length)
 {
         size_t median = findWeighedMedian(data, length);
         return data[median];
 }
+
+//
+// P3
+//
 
 float PFunctional3(const float* data, const size_t length)
 {
@@ -192,6 +277,10 @@ float PFunctional3(const float* data, const size_t length)
         free(fourier_imag);
         return sum;
 }
+
+//
+// Hermite P-functionals
+//
 
 float PFunctionalHermite(const float* data, const size_t length, unsigned int order, size_t center)
 {

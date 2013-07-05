@@ -25,23 +25,6 @@ extern "C" {
 // Structures
 //
 
-struct TFunctional345Precalculation {
-        TFunctional345Precalculation(size_t length)
-        {
-                real = new float[length];
-                imag = new float[length];
-        }
-
-        ~TFunctional345Precalculation()
-        {
-                delete[] real;
-                delete[] imag;
-        }
-
-        float *real;
-        float *imag;
-};
-
 
 //
 // Module definitions
@@ -93,36 +76,18 @@ std::vector<Eigen::MatrixXf> getSinograms(
                 outputs[t] = Eigen::MatrixXf(p_steps, a_steps);
 
         // Pre-calculate
-        int length = input.rows();
-        TFunctional345Precalculation *t3precalc = 0, *t4precalc = 0, *t5precalc = 0;
+        std::map<TFunctional, void*> precalculations;
         for (size_t t = 0; t < tfunctionals.size(); t++) {
-                switch (tfunctionals[t].functional) {
+                TFunctional tfunctional = tfunctionals[t].functional;
+                switch (tfunctional) {
                         case TFunctional::T3:
-                                if (t3precalc == 0) {
-                                        t3precalc = new TFunctional345Precalculation(length);
-                                        for (int r = 1; r < length; r++) {
-                                                t3precalc->real[r] = r*cos(5.0*log(r));
-                                                t3precalc->imag[r] = r*sin(5.0*log(r));
-                                        }
-                                }
+                                precalculations[tfunctional] = TFunctional3_prepare(input.rows(), input.cols());
                                 break;
                         case TFunctional::T4:
-                                if (t4precalc == 0) {
-                                        t4precalc = new TFunctional345Precalculation(length);
-                                        for (int r = 1; r < length; r++) {
-                                        t4precalc->real[r] = cos(3.0*log(r));
-                                        t4precalc->imag[r] = sin(3.0*log(r));
-                                        }
-                                }
+                                precalculations[tfunctional] = TFunctional4_prepare(input.rows(), input.cols());
                                 break;
                         case TFunctional::T5:
-                                if (t5precalc == 0) {
-                                        t5precalc = new TFunctional345Precalculation(length);
-                                        for (int r = 1; r < length; r++) {
-                                        t5precalc->real[r] = sqrt(r)*cos(4.0*log(r));
-                                        t5precalc->imag[r] = sqrt(r)*sin(4.0*log(r));
-                                        }
-                                }
+                                precalculations[tfunctional] = TFunctional5_prepare(input.rows(), input.cols());
                                 break;
                 }
         }
@@ -139,25 +104,22 @@ std::vector<Eigen::MatrixXf> getSinograms(
 
                         // Process all T-functionals
                         for (size_t t = 0; t < tfunctionals.size(); t++) {
+                                TFunctional tfunctional = tfunctionals[t].functional;
                                 float result;
-                                switch (tfunctionals[t].functional) {
+                                switch (tfunctional) {
                                         case TFunctional::Radon:
-                                                result = TFunctionalRadon(data, length);
+                                                result = TFunctionalRadon(data, input.rows());
                                                 break;
                                         case TFunctional::T1:
-                                                result = TFunctional1(data, length);
+                                                result = TFunctional1(data, input.rows());
                                                 break;
                                         case TFunctional::T2:
-                                                result = TFunctional2(data, length);
+                                                result = TFunctional2(data, input.rows());
                                                 break;
                                         case TFunctional::T3:
-                                                result = TFunctional345(data, t3precalc->real, t3precalc->imag, length);
-                                                break;
                                         case TFunctional::T4:
-                                                result = TFunctional345(data, t4precalc->real, t4precalc->imag, length);
-                                                break;
                                         case TFunctional::T5:
-                                                result = TFunctional345(data, t5precalc->real, t5precalc->imag, length);
+                                                result = TFunctional345(data, input.rows(), (TFunctional345_precalc_t*) precalculations[tfunctional]);
                                                 break;
                                 }
                                 outputs[t](
@@ -168,11 +130,21 @@ std::vector<Eigen::MatrixXf> getSinograms(
                 }
         }
 
-        if (t3precalc != 0)
-                delete t3precalc;
-        if (t4precalc != 0)
-                delete t4precalc;
-        if (t5precalc != 0)
-                delete t5precalc;
+        // Destroy pre-calculations
+        std::map<TFunctional, void*>::iterator it = precalculations.begin();
+        while (it != precalculations.end()) {
+                switch (it->first) {
+                        case TFunctional::T3:
+                        case TFunctional::T4:
+                        case TFunctional::T5:
+                        {
+                                TFunctional345_precalc_t *precalc = (TFunctional345_precalc_t*) it->second;
+                                TFunctional345_destroy(precalc);
+                                break;
+                        }
+                }
+                ++it;
+        }
+
         return outputs;
 }

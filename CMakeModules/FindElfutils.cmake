@@ -8,6 +8,6 @@ FIND_LIBRARY(DW_LIBRARY
   PATHS /usr/lib
         /usr/$ENV{MACHTYPE}/lib)
 
-IF (Elfutils_INCLUDE_DIR)
+IF (Elfutils_INCLUDE_DIR AND DW_LIBRARY)
         SET(Elfutils_FOUND TRUE)
-ENDIF (Elfutils_INCLUDE_DIR)
+ENDIF (Elfutils_INCLUDE_DIR AND DW_LIBRARY)
