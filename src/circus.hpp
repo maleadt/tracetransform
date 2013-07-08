@@ -47,8 +47,9 @@ struct PFunctionalArguments
 
 struct PFunctionalWrapper
 {
-        PFunctionalWrapper()
+        PFunctionalWrapper() : name("invalid"), functional(PFunctional())
         {
+                // Invalid constructor, only used by boost::program_options
         }
 
         PFunctionalWrapper(const std::string &_name,

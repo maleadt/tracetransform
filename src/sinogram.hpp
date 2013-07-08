@@ -36,8 +36,9 @@ struct TFunctionalArguments
 
 struct TFunctionalWrapper
 {
-        TFunctionalWrapper()
+        TFunctionalWrapper() : name("invalid"), functional(TFunctional())
         {
+                // Invalid constructor, only used by boost::program_options
         }
 
         TFunctionalWrapper(const std::string &_name,
