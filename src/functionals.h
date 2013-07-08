@@ -7,7 +7,7 @@
 #define _TRACETRANSFORM_FUNCTIONALS_
 
 // Standard library
-#include <string.h>
+#include <stddef.h>                     // for size_t
 
 
 //

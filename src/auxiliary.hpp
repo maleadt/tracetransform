@@ -7,12 +7,11 @@
 #define _TRACETRANSFORM_AUXILIARY_
 
 // Standard library
-#include <iostream>
-#include <string>
-#include <vector>
+#include <stddef.h>                     // for size_t
+#include <string>                       // for string
 
 // Eigen
-#include <Eigen/Dense>
+#include <Eigen/Dense>                  // for MatrixXf, MatrixXi, etc
 
 // Local
 #include "global.hpp"

@@ -7,10 +7,10 @@
 #include "logger.hpp"
 
 // Standard library
-#include <sstream>
-#include <ctime>
-#include <cassert>
-#include <iomanip>
+#include <stddef.h>                     // for size_t
+#include <cassert>                      // for assert
+#include <ctime>                        // for localtime, strftime, time, etc
+#include <sstream>                      // for stringstream
 
 // Null stream
 std::ostream cnull(0);

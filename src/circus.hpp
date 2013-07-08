@@ -7,14 +7,16 @@
 #define _TRACETRANSFORM_CIRCUS_
 
 // Standard library
-#include <cstddef>
+#include <cstddef>                      // for size_t
+#include <iosfwd>                       // for istream
+#include <string>                       // for string
 
 // Boost
-#include <boost/optional.hpp>
-#include <boost/program_options.hpp>
+#include <boost/none.hpp>               // for none
+#include <boost/optional.hpp>           // for optional
 
 // Eigen
-#include <Eigen/Dense>
+#include <Eigen/Dense>                  // for MatrixXf, VectorXf
 
 
 //

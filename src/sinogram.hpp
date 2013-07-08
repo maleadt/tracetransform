@@ -7,11 +7,9 @@
 #define _TRACETRANSFORM_SINOGRAM_
 
 // Standard library
-#include <cstddef>
-#include <vector>
-
-// Boost
-#include <boost/program_options.hpp>
+#include <istream>                      // for istream
+#include <string>                       // for string
+#include <vector>                       // for vector
 
 // Eigen
 #include <Eigen/Dense>

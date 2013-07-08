@@ -6,10 +6,13 @@
 #include "transform.hpp"
 
 // Standard library
-#include <cmath>
-#include <vector>
-#include <ostream>
-#include <stdexcept>
+#include <stddef.h>                     // for size_t
+#include <algorithm>                    // for min
+#include <cmath>                        // for ceil, sqrt
+#include <new>                          // for operator new
+#include <ostream>                      // for operator<<, basic_ostream, etc
+#include <string>                       // for operator<<
+#include <vector>                       // for vector
 
 // Local
 #include "logger.hpp"

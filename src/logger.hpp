@@ -7,7 +7,8 @@
 #define _TRACETRANSFORM_LOGGER_
 
 // Standard library
-#include <iostream>
+#include <iostream>                     // for streambuf, ostream, etc
+#include <string>                       // for string
 
 
 //

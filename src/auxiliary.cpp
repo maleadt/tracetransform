@@ -6,12 +6,14 @@
 #include "auxiliary.hpp"
 
 // Standard library
+#include <algorithm>                    // for min
+#include <cassert>                      // for assert
+#include <cmath>                        // for floor, cos, modf, sin, NAN, etc
+#include <cstddef>                      // for size_t
 #include <fstream>
-#include <iomanip>
-#include <cassert>
-#include <cstddef>
-#include <cmath>
-#include <stdexcept>
+#include <iostream>                     // for ofstream, operator<<, etc
+#include <new>                          // for operator new
+#include <stdexcept>                    // for runtime_error
 
 
 //

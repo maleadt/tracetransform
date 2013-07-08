@@ -6,9 +6,8 @@
 #include "functionals.h"
 
 // Standard library
-#include <complex.h>
-#include <math.h>
-#include <stdlib.h>
+#include <math.h>                       // for log, sqrt, cos, sin, hypot, etc
+#include <stdlib.h>                     // for malloc, free, calloc
 
 // M_PI is dropped in GCC's C99
 #ifndef M_PI

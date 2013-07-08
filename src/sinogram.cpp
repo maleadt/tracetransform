@@ -6,15 +6,18 @@
 #include "sinogram.hpp"
 
 // Standard library
-#include <cassert>
-#include <cmath>
-#include <complex>
+#include <cassert>                      // for assert
+#include <cmath>                        // for floor
+#include <cstddef>                      // for size_t
+#include <map>                          // for map, _Rb_tree_iterator, etc
+#include <new>                          // for operator new
+#include <utility>                      // for pair
 
 // Boost
-#include <boost/optional.hpp>
+#include <boost/program_options.hpp>
 
 // Local
-#include "logger.hpp"
+#include "global.hpp"
 #include "auxiliary.hpp"
 extern "C" {
         #include "functionals.h"

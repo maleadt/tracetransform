@@ -3,20 +3,15 @@
 //
 
 // Standard library
-#include <cstddef>
-#include <exception>
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <vector>
-#include <cmath>
-#include <chrono>
+#include <chrono>                       // for microseconds, time_point, etc
+#include <cstddef>                      // for size_t
+#include <exception>                    // for exception
+#include <iostream>                     // for operator<<, ostream, etc
+#include <string>                       // for operator+, string, etc
+#include <vector>                       // for vector
 
 // Boost
 #include <boost/program_options.hpp>
-
-// Eigen
-#include <Eigen/Dense>
 
 // Local
 #include "logger.hpp"

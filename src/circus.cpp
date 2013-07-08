@@ -6,16 +6,21 @@
 #include "circus.hpp"
 
 // Standard library
-#include <cassert>
-#include <cmath>
-#include <algorithm>
-#include <vector>
+#include <stdlib.h>                     // for abs
+#include <new>                          // for operator new
+#include <algorithm>                    // for min, swap, max, max_element, etc
+#include <cmath>                        // for floor
+#include <cassert>                      // for assert
+#include <vector>                       // for vector
 
 // Eigen
-#include <Eigen/SVD>
+#include <Eigen/SVD>                    // for JacobiSVD, etc
+
+// Boost
+#include <boost/lexical_cast.hpp>       // for lexical_cast, etc
+#include <boost/program_options.hpp>    // for validation_error, etc
 
 // Local
-#include "logger.hpp"
 #include "auxiliary.hpp"
 extern "C" {
         #include "functionals.h"

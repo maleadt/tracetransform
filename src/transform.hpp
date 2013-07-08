@@ -7,10 +7,7 @@
 #define _TRACETRANSFORM_TRANSFORM_
 
 // Standard library
-#include <vector>
-
-// Boost
-#include <boost/optional.hpp>
+#include <vector>                       // for vector
 
 // Eigen
 #include <Eigen/Dense>
