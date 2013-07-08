@@ -141,6 +141,10 @@ int main(int argc, char **argv)
                 transformer.getTransform(tfunctionals, pfunctionals, true);
         }
 
+        else if (vm["mode"].as<std::string>() == "profile") {
+                transformer.getTransform(tfunctionals, pfunctionals, false);
+        }
+
         else if (vm["mode"].as<std::string>() == "benchmark") {
                 if (!vm.count("iterations"))
                         throw boost::program_options::required_option(
