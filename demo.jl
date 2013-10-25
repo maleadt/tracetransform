@@ -89,7 +89,7 @@ function main(args::Vector{Any})
         if opts["mode"] == "calculate"
                 get_transform(input, tfunctionals, pfunctionals, orthonormal, true)
 
-        elseif opts["mode"] == "calculate"
+        elseif opts["mode"] == "benchmark"
 
         else
                 error("invalid execution mode")

@@ -56,7 +56,7 @@ function getSinogram(
         # Process all angles
         for a in 0:359
                 # Rotate the image
-                input_rotated::Image = rotate(input, origin, a)
+                input_rotated::Image{Float64} = rotate(input, origin, a)
 
                 # Process all projection bands
                 for p in 1:cols(input)-1
