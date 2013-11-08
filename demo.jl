@@ -1,5 +1,3 @@
-#!/usr/local/bin/julia
-
 require("geometry")
 require("transform")
 require("auxiliary")
@@ -37,9 +35,13 @@ function main(args::Vector{Any})
                         help = "P-functionals"
                         arg_type = String
                 "--mode", "-m"
-                        help = "execution mode"
+                        help = "execution mode (calculate or benchmark)"
                         arg_type = String
                         required = true
+                "--angle", "-a"
+                        help = "angle stepsize"
+                        arg_type = Uint
+                        default = uint(1)
                 "--iterations", "-n"
                         help = "amount of iterations to run"
                         arg_type = Uint
@@ -48,6 +50,7 @@ function main(args::Vector{Any})
                         required = true
         end
         opts = parse_args(args, s)
+        @assert(opts["angle"] == 1)
 
         # Parse the functionals
         tfunctionals::Vector{TFunctionalWrapper} = parse_tfunctionals(opts["t-functional"])

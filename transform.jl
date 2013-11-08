@@ -21,7 +21,10 @@ function prepare_transform(input::Image{Float64}, orthonormal::Bool)
         return input
 end
 
-function get_transform(input::Image{Float64}, tfunctionals::Vector{TFunctionalWrapper}, pfunctionals::Vector{PFunctionalWrapper}, orthonormal::Bool, write_data::Bool)
+function get_transform(input::Image{Float64},
+        tfunctionals::Vector{TFunctionalWrapper},
+        pfunctionals::Vector{PFunctionalWrapper},
+        orthonormal::Bool, write_data::Bool)
         # Process all T-functionals
         for tfunctional in tfunctionals
                 # Calculate the trace transform sinogram
