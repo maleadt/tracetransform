@@ -41,10 +41,11 @@ end
 function getSinogram(
         input::Image{Float64},
         tfunctional::TFunctionalWrapper)
+        @assert length(size(input)) == 2
         @assert rows(input) == cols(input)        # Padded image!
 
         # Get the image origin to rotate around
-        origin::Vector{Float64} = floor(flipud([size(input)...] .+ 1) ./ 2)
+        origin::Vector{Float64} = floor(([size(input)...] .+ 1) ./ 2)
 
         # Allocate the output matrix
         output::Matrix{Float64} = Array(

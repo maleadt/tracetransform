@@ -72,6 +72,8 @@ function pad(input::Image{Float64})
 end
 
 function rotate(input::Image{Float64}, origin::Vector{Float64}, angle::Real)
+    @assert length(size(input)) == 2
+
     # Calculate part of transform matrix
     angle_cos = cosd(-angle)
     angle_sin = sind(-angle)
@@ -79,23 +81,22 @@ function rotate(input::Image{Float64}, origin::Vector{Float64}, angle::Real)
     # Allocate output matrix
     output::Matrix{Float64} = zeros(
         Float64,
-        size(input)...)
+        size(input))
 
     # Process all pixels
-    # TODO: swap 2 1
-    for col in 1:size(input, 2)
-        for row in 1:size(input, 1)
+    for i in 1:size(input, 1)
+        for j in 1:size(input, 2)
             # Get the source pixel
             # FIXME: this was a nice matrix multiplication before, but Julia
             #        can't manage these small-matrix multiplications (issue 3239)
-            xt::Float64 = col - origin[1]
-            yt::Float64 = row - origin[2]
-            x::Float64 =  xt*angle_cos + yt*angle_sin + origin[1]
-            y::Float64 = -xt*angle_sin + yt*angle_cos + origin[2]
+            i_t::Float64 = i - origin[1]
+            j_t::Float64 = j - origin[2]
+            i_r::Float64 = -j_t*angle_sin + i_t*angle_cos + origin[1]
+            j_r::Float64 =  j_t*angle_cos + i_t*angle_sin + origin[2]
 
             # Copy if within bounds
-            if 1 <= x < size(input, 2) && 1 <= y < size(input, 1)
-                output[row, col] = interpolate(input, y, x)
+            if 1 <= i_r < size(input, 1) && 1 <= j_r < size(input, 2)
+                output[i, j] = interpolate(input, i_r, j_r)
             end
         end
     end
