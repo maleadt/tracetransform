@@ -11,7 +11,7 @@ function prepare_transform(input::Image{Float64}, orthonormal::Bool)
                 ndiag = 360
                 nsize::Uint = iceil(ndiag / sqrt(2))
                 print_debug("Stretching input image to $(int(nsize)) squared.\n")
-                input = resize(input, nsize, nsize)
+                input = resize(input, (nsize, nsize))
         end
 
         # Pad the image so we can freely rotate without losing information

@@ -20,23 +20,28 @@ function interpolate(input::Image{Float64}, x::Float64, y::Float64)
               input.data[y_int+1, x_int+1] * x_fract     * y_fract)
 end
 
-function resize(input::Image{Float64}, new_rows::Uint, new_cols::Uint)
+function resize(input::Image{Float64}, new_size::(Uint, Uint))
+        @assert length(size(input)) == 2
+        # TODO: extract colordim? use wrapper for each cd?
+        @assert length(new_size) == 2
+
         # Calculate transform matrix
         transform::Matrix = [
-                rows(input)/new_rows    0;
-                0                       cols(input)/new_cols];
+                size(input, 1)/new_size[1]  0;
+                0                           size(input, 2)/new_size[2]];
 
         # Allocate output matrix
         # FIXME: zeros not necessary if we properly handle borders
         output::Matrix = zeros(
                 Float64,
-                new_rows, new_cols)
+                new_size)
         
         # Process all points
         # FIXME: borders are wrong (but this doesn't matter here since we
         #        only handle padded images)
-        for col in 2:new_cols-1
-                for row in 2:new_rows-1
+        # FIXME: swap 2 1
+        for col in 2:new_size[2]-1
+                for row in 2:new_size[1]-1
                         # TODO: RowVector
                         p::Matrix = [col row]
                         p += [0.5 0.5]
@@ -44,7 +49,7 @@ function resize(input::Image{Float64}, new_rows::Uint, new_cols::Uint)
                         p -= [0.5 0.5]
 
                         # FIXME: this discards edge pixels
-                        if 1 <= p[1] < cols(input) && 1 <= p[2] < rows(input)
+                        if 1 <= p[1] < size(input, 2) && 1 <= p[2] < size(input, 1)
                             output[row, col] = interpolate(input, p[1], p[2])
                         end
                 end
