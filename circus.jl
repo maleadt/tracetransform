@@ -55,7 +55,7 @@ function nearest_orthonormal_sinogram(input::Image{Float64})
         # Align each column to the sinogram center
         padding::Uint = max(offset) + abs(min(offset))
         new_center = sinogram_center + max(offset);
-        aligned::Matrix = zeros(Float64, rows(input)+padding, cols(input))
+        aligned::Matrix = zeros(rows(input)+padding, cols(input))
         for col in 1:cols(input)
                 for row in 1:rows(input)
                         aligned[max(offset)+row-offset[col], col] = input.data[row, col]

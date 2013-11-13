@@ -32,9 +32,7 @@ function resize(input::Image{Float64}, new_size::(Uint, Uint))
 
         # Allocate output matrix
         # FIXME: zeros not necessary if we properly handle borders
-        output::Matrix = zeros(
-                Float64,
-                new_size)
+        output::Matrix = zeros(new_size)
         
         # Process all points
         # FIXME: borders are wrong (but this doesn't matter here since we
@@ -62,7 +60,7 @@ function pad(input::Image{Float64})
         rLast::Int = iceil(hypot(([size(input)...] .- 1 - origin)...)) + 1
         rFirst::Int = -rLast
         nBins::Int = rLast - rFirst + 1
-        padded::Array = zeros(Float64, nBins, nBins)
+        padded::Array = zeros(nBins, nBins)
         origin_padded::Vector = ifloor(flipud([size(padded)...] .+ 1) ./ 2)
         offset::Vector = origin_padded - origin
         endpoint::Vector = offset+flipud([size(input)...])
@@ -79,9 +77,7 @@ function rotate(input::Image{Float64}, origin::Vector{Float64}, angle::Real)
     angle_sin = sind(-angle)
 
     # Allocate output matrix
-    output::Matrix{Float64} = zeros(
-        Float64,
-        size(input))
+    output::Matrix{Float64} = zeros(size(input))
 
     # Process all pixels
     for i in 1:size(input, 1)
