@@ -5,6 +5,9 @@ using Images
 rows(input::Image) = size(input, 1)
 cols(input::Image) = size(input, 2)
 
+@deprecate  rows(A)     size(A, 1)
+@deprecate  cols(A)     size(A, 2)
+
 function interpolate(input::Image{Float64}, x::Float64, y::Float64)
     # Get fractional and integral part of the coordinates
     (x_fract, x_int) = modf(x)
