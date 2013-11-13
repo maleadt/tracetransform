@@ -1,5 +1,6 @@
 * Improve use of Image.jl
   - generic implementations of algorithms (in terms of AbstractAyyay{T}),
     given that they do not degrade performance too much
+  - use scale/convert stuff https://github.com/timholy/Images.jl/blob/master/doc/function_reference.md
 * Revert 'unrolled' matrix multiplication as soon as Julia can handle
   these small-matrix multiplications

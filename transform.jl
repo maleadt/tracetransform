@@ -1,4 +1,5 @@
 require("functionals")
+require("geometry")
 require("sinogram")
 require("circus")
 
@@ -40,6 +41,7 @@ function get_transform(input::Image{Float64},
 
                         if want_log(debug_l)
                                 # Save the sinogram image
+                                # FIXME: why does imwrite generate a transposed image?
                                 imwrite(mat2gray(sinogram),
                                         "trace_$(tfunctional.functional).ppm")
                         end
