@@ -44,21 +44,27 @@ function parse_pfunctionals(args::Vector{String})
 end
 
 function nearest_orthonormal_sinogram(input::Image{Float64})
+        @assert length(size(input)) == 2
+
+        cols = size(input, "x")
+        rows = size(input, "y")
+
         # Detect the offset of each column to the sinogram center
-        sinogram_center = ifloor(rows(input) / 2);
-        offset::Vector = Array(Float64, cols(input))
-        for p in 1:cols(input)
-                median = find_weighted_median(vec(input.data[p, :]))
+        sinogram_center = ifloor(rows / 2);
+        offset::Vector = Array(Float64, cols)
+        for p in 1:cols
+                median = find_weighted_median(input["y", p])
                 offset[p] = median - sinogram_center
         end
 
         # Align each column to the sinogram center
-        padding::Uint = max(offset) + abs(min(offset))
-        new_center = sinogram_center + max(offset);
-        aligned::Matrix = zeros(rows(input)+padding, cols(input))
-        for col in 1:cols(input)
-                for row in 1:rows(input)
-                        aligned[max(offset)+row-offset[col], col] = input.data[row, col]
+        padding::Uint = maximum(offset) + abs(mimimum(offset))
+        new_center = sinogram_center + maximum(offset);
+        aligned::Matrix = zeros(rows+padding, cols)
+        for col in 1:cols
+                for row in 1:rows
+                        aligned[maximum(offset)+row-offset[col], col] =
+                                input.data["x", col, "y", row]
                 end
         end
 
@@ -77,19 +83,21 @@ function getCircusFunction(
         # Allocate the output matrix
         output::Vector = Array(
                 Float64,
-                cols(input)
+                size(input, "x")
         )
 
         # Trace all columns
-        for p in 1:cols(input)
+        for p in 1:size(input, "x")
                 if pfunctional.functional == P1
-                        output[p] = p_1(vec(input[:, p]))
+                        output[p] = p_1(input["y", p])
                 elseif pfunctional.functional == P2
-                        output[p] = p_2(vec(input[:, p]))
+                        output[p] = p_2(input["y", p])
                 elseif pfunctional.functional == P3
-                        output[p] = p_3(vec(input[:, p]))
+                        output[p] = p_3(input["y", p])
                 elseif pfunctional.functional == Hermite
-                        output[p] = p_hermite(vec(input[:, p]), pfunctional.arguments.order, pfunctional.arguments.center)
+                        output[p] = p_hermite(input["y", p],
+                                              pfunctional.arguments.order,
+                                              pfunctional.arguments.center)
                 end
         end
 

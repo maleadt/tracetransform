@@ -42,7 +42,7 @@ function getSinogram(
         input::Image{Float64},
         tfunctional::TFunctionalWrapper)
         @assert length(size(input)) == 2
-        @assert rows(input) == cols(input)        # Padded image!
+        @assert size(input, 1) == size(input, 2)        # Padded image!
 
         # Get the image origin to rotate around
         origin::Vector{Float64} = floor(([size(input)...] .+ 1) ./ 2)
@@ -50,8 +50,8 @@ function getSinogram(
         # Allocate the output matrix
         output::Matrix{Float64} = Array(
                 Float64,
-                cols(input),    # rows
-                360             # cols
+                size(input, "y"),       # rows
+                360                     # cols
                 )
 
         # Process all angles
@@ -60,19 +60,19 @@ function getSinogram(
                 input_rotated::Image{Float64} = rotate(input, origin, a)
 
                 # Process all projection bands
-                for p in 1:cols(input)-1
+                for p in 1:size(input, "x")-1
                         if tfunctional.functional == Radon
-                                output[p, a+1] = t_radon(vec(input_rotated.data[:, p]))
+                                output[p, a+1] = t_radon(input_rotated["y", p])
                         elseif tfunctional.functional == T1
-                                output[p, a+1] = t_1(vec(input_rotated.data[:, p]))
+                                output[p, a+1] = t_1(input_rotated["y", p])
                         elseif tfunctional.functional == T2
-                                output[p, a+1] = t_2(vec(input_rotated.data[:, p]))
+                                output[p, a+1] = t_2(input_rotated["y", p])
                         elseif tfunctional.functional == T3
-                                output[p, a+1] = t_3(vec(input_rotated.data[:, p]))
+                                output[p, a+1] = t_3(input_rotated["y", p])
                         elseif tfunctional.functional == T4
-                                output[p, a+1] = t_4(vec(input_rotated.data[:, p]))
+                                output[p, a+1] = t_4(input_rotated["y", p])
                         elseif tfunctional.functional == T5
-                                output[p, a+1] = t_5(vec(input_rotated.data[:, p]))
+                                output[p, a+1] = t_5(input_rotated["y", p])
                         end
                 end
         end

@@ -16,8 +16,9 @@ function prepare_transform(input::Image{Float64}, orthonormal::Bool)
         end
 
         # Pad the image so we can freely rotate without losing information
+        oldsize = size(input)
         input = pad(input)
-        print_debug("Padded image to $(rows(input))x$(cols(input)).\n")
+        print_debug("Padded image from $(oldsize) to $(size(input)).\n")
 
         return input
 end
