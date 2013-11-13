@@ -8,16 +8,16 @@ cols(input::Image) = size(input, 2)
 @deprecate  rows(A)     size(A, 1)
 @deprecate  cols(A)     size(A, 2)
 
-function interpolate(input::Image{Float64}, x::Float64, y::Float64)
+function interpolate(input::Image{Float64}, i::Float64, j::Float64)
     # Get fractional and integral part of the coordinates
-    (x_fract, x_int) = modf(x)
-    (y_fract, y_int) = modf(y)
+    (j_fract, j_int) = modf(j)
+    (i_fract, i_int) = modf(i)
 
     # Bilinear interpolation
-    return   (input.data[y_int,   x_int]   * (1-x_fract) * (1-y_fract) + 
-              input.data[y_int,   x_int+1] * x_fract     * (1-y_fract) + 
-              input.data[y_int+1, x_int]   * (1-x_fract) * y_fract + 
-              input.data[y_int+1, x_int+1] * x_fract     * y_fract)
+    return   (input.data[i_int,   j_int]   * (1-j_fract) * (1-i_fract) +
+              input.data[i_int,   j_int+1] * j_fract     * (1-i_fract) +
+              input.data[i_int+1, j_int]   * (1-j_fract) * i_fract +
+              input.data[i_int+1, j_int+1] * j_fract     * i_fract)
 end
 
 function resize(input::Image{Float64}, new_size::(Uint, Uint))
@@ -39,18 +39,17 @@ function resize(input::Image{Float64}, new_size::(Uint, Uint))
         # Process all points
         # FIXME: borders are wrong (but this doesn't matter here since we
         #        only handle padded images)
-        # FIXME: swap 2 1
-        for col in 2:new_size[2]-1
-                for row in 2:new_size[1]-1
+        for i in 2:new_size[1]-1
+                for j in 2:new_size[2]-1
                         # TODO: RowVector
-                        p::Matrix = [col row]
+                        p::Matrix = [j i]
                         p += [0.5 0.5]
                         p *= transform
                         p -= [0.5 0.5]
 
                         # FIXME: this discards edge pixels
                         if 1 <= p[1] < size(input, 2) && 1 <= p[2] < size(input, 1)
-                            output[row, col] = interpolate(input, p[1], p[2])
+                            output[i, j] = interpolate(input, p[2], p[1])
                         end
                 end
         end
@@ -96,7 +95,7 @@ function rotate(input::Image{Float64}, origin::Vector{Float64}, angle::Real)
 
             # Copy if within bounds
             if 1 <= x < size(input, 2) && 1 <= y < size(input, 1)
-                output[row, col] = interpolate(input, x, y)
+                output[row, col] = interpolate(input, y, x)
             end
         end
     end
