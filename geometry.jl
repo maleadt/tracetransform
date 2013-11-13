@@ -83,8 +83,9 @@ function rotate(input::Image{Float64}, origin::Vector{Float64}, angle::Real)
         size(input)...)
 
     # Process all pixels
-    for col in 1:cols(input)
-        for row in 1:rows(input)
+    # TODO: swap 2 1
+    for col in 1:size(input, 2)
+        for row in 1:size(input, 1)
             # Get the source pixel
             # FIXME: this was a nice matrix multiplication before, but Julia
             #        can't manage these small-matrix multiplications (issue 3239)
@@ -94,7 +95,7 @@ function rotate(input::Image{Float64}, origin::Vector{Float64}, angle::Real)
             y::Float64 = -xt*angle_sin + yt*angle_cos + origin[2]
 
             # Copy if within bounds
-            if 1 <= x < cols(input) && 1 <= y < rows(input)
+            if 1 <= x < size(input, 2) && 1 <= y < size(input, 1)
                 output[row, col] = interpolate(input, x, y)
             end
         end
