@@ -15,58 +15,58 @@ function interpolate(input::Image{Float64}, i::Float64, j::Float64)
 
     # Bilinear interpolation
     return   (input.data[i_int,   j_int]   * (1-j_fract) * (1-i_fract) +
-              input.data[i_int,   j_int+1] * j_fract     * (1-i_fract) +
-              input.data[i_int+1, j_int]   * (1-j_fract) * i_fract +
-              input.data[i_int+1, j_int+1] * j_fract     * i_fract)
+      input.data[i_int,   j_int+1] * j_fract     * (1-i_fract) +
+      input.data[i_int+1, j_int]   * (1-j_fract) * i_fract +
+      input.data[i_int+1, j_int+1] * j_fract     * i_fract)
 end
 
 function resize(input::Image{Float64}, new_size::(Uint, Uint))
-        @assert length(size(input)) == 2
-        # TODO: extract colordim? use wrapper for each cd?
-        @assert length(new_size) == 2
+    @assert length(size(input)) == 2
+    # TODO: extract colordim? use wrapper for each cd?
+    @assert length(new_size) == 2
 
-        # Calculate transform matrix
-        transform::Matrix = [
-                size(input, 1)/new_size[1]  0;
-                0                           size(input, 2)/new_size[2]];
+    # Calculate transform matrix
+    transform::Matrix = [
+    size(input, 1)/new_size[1]  0;
+    0                           size(input, 2)/new_size[2]];
 
-        # Allocate output matrix
-        # FIXME: zeros not necessary if we properly handle borders
-        output::Matrix = zeros(new_size)
-        
-        # Process all points
-        # FIXME: borders are wrong (but this doesn't matter here since we
-        #        only handle padded images)
-        for i in 2:new_size[1]-1
-                for j in 2:new_size[2]-1
-                        # TODO: RowVector
-                        p::Matrix = [j i]
-                        p += [0.5 0.5]
-                        p *= transform
-                        p -= [0.5 0.5]
+    # Allocate output matrix
+    # FIXME: zeros not necessary if we properly handle borders
+    output::Matrix = zeros(new_size)
+    
+    # Process all points
+    # FIXME: borders are wrong (but this doesn't matter here since we
+    #        only handle padded images)
+    for i in 2:new_size[1]-1
+        for j in 2:new_size[2]-1
+            # TODO: RowVector
+            p::Matrix = [j i]
+            p += [0.5 0.5]
+            p *= transform
+            p -= [0.5 0.5]
 
-                        # FIXME: this discards edge pixels
-                        if 1 <= p[1] < size(input, 2) && 1 <= p[2] < size(input, 1)
-                            output[i, j] = interpolate(input, p[2], p[1])
-                        end
-                end
+            # FIXME: this discards edge pixels
+            if 1 <= p[1] < size(input, 2) && 1 <= p[2] < size(input, 1)
+                output[i, j] = interpolate(input, p[2], p[1])
+            end
         end
+    end
 
-        share(input, output)
+    share(input, output)
 end
 
 function pad(input::Image{Float64})
-        origin::Vector = ifloor(flipud([size(input)...] .+ 1) ./ 2)
-        rLast::Int = iceil(hypot(([size(input)...] .- 1 - origin)...)) + 1
-        rFirst::Int = -rLast
-        nBins::Int = rLast - rFirst + 1
-        padded::Array = zeros(nBins, nBins)
-        origin_padded::Vector = ifloor(flipud([size(padded)...] .+ 1) ./ 2)
-        offset::Vector = origin_padded - origin
-        endpoint::Vector = offset+flipud([size(input)...])
-        padded[1+offset[2]:endpoint[2], 1+offset[1]:endpoint[1]] = input.data
+    origin::Vector = ifloor(flipud([size(input)...] .+ 1) ./ 2)
+    rLast::Int = iceil(hypot(([size(input)...] .- 1 - origin)...)) + 1
+    rFirst::Int = -rLast
+    nBins::Int = rLast - rFirst + 1
+    padded::Array = zeros(nBins, nBins)
+    origin_padded::Vector = ifloor(flipud([size(padded)...] .+ 1) ./ 2)
+    offset::Vector = origin_padded - origin
+    endpoint::Vector = offset+flipud([size(input)...])
+    padded[1+offset[2]:endpoint[2], 1+offset[1]:endpoint[1]] = input.data
 
-        share(input, padded)
+    share(input, padded)
 end
 
 function rotate(input::Image{Float64}, origin::Vector{Float64}, angle::Real)

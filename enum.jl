@@ -5,7 +5,8 @@ macro enum(T,syms...)
             $(esc(T))(n::Integer) = new(n)
         end
         Base.show(io::IO, x::$(esc(T))) = print(io, $syms[x.n+1])
-        Base.show(io::IO, x::Type{$(esc(T))}) = print(io, $(string("enum ", T, ' ', '(', join(syms, ", "), ')')))
+        Base.show(io::IO, x::Type{$(esc(T))}) = print(io,
+            $(string("enum ", T, ' ', '(', join(syms, ", "), ')')))
     end
     for (i,sym) in enumerate(syms)
         push!(blk.args, :(const $(esc(sym)) = $(esc(T))($(i-1))))

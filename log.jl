@@ -2,18 +2,18 @@
 THRESHOLD = info_l
 
 function set_threshold(level::LogLevel)
-        global THRESHOLD::LogLevel
-        THRESHOLD::LogLevel = level
+    global THRESHOLD::LogLevel
+    THRESHOLD::LogLevel = level
 end
 
 function want_log(level::LogLevel)
-        return (level.n >= (THRESHOLD::LogLevel).n)
+    return (level.n >= (THRESHOLD::LogLevel).n)
 end
 
 function print_checked(level::LogLevel, msg::String...)
-        if want_log(level)
-                print(msg...)
-        end
+    if want_log(level)
+        print(msg...)
+    end
 end
 
 print_fatal(msg::String...) = print_checked(fatal_l, msg...)
