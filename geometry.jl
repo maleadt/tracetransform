@@ -56,15 +56,17 @@ function resize(input::Image{Float64}, new_size::(Uint, Uint))
 end
 
 function pad(input::Image{Float64})
-    origin::Vector = ifloor(flipud([size(input)...] .+ 1) ./ 2)
+    @assert length(size(input)) == 2
+
+    origin::Vector = ifloor(([size(input)...] .+ 1) ./ 2)
     rLast::Int = iceil(hypot(([size(input)...] .- 1 - origin)...)) + 1
     rFirst::Int = -rLast
     nBins::Int = rLast - rFirst + 1
     padded::Array = zeros(nBins, nBins)
-    origin_padded::Vector = ifloor(flipud([size(padded)...] .+ 1) ./ 2)
+    origin_padded::Vector = ifloor(([size(padded)...] .+ 1) ./ 2)
     offset::Vector = origin_padded - origin
-    endpoint::Vector = offset+flipud([size(input)...])
-    padded[1+offset[2]:endpoint[2], 1+offset[1]:endpoint[1]] = input.data
+    endpoint::Vector = offset+([size(input)...])
+    padded[1+offset[1]:endpoint[1], 1+offset[2]:endpoint[2]] = input.data
 
     share(input, padded)
 end

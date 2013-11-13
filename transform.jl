@@ -9,7 +9,7 @@ function prepare_transform(input::Image{Float64}, orthonormal::Bool)
     # Orthonormal P-functionals need a stretched image in order to ensure a
     # square sinogram
     if orthonormal
-        ndiag = 360
+        ndiag = 360 # iceil(360/angle_interval)
         nsize::Uint = iceil(ndiag / sqrt(2))
         print_debug("Stretching input image to $(int(nsize)) squared.\n")
         input = resize(input, (nsize, nsize))
