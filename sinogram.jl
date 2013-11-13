@@ -48,11 +48,8 @@ function getSinogram(
     origin::Vector{Float64} = floor(([size(input)...] .+ 1) ./ 2)
 
     # Allocate the output matrix
-    output::Matrix{Float64} = Array(
-        Float64,
-        size(input, "y"),       # rows
-        360                     # cols
-        )
+    output = similar(input, (size(input, "y"), 360))
+    output.properties["spatialorder"] = ["y", "x"]
 
     # Process all angles
     for a in 0:359
@@ -62,20 +59,20 @@ function getSinogram(
         # Process all projection bands
         for p in 1:size(input, "x")-1
             if tfunctional.functional == Radon
-                output[p, a+1] = t_radon(input_rotated["y", p])
+                output.data[p, a+1] = t_radon(input_rotated["y", p])
             elseif tfunctional.functional == T1
-                output[p, a+1] = t_1(input_rotated["y", p])
+                output.data[p, a+1] = t_1(input_rotated["y", p])
             elseif tfunctional.functional == T2
-                output[p, a+1] = t_2(input_rotated["y", p])
+                output.data[p, a+1] = t_2(input_rotated["y", p])
             elseif tfunctional.functional == T3
-                output[p, a+1] = t_3(input_rotated["y", p])
+                output.data[p, a+1] = t_3(input_rotated["y", p])
             elseif tfunctional.functional == T4
-                output[p, a+1] = t_4(input_rotated["y", p])
+                output.data[p, a+1] = t_4(input_rotated["y", p])
             elseif tfunctional.functional == T5
-                output[p, a+1] = t_5(input_rotated["y", p])
+                output.data[p, a+1] = t_5(input_rotated["y", p])
             end
         end
     end
 
-    return share(input, output)
+    return output
 end
