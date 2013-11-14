@@ -40,14 +40,14 @@ function resize(input::Image{Float64}, new_size::(Uint, Uint))
     for i in 2:new_size[1]-1
         for j in 2:new_size[2]-1
             # TODO: RowVector
-            p::Matrix = [j i]
+            p::Matrix = [i j]
             p += [0.5 0.5]
             p *= transform
             p -= [0.5 0.5]
 
             # FIXME: this discards edge pixels
-            if 1 <= p[1] < size(input, 2) && 1 <= p[2] < size(input, 1)
-                output[i, j] = interpolate(input, p[2], p[1])
+            if 1 <= p[1] < size(input, 1) && 1 <= p[2] < size(input, 2)
+                output[i, j] = interpolate(input, p[1], p[2])
             end
         end
     end
@@ -75,8 +75,8 @@ function rotate(input::Image{Float64}, origin::Vector{Float64}, angle::Real)
     @assert length(size(input)) == 2
 
     # Calculate part of transform matrix
-    angle_cos = cosd(-angle)
-    angle_sin = sind(-angle)
+    angle_cos = cosd(angle)
+    angle_sin = sind(angle)
 
     # Allocate output matrix
     output::Matrix{Float64} = zeros(size(input))
