@@ -1,4 +1,5 @@
 require("functionals")
+require("geometry")
 require("enum")
 
 @enum TFunctional Radon T1 T2 T3 T4 T5
@@ -55,21 +56,24 @@ function getSinogram(
     for a in 0:359
         # Rotate the image
         input_rotated::Image{Float64} = rotate(input, origin, a)
+        if a == 95
+            imwrite(mat2gray(input_rotated), "/tmp/rotated-julia.ppm")
+        end
 
         # Process all projection bands
         for p in 1:size(input, "x")-1
             if tfunctional.functional == Radon
-                output.data[p, a+1] = t_radon(input_rotated["y", p])
+                output.data[p, a+1] = t_radon(slice(input_rotated, "x", p))
             elseif tfunctional.functional == T1
-                output.data[p, a+1] = t_1(input_rotated["y", p])
+                output.data[p, a+1] = t_1(slice(input_rotated, "x", p))
             elseif tfunctional.functional == T2
-                output.data[p, a+1] = t_2(input_rotated["y", p])
+                output.data[p, a+1] = t_2(slice(input_rotated, "x", p))
             elseif tfunctional.functional == T3
-                output.data[p, a+1] = t_3(input_rotated["y", p])
+                output.data[p, a+1] = t_3(slice(input_rotated, "x", p))
             elseif tfunctional.functional == T4
-                output.data[p, a+1] = t_4(input_rotated["y", p])
+                output.data[p, a+1] = t_4(slice(input_rotated, "x", p))
             elseif tfunctional.functional == T5
-                output.data[p, a+1] = t_5(input_rotated["y", p])
+                output.data[p, a+1] = t_5(slice(input_rotated, "x", p))
             end
         end
     end

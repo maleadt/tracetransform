@@ -2,7 +2,7 @@
 # Auxiliary
 #
 
-function find_weighted_median(data::Vector)
+function find_weighted_median(data::StridedVector)
     total = sum(data)
 
     integral = 0
@@ -38,11 +38,11 @@ end
 # T-functionals
 #
 
-function t_radon(data::Vector)
+function t_radon(data::StridedVector)
     return sum(data)
 end
 
-function t_1(data::Vector)
+function t_1(data::StridedVector)
     median = find_weighted_median(data)
 
     integral = 0
@@ -52,7 +52,7 @@ function t_1(data::Vector)
     return integral
 end
 
-function t_2(data::Vector)
+function t_2(data::StridedVector)
     median = find_weighted_median(data)
 
     integral = 0
@@ -62,7 +62,7 @@ function t_2(data::Vector)
     return integral
 end
 
-function t_3(data::Vector)
+function t_3(data::StridedVector)
     squaredmedian = find_weighted_median(sqrt(data))
 
     integral = 0 + 0im
@@ -75,7 +75,7 @@ function t_3(data::Vector)
     return abs(integral)
 end
 
-function t_4(data::Vector)
+function t_4(data::StridedVector)
     squaredmedian = find_weighted_median(sqrt(data))
 
     integral = 0 + 0im
@@ -88,7 +88,7 @@ function t_4(data::Vector)
     return abs(integral)
 end
 
-function t_5(data::Vector)
+function t_5(data::StridedVector)
     squaredmedian = find_weighted_median(sqrt(data))
 
     integral = 0 + 0im
@@ -106,20 +106,20 @@ end
 # P-functionals
 #
 
-function p_1(data::Vector)
+function p_1(data::StridedVector)
     return mean(abs(diff(data)))
 end
 
-function p_2(data::Vector)
+function p_2(data::StridedVector)
     median = find_weighted_median(data)
     return data[median]
 end
 
-function p_3(data::Vector)
+function p_3(data::StridedVector)
     return sum(abs(fft(data)).^4)
 end
 
-function p_hermite(data::Vector, order::Uint, center::Uint)
+function p_hermite(data::StridedVector, order::Uint, center::Uint)
     # Discretize the [-10, 10] domain to fit the column iterator
     z = -10
     stepsize_lower = 10 / center

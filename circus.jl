@@ -89,13 +89,13 @@ function getCircusFunction(
     # Trace all columns
     for p in 1:size(input, "x")
         if pfunctional.functional == P1
-            output[p] = p_1(input["y", p])
+            output[p] = p_1(slice(input, "x", p))
         elseif pfunctional.functional == P2
-            output[p] = p_2(input["y", p])
+            output[p] = p_2(slice(input, "x", p))
         elseif pfunctional.functional == P3
-            output[p] = p_3(input["y", p])
+            output[p] = p_3(slice(input, "x", p))
         elseif pfunctional.functional == Hermite
-            output[p] = p_hermite(input["y", p],
+            output[p] = p_hermite(slice(input, "x", p),
               pfunctional.arguments.order,
               pfunctional.arguments.center)
         end
