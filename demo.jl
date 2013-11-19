@@ -50,7 +50,6 @@ function main(args::Vector{Any})
             required = true
     end
     opts = parse_args(args, s)
-    @assert(opts["angle"] == 1)
 
     # Parse the functionals
     tfunctionals::Vector{TFunctionalWrapper} =
@@ -89,10 +88,11 @@ function main(args::Vector{Any})
 
     # Read the image
     input::Image{Float64} = gray2mat(imread(opts["input"]))
-    input = prepare_transform(input, orthonormal)
+    input = prepare_transform(input, opts["angle"], orthonormal)
 
     if opts["mode"] == "calculate"
-        get_transform(input, tfunctionals, pfunctionals, orthonormal, true)
+        get_transform(input, tfunctionals, pfunctionals, opts["angle"],
+                      orthonormal, true)
 
     elseif opts["mode"] == "benchmark"
 

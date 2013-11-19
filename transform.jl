@@ -5,11 +5,12 @@ require("circus")
 
 using Images
 
-function prepare_transform(input::Image{Float64}, orthonormal::Bool)
+function prepare_transform(input::Image{Float64}, angle_stepsize::Uint,
+                           orthonormal::Bool)
     # Orthonormal P-functionals need a stretched image in order to ensure a
     # square sinogram
     if orthonormal
-        ndiag = 360 # iceil(360/angle_interval)
+        ndiag = iceil(360/angle_stepsize)
         nsize::Uint = iceil(ndiag / sqrt(2))
         print_debug("Stretching input image to $(int(nsize)) squared.\n")
         input = resize(input, (nsize, nsize))
@@ -26,16 +27,14 @@ end
 function get_transform(input::Image{Float64},
     tfunctionals::Vector{TFunctionalWrapper},
     pfunctionals::Vector{PFunctionalWrapper},
-    orthonormal::Bool, write_data::Bool)
+    angle_stepsize::Uint, orthonormal::Bool, write_data::Bool)
     # Process all T-functionals
     for tfunctional in tfunctionals
         # Calculate the trace transform sinogram
         print_debug("Calculating sinogram using T-functional ",
             repr(tfunctional.functional), "\n")
-        sinogram::Image{Float64} = getSinogram(
-            input,
-            tfunctional
-            )
+        sinogram::Image{Float64} = getSinogram(input, angle_stepsize, 
+                                               tfunctional)
 
         if write_data
             # Save the sinogram trace
