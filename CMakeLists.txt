@@ -89,13 +89,11 @@ ADD_LIBRARY(auxiliary src/auxiliary.hpp src/auxiliary.cpp)
 ADD_LIBRARY(logger src/logger.hpp src/logger.cpp)
 SET(COMMON_LIBRARIES auxiliary logger)
 
-ADD_LIBRARY(functionals src/functionals.h src/functionals.c)
-
 ADD_LIBRARY(sinogram src/sinogram.hpp src/sinogram.cpp)
 TARGET_LINK_LIBRARIES(sinogram ${KERNELS} ${COMMON_LIBRARIES})
 
 ADD_LIBRARY(circus src/circus.hpp src/circus.cpp)
-TARGET_LINK_LIBRARIES(circus functionals ${KERNELS} ${COMMON_LIBRARIES})
+TARGET_LINK_LIBRARIES(circus ${KERNELS} ${COMMON_LIBRARIES})
 
 ADD_LIBRARY(transform src/transform.hpp src/transform.cpp)
 TARGET_LINK_LIBRARIES(transform ${COMMON_LIBRARIES} sinogram circus)
