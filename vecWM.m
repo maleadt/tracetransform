@@ -3,5 +3,3 @@ function c = vecWM(I)
 [N M] = size(I);
 D = repmat((0:N-1)',[1 M]);
 c = vecWMed(D,I);
-
-

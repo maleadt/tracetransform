@@ -2,18 +2,18 @@ transform
 
 % Check arguments
 if exist('imageFile') == 0
-        error('imageFile not defined');
+    error('imageFile not defined');
 elseif exist('tfunctionals') == 0
-        error('tfunctionals not defined');
+    error('tfunctionals not defined');
 elseif exist('pfunctionals') == 0
-        error('pfunctionals not defined');
+    error('pfunctionals not defined');
 elseif exist('mode') == 0
-        error('mode not defined');
-        if strcmp(mode, 'benchmark')
-            if exist('iterations') == 0
-                    error('iterations not defined');
-            end
+    error('mode not defined');
+    if strcmp(mode, 'benchmark')
+        if exist('iterations') == 0
+            error('iterations not defined');
         end
+    end
 end
 
 % Check optional arguments
@@ -24,16 +24,16 @@ if exist('angle') == 0
 % Check orthonormal
 orthonormal_count = 0;
 for i=1:length(pfunctionals)
-        if pfunctionals(i) > 3
-                orthonormal_count = orthonormal_count + 1;
-        end
+    if pfunctionals(i) > 3
+        orthonormal_count = orthonormal_count + 1;
+    end
 end
 if orthonormal_count == 0
-        orthonormal = false;
+    orthonormal = false;
 elseif orthonormal_count == length(pfunctionals)
-        orthonormal = true;
+    orthonormal = true;
 else
-        error('cannot mix orthonormal with non-orthonormal pfunctionals')
+    error('cannot mix orthonormal with non-orthonormal pfunctionals')
 end
 
 % Gather input data
