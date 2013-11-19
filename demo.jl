@@ -14,7 +14,6 @@ function main(args::Vector{Any})
     
     # Parse the command arguments
     s = ArgParseSettings("Allowed options")
-    s.suppress_warnings = true # TODO: fix bug in argparse
     @add_arg_table s begin
         "--quiet", "-q"
             action = :store_true
@@ -29,7 +28,6 @@ function main(args::Vector{Any})
             action = :append_arg
             help = "T-functionals"
             arg_type = String
-            required = true
         "--p-functional", "-P"
             action = :append_arg
             help = "P-functionals"
@@ -37,7 +35,6 @@ function main(args::Vector{Any})
         "--mode", "-m"
             help = "execution mode (calculate or benchmark)"
             arg_type = String
-            required = true
         "--angle", "-a"
             help = "angle stepsize"
             arg_type = Uint
@@ -50,6 +47,15 @@ function main(args::Vector{Any})
             required = true
     end
     opts = parse_args(args, s)
+
+    # Check for required named arguments
+    # FIXME: ArgParse only allows requiring positional arguments
+    if opts["mode"] == nothing
+        error("required argument mode was not provided")
+    end
+    if opts["t-functional"] == nothing
+        error("required argument t-functional was not provided")
+    end
 
     # Parse the functionals
     tfunctionals::Vector{TFunctionalWrapper} =
