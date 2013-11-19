@@ -16,6 +16,11 @@ elseif exist('mode') == 0
         end
 end
 
+% Check optional arguments
+if exist('angle') == 0
+        angle = 1;
+    end
+
 % Check orthonormal
 orthonormal_count = 0;
 for i=1:length(pfunctionals)
