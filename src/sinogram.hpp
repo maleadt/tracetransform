@@ -25,49 +25,40 @@
 //
 
 // TODO: make this an enum class when ICC 14 is released
-enum TFunctional
-{
-        Radon,
-        T1,
-        T2,
-        T3,
-        T4,
-        T5
+enum TFunctional {
+    Radon,
+    T1,
+    T2,
+    T3,
+    T4,
+    T5
 };
 
-struct TFunctionalArguments
-{
+struct TFunctionalArguments {};
+
+struct TFunctionalWrapper {
+    TFunctionalWrapper() {}
+
+    TFunctionalWrapper(const std::string &_name, const TFunctional &_functional,
+                       const TFunctionalArguments &_arguments =
+                           TFunctionalArguments())
+        : name(_name), functional(_functional), arguments(_arguments) {}
+
+    std::string name;
+    TFunctional functional;
+    TFunctionalArguments arguments;
 };
 
-struct TFunctionalWrapper
-{
-        TFunctionalWrapper()
-        {
-        }
-
-        TFunctionalWrapper(const std::string &_name,
-                        const TFunctional &_functional,
-                        const TFunctionalArguments &_arguments =
-                                        TFunctionalArguments())
-                        : name(_name), functional(_functional), arguments(
-                                        _arguments)
-        {
-        }
-
-        std::string name;
-        TFunctional functional;
-        TFunctionalArguments arguments;
-};
-
-std::istream& operator>>(std::istream& in, TFunctionalWrapper& wrapper);
+std::istream &operator>>(std::istream &in, TFunctionalWrapper &wrapper);
 
 
 //
 // Module definitions
 //
 
-std::vector<CUDAHelper::GlobalMemory<float>*> getSinograms(
-        const CUDAHelper::GlobalMemory<float> *input, unsigned int angle_stepsize,
-        const std::vector<TFunctionalWrapper> &tfunctionals);
+std::vector<CUDAHelper::GlobalMemory<float> *>
+getSinograms(const CUDAHelper::GlobalMemory<float> *input,
+             unsigned int angle_stepsize,
+             const std::vector<TFunctionalWrapper> &tfunctionals);
 
 #endif

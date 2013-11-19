@@ -17,16 +17,15 @@
 // Structs
 //
 
-template<typename T>
-struct Point
-{
+template <typename T> struct Point {
     typedef Eigen::Matrix<T, 1, 2> type;
 };
 
 template <typename T>
-std::ostream& operator<<(std::ostream &stream, const typename Point<T>::type &point) {
-        stream << point.x() << "x" << point.y();
-        return stream;
+std::ostream &operator<<(std::ostream &stream,
+                         const typename Point<T>::type &point) {
+    stream << point.x() << "x" << point.y();
+    return stream;
 }
 
 #endif

@@ -25,56 +25,45 @@
 //
 
 // TODO: make this an enum class when ICC 14 is released
-enum PFunctional
-{
-        Hermite,
-        P1,
-        P2,
-        P3
+enum PFunctional {
+    Hermite,
+    P1,
+    P2,
+    P3
 };
 
-struct PFunctionalArguments
-{
-        PFunctionalArguments(boost::optional<unsigned int> _order = boost::none,
-                        boost::optional<size_t> _center = boost::none)
-                        : order(_order), center(_center)
-        {
-        }
+struct PFunctionalArguments {
+    PFunctionalArguments(boost::optional<unsigned int> _order = boost::none,
+                         boost::optional<size_t> _center = boost::none)
+        : order(_order), center(_center) {}
 
-        // Arguments for Hermite P-functional
-        boost::optional<unsigned int> order;
-        boost::optional<size_t> center;
+    // Arguments for Hermite P-functional
+    boost::optional<unsigned int> order;
+    boost::optional<size_t> center;
 };
 
-struct PFunctionalWrapper
-{
-        PFunctionalWrapper()
-        {
-        }
+struct PFunctionalWrapper {
+    PFunctionalWrapper() {}
 
-        PFunctionalWrapper(const std::string &_name,
-                        const PFunctional &_functional,
-                        const PFunctionalArguments &_arguments =
-                                        PFunctionalArguments())
-                        : name(_name), functional(_functional), arguments(
-                                        _arguments)
-        {
-        }
+    PFunctionalWrapper(const std::string &_name, const PFunctional &_functional,
+                       const PFunctionalArguments &_arguments =
+                           PFunctionalArguments())
+        : name(_name), functional(_functional), arguments(_arguments) {}
 
-        std::string name;
-        PFunctional functional;
-        PFunctionalArguments arguments;
+    std::string name;
+    PFunctional functional;
+    PFunctionalArguments arguments;
 };
 
-std::istream& operator>>(std::istream& in, PFunctionalWrapper& wrapper);
+std::istream &operator>>(std::istream &in, PFunctionalWrapper &wrapper);
 
 
 //
 // Module definitions
 //
 
-CUDAHelper::GlobalMemory<float> *getCircusFunction(
-        const CUDAHelper::GlobalMemory<float> *input,
-        const PFunctionalWrapper &pfunctional);
+CUDAHelper::GlobalMemory<float> *
+getCircusFunction(const CUDAHelper::GlobalMemory<float> *input,
+                  const PFunctionalWrapper &pfunctional);
 
 #endif

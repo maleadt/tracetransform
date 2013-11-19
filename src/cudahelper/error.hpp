@@ -18,21 +18,16 @@
 // Module definitions
 //
 
-namespace CUDAHelper
-{
-    // Exception wrapper class for Cuda error codes
-    class Error : public std::runtime_error
-    {
-    public:
-        explicit Error(cudaError_t errorCode) :
-            std::runtime_error(cudaGetErrorString(errorCode)),
-            _code(errorCode)
-        {
-        }
+namespace CUDAHelper {
+// Exception wrapper class for Cuda error codes
+class Error : public std::runtime_error {
+  public:
+    explicit Error(cudaError_t errorCode)
+        : std::runtime_error(cudaGetErrorString(errorCode)), _code(errorCode) {}
 
-    private:
-        cudaError_t _code;
-    };
+  private:
+    cudaError_t _code;
+};
 }
 
 #endif

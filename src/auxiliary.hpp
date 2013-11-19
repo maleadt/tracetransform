@@ -34,7 +34,8 @@ void writecsv(std::string filename, const Eigen::MatrixXf &data);
 // Convert a grayscale image (range [0, 255]) to a matrix (range [0, 1]).
 Eigen::MatrixXf gray2mat(const Eigen::MatrixXi &input);
 
-// Convert a matrix (arbitrary values) to a grayscale image (range [0, 255]). This
+// Convert a matrix (arbitrary values) to a grayscale image (range [0, 255]).
+// This
 // involves detecting the maximum value, and clamping that to 255.
 Eigen::MatrixXi mat2gray(const Eigen::MatrixXf &input);
 
@@ -42,9 +43,11 @@ float deg2rad(float degrees);
 
 float interpolate(const Eigen::MatrixXf &source, const Point<float>::type &p);
 
-Eigen::MatrixXf resize(const Eigen::MatrixXf &input, const size_t rows, const size_t cols);
+Eigen::MatrixXf resize(const Eigen::MatrixXf &input, const size_t rows,
+                       const size_t cols);
 
-Eigen::MatrixXf rotate(const Eigen::MatrixXf &input, const Point<float>::type &origin, const float angle);
+Eigen::MatrixXf rotate(const Eigen::MatrixXf &input,
+                       const Point<float>::type &origin, const float angle);
 
 Eigen::MatrixXf pad(const Eigen::MatrixXf &image);
 
@@ -54,12 +57,10 @@ float standard_deviation(const Eigen::VectorXf &input);
 
 Eigen::VectorXf zscore(const Eigen::VectorXf &input);
 
-template<typename T> int sgn(T val)
-{
-        return (T(0) < val) - (val < T(0));
-}
+template <typename T> int sgn(T val) { return (T(0) < val) - (val < T(0)); }
 
-std::string readable_si(double number, const std::string unit, double base = 1000);
+std::string readable_si(double number, const std::string unit,
+                        double base = 1000);
 std::string readable_size(double size);
 std::string readable_frequency(double frequency);
 
