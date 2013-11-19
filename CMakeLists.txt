@@ -58,14 +58,6 @@ IF (Elfutils_FOUND)
 	ADD_DEFINITIONS(-DBACKWARD_HAS_DW=1)
 ENDIF (Elfutils_FOUND)
 
-# Intel MKL
-#FIND_PACKAGE(MKL)
-IF (MKL_FOUND)
-        ADD_DEFINITIONS(-DEIGEN_USE_MKL_ALL)
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -openmp -DMKL_ILP64")
-        SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lmkl_core -lmkl_intel_ilp64 -lmkl_intel_thread")
-ENDIF (MKL_FOUND)
-
 
 #
 # Libraries
