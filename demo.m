@@ -1,3 +1,5 @@
+transform
+
 % Check arguments
 if exist('imageFile') == 0
         error('imageFile not defined');
@@ -34,7 +36,8 @@ image = mat2gray(imread(imageFile, 'pgm'));
 
 if strcmp(mode, 'calculate')
     % Get output data
-    [sinogram circus] = OrthTraceSign(image, tfunctionals, pfunctionals, 1, orthonormal);
+    padded = prepare_transform(image, angle, orthonormal);
+    [sinogram circus] = get_transform(padded, tfunctionals, pfunctionals, angle, orthonormal);
 
     % Save sinograms
     for t_i = 1:length(tfunctionals)
@@ -66,11 +69,12 @@ if strcmp(mode, 'calculate')
 
 elseif strcmp(mode, 'benchmark')
     % Warm-up
-    OrthTraceSign(image, tfunctionals, pfunctionals, 1, orthonormal);
+    padded = prepare_transform(image, angle, orthonormal);
+    get_transform(padded, tfunctionals, pfunctionals, angle, orthonormal);
 
     for i=1:iterations
        tstart = tic;
-       OrthTraceSign(image, tfunctionals, pfunctionals, 1, orthonormal);
+       get_transform(padded, tfunctionals, pfunctionals, 1, orthonormal);
        telapsed = toc(tstart);
        fprintf(1, 't_%g=%g\n', i, telapsed)
     end
