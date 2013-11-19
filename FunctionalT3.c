@@ -61,8 +61,8 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
     for(k = 0; k < N; k++){
         
         functional((ptrI+k*M),*(ptr_c+2*k+1), M, ptrKreal, ptrKim, ptr_out);
-        *(pSign + k) = ptr_out[0]/150.00;
-        *(pSign + k + N) = ptr_out[1]/150.00;
+        *(pSign + k) = ptr_out[0];
+        *(pSign + k + N) = ptr_out[1];
     }
     mxDestroyArray(kernel[0]);
 }
