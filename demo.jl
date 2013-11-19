@@ -101,7 +101,15 @@ function main(args::Vector{Any})
                       orthonormal, true)
 
     elseif opts["mode"] == "benchmark"
+        if opts["iterations"] == nothing
+            error("required argument iterations was not provided")
+        end
 
+        for i = 1:opts["iterations"]
+            time = @elapsed get_transform(input, tfunctionals, pfunctionals,
+                                          opts["angle"], orthonormal, false)
+            println("t_$(i)=$(time)")
+        end
     else
         error("invalid execution mode")
     end
