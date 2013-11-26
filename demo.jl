@@ -16,32 +16,32 @@ function main(args::Vector{Any})
     s = ArgParseSettings("Allowed options")
     @add_arg_table s begin
         "--quiet", "-q"
-            action = :store_true
             help = "only display errors and warnings"
+            action = :store_true
         "--verbose", "-v"
-            action = :store_true
             help = "display some more details"
-        "--debug", "-d"
             action = :store_true
-            help = "write even more details"
+        "--debug", "-d"
+            help = "write debug information"
+            action = :store_true
         "--t-functional", "-T"
-            action = :append_arg
             help = "T-functionals"
+            action = :append_arg
             arg_type = String
         "--p-functional", "-P"
-            action = :append_arg
             help = "P-functionals"
+            action = :append_arg
             arg_type = String
         "--mode", "-m"
             help = "execution mode (calculate or benchmark)"
             arg_type = String
+        "--iterations", "-n"
+            help = "amount of iterations to benchmark"
+            arg_type = Uint
         "--angle", "-a"
             help = "angle stepsize"
             arg_type = Uint
             default = uint(1)
-        "--iterations", "-n"
-            help = "amount of iterations to run"
-            arg_type = Uint
         "input"
             help = "image to process"
             required = true
