@@ -16,6 +16,7 @@ function main(args::Vector{Any})
     
     # Parse the command arguments
     s = ArgParseSettings("Allowed options")
+    s.autofix_names = true
     @add_arg_table s begin
         "--quiet", "-q"
             help = "only display errors and warnings"
@@ -55,15 +56,15 @@ function main(args::Vector{Any})
     if opts["mode"] == nothing
         error("required argument mode was not provided")
     end
-    if opts["t-functional"] == nothing
+    if opts["t_functional"] == nothing
         error("required argument t-functional was not provided")
     end
 
     # Parse the functionals
     tfunctionals::Vector{TFunctionalWrapper} =
-        parse_tfunctionals(opts["t-functional"])
+        parse_tfunctionals(opts["t_functional"])
     pfunctionals::Vector{PFunctionalWrapper} =
-        parse_pfunctionals(opts["p-functional"])
+        parse_pfunctionals(opts["p_functional"])
 
     # Check for orthonormal P-functionals
     orthonormal_count = 0
