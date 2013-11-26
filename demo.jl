@@ -1,3 +1,5 @@
+#!/usr/bin/julia
+
 require("geometry")
 require("transform")
 require("auxiliary")
