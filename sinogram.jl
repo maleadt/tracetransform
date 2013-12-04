@@ -1,6 +1,6 @@
-require("functionals")
-require("geometry")
-require("enum")
+include("functionals.jl")
+include("geometry.jl")
+include("enum.jl")
 
 @enum TFunctional Radon T1 T2 T3 T4 T5
 

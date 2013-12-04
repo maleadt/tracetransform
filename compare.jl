@@ -1,4 +1,4 @@
-require("auxiliary")
+include("auxiliary.jl")
 
 using ArgParse
 
