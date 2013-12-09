@@ -5,4 +5,4 @@ src/.tags*
 .cproject
 .settings
 .project
-
+trace_*
