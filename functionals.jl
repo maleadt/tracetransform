@@ -106,6 +106,10 @@ end
 # P-functionals
 #
 
+# Julia issue #5074
+import Base.diff
+diff(a::SubArray) = diff(collect(a))
+
 function p_1(data::StridedVector)
     return mean(abs(diff(data)))
 end
