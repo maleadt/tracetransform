@@ -219,20 +219,19 @@ int main(int argc, char **argv) {
         transformer.getTransform(tfunctionals, pfunctionals, false);
 
         // Transform the image
-        timings[0] = std::chrono::high_resolution_clock::now();
-        for (unsigned int n = 0; n < iterations; n++) {
-            transformer.getTransform(tfunctionals, pfunctionals, false);
-            timings[n + 1] = std::chrono::high_resolution_clock::now();
-        }
-
-        // Get iteration durations
         // NOTE: although the use of elapsed real time rather than CPU
         //       time might seem inaccurate, it is necessary because
         //       some of the ports execute code on non-CPU hardware
+        std::chrono::time_point<std::chrono::high_resolution_clock> last,
+            current;
         for (unsigned int n = 0; n < iterations; n++) {
+            last = std::chrono::high_resolution_clock::now();
+            transformer.getTransform(tfunctionals, pfunctionals, false);
+            current = std::chrono::high_resolution_clock::now();
+
             clog(info) << "t_" << n + 1 << "="
                        << std::chrono::duration_cast<std::chrono::microseconds>(
-                              timings[n + 1] - timings[n]).count() /
+                              current - last).count() /
                               1000000.0 << std::endl;
         }
     } else {
