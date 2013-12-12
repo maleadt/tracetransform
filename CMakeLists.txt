@@ -58,16 +58,15 @@ IF (Elfutils_FOUND)
 ENDIF (Elfutils_FOUND)
 
 # Intel MKL
+# TODO: -l static
 IF (DEFINED ENV{MKLROOT})
     FIND_PROGRAM(LINKTOOL mkl_link_tool
         PATHS $ENV{MKLROOT}/tools)
     if(NOT LINKTOOL)
-      MESSAGE(WARNING "Could not find mkl_link_tool; are you sure MKLROOT is correct?")
+      MESSAGE(FATAL_ERROR "Could not find 'mkl_link_tool'; verify your MKL installation")
     ENDIF(NOT LINKTOOL)
 
-    # TODO: use -check_mkl_presence instead of REGEX REPLACE
-
-    EXECUTE_PROCESS(COMMAND ${LINKTOOL} -libs
+    EXECUTE_PROCESS(COMMAND ${LINKTOOL} -check_mkl_presence -libs
         OUTPUT_VARIABLE MKL_LDFLAGS
         OUTPUT_STRIP_TRAILING_WHITESPACE
         ERROR_VARIABLE MKL_ERROR
@@ -75,9 +74,8 @@ IF (DEFINED ENV{MKLROOT})
     IF (NOT "${RETVAR}" STREQUAL "0")
       message(FATAL_ERROR "MKL link tool failure while detecting library flags\n${MKL_ERROR}")
     ENDIF()
-    STRING(REGEX REPLACE "\\$\\(MKLROOT\\)" $ENV{MKLROOT} MKL_LDFLAGS ${MKL_LDFLAGS})
 
-    EXECUTE_PROCESS(COMMAND ${LINKTOOL} -opts
+    EXECUTE_PROCESS(COMMAND ${LINKTOOL} -check_mkl_presence -opts
         OUTPUT_VARIABLE MKL_CFLAGS
         OUTPUT_STRIP_TRAILING_WHITESPACE
         ERROR_VARIABLE MKL_ERROR
@@ -85,13 +83,12 @@ IF (DEFINED ENV{MKLROOT})
     IF (NOT "${RETVAR}" STREQUAL "0")
       message(FATAL_ERROR "MKL link tool failure while detecting compilation flags\n${MKL_ERROR}")
     ENDIF()
-    STRING(REGEX REPLACE "\\$\\(MKLROOT\\)" $ENV{MKLROOT} MKL_CFLAGS ${MKL_CFLAGS})
 
     SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MKL_LDFLAGS}")
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MKL_CFLAGS}")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MKL_CFLAGS}")
 
-    EXECUTE_PROCESS(COMMAND ${LINKTOOL} -env
+    EXECUTE_PROCESS(COMMAND ${LINKTOOL} -check_mkl_presence -env
         OUTPUT_STRIP_TRAILING_WHITESPACE
         OUTPUT_VARIABLE MKL_ENV
         ERROR_VARIABLE MKL_ERROR
@@ -99,14 +96,14 @@ IF (DEFINED ENV{MKLROOT})
     IF (NOT "${RETVAR}" STREQUAL "0")
       message(FATAL_ERROR "MKL link tool failure while detecting environment flags\n${MKL_ERROR}")
     ENDIF()
-    STRING(REGEX REPLACE "\\$\\(MKLROOT\\)" $ENV{MKLROOT} MKL_ENV ${MKL_ENV})
 
-    MESSAGE(STATUS "You will have to define the following environment variables at runtime:")
-    MESSAGE(STATUS "${MKL_ENV}")
+    IF (NOT "${MKL_ENV}" STREQUAL "")
+        MESSAGE(STATUS "You will have to define the following environment variables at runtime:\n${MKL_ENV}")
+    ENDIF()
 
     ADD_DEFINITIONS(-DEIGEN_USE_MKL_ALL)
 ELSE()
-    MESSAGE(WARNING "Could not find MKLROOT environment variable.")
+    MESSAGE(STATUS "Not using Intel MKL (specify MKLROOT to do so).")
 ENDIF()
 
 # OpenMP
