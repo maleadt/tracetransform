@@ -6,6 +6,7 @@
 #include "functionals.h"
 
 // Standard library
+#define _GNU_SOURCE // for sincosf
 #include <math.h>   // for log, sqrt, cos, sin, hypot, etc
 #include <stdlib.h> // for malloc, free, calloc
 
@@ -140,8 +141,14 @@ TFunctional345_precalc_t *TFunctional3_prepare(size_t rows, size_t cols) {
     precalc->imag = (float *)malloc(rows * sizeof(float));
 
     for (unsigned int r = 1; r < rows; r++) {
+#if defined(__clang__)
+        sincosf(5.0 * log(r), &precalc->imag[r], &precalc->real[r]);
+        precalc->real[r] *= r;
+        precalc->imag[r] *= r;
+#else
         precalc->real[r] = r * cos(5.0 * log(r));
         precalc->imag[r] = r * sin(5.0 * log(r));
+#endif
     }
 
     return precalc;
@@ -155,8 +162,14 @@ TFunctional345_precalc_t *TFunctional4_prepare(size_t rows, size_t cols) {
     precalc->imag = (float *)malloc(rows * sizeof(float));
 
     for (unsigned int r = 1; r < rows; r++) {
+#if defined(__clang__)
+        sincosf(3.0 * log(r), &precalc->imag[r], &precalc->real[r]);
+        precalc->real[r] *= r;
+        precalc->imag[r] *= r;
+#else
         precalc->real[r] = cos(3.0 * log(r));
         precalc->imag[r] = sin(3.0 * log(r));
+#endif
     }
 
     return precalc;
@@ -170,8 +183,14 @@ TFunctional345_precalc_t *TFunctional5_prepare(size_t rows, size_t cols) {
     precalc->imag = (float *)malloc(rows * sizeof(float));
 
     for (unsigned int r = 1; r < rows; r++) {
+#if defined(__clang__)
+        sincosf(4.0 * log(r), &precalc->imag[r], &precalc->real[r]);
+        precalc->real[r] *= sqrt(r);
+        precalc->imag[r] *= sqrt(r);
+#else
         precalc->real[r] = sqrt(r) * cos(4.0 * log(r));
         precalc->imag[r] = sqrt(r) * sin(4.0 * log(r));
+#endif
     }
 
     return precalc;
@@ -240,8 +259,13 @@ float PFunctional3(const float *data, const size_t length) {
         fourier_imag[i] = 0;
         float arg = -2.0 * M_PI * (float)i / (float)length;
         for (size_t j = 0; j < length; j++) {
+#if defined(__clang__)
+            float sinarg, cosarg;
+            sincosf(j * arg, &sinarg, &cosarg);
+#else
             float cosarg = cos(j * arg);
             float sinarg = sin(j * arg);
+#endif
             fourier_real[i] += data[j] * cosarg;
             fourier_imag[i] += data[j] * sinarg;
         }
