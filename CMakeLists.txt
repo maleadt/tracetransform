@@ -58,13 +58,15 @@ IF (Elfutils_FOUND)
 ENDIF (Elfutils_FOUND)
 
 # Intel MKL
-SET(MKL_OPTS -l static)
+SET(MKL_OPTS --linking=dynamic)
 IF (DEFINED ENV{MKLROOT})
     FIND_PROGRAM(MKL_LINKTOOL mkl_link_tool
         PATHS $ENV{MKLROOT}/tools)
     if(NOT MKL_LINKTOOL)
       MESSAGE(FATAL_ERROR "Could not find 'mkl_link_tool'; verify your MKL installation")
     ENDIF(NOT MKL_LINKTOOL)
+
+    # TODO: don't regex -lm away
 
     EXECUTE_PROCESS(COMMAND ${MKL_LINKTOOL} ${MKL_OPTS} -check_mkl_presence -libs
         OUTPUT_VARIABLE MKL_LDFLAGS
@@ -74,6 +76,7 @@ IF (DEFINED ENV{MKLROOT})
     IF (NOT "${RETVAR}" STREQUAL "0")
       message(FATAL_ERROR "MKL link tool failure while detecting library flags\n${MKL_ERROR}")
     ENDIF()
+    STRING(REGEX REPLACE "-lm$" "" MKL_LDFLAGS ${MKL_LDFLAGS})
 
     EXECUTE_PROCESS(COMMAND ${MKL_LINKTOOL} ${MKL_OPTS} -check_mkl_presence -opts
         OUTPUT_VARIABLE MKL_CFLAGS
@@ -83,6 +86,7 @@ IF (DEFINED ENV{MKLROOT})
     IF (NOT "${RETVAR}" STREQUAL "0")
       message(FATAL_ERROR "MKL link tool failure while detecting compilation flags\n${MKL_ERROR}")
     ENDIF()
+    STRING(REGEX REPLACE "-lm$" "" MKL_CFLAGS ${MKL_CFLAGS})
 
     SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MKL_LDFLAGS}")
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MKL_CFLAGS}")
@@ -101,6 +105,7 @@ IF (DEFINED ENV{MKLROOT})
         MESSAGE(STATUS "You will have to define the following environment variables at runtime:\n${MKL_ENV}")
     ENDIF()
 
+    MESSAGE(STATUS "Found Intel MKL")
     ADD_DEFINITIONS(-DEIGEN_USE_MKL_ALL)
 ELSE()
     MESSAGE(STATUS "Not using Intel MKL (specify MKLROOT to do so).")
@@ -145,6 +150,7 @@ TARGET_LINK_LIBRARIES(transform ${COMMON_LIBRARIES} sinogram circus)
 
 ADD_EXECUTABLE(demo src/demo.cpp)
 TARGET_LINK_LIBRARIES(demo ${COMMON_LIBRARIES} transform ${Boost_LIBRARIES})
+# TODO: why also linked in at Release?
 IF (Elfutils_FOUND)
 	TARGET_LINK_LIBRARIES(demo debug ${BACKWARD})
 ENDIF (Elfutils_FOUND)
