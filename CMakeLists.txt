@@ -58,15 +58,15 @@ IF (Elfutils_FOUND)
 ENDIF (Elfutils_FOUND)
 
 # Intel MKL
-# TODO: -l static
+SET(MKL_OPTS -l static)
 IF (DEFINED ENV{MKLROOT})
-    FIND_PROGRAM(LINKTOOL mkl_link_tool
+    FIND_PROGRAM(MKL_LINKTOOL mkl_link_tool
         PATHS $ENV{MKLROOT}/tools)
-    if(NOT LINKTOOL)
+    if(NOT MKL_LINKTOOL)
       MESSAGE(FATAL_ERROR "Could not find 'mkl_link_tool'; verify your MKL installation")
-    ENDIF(NOT LINKTOOL)
+    ENDIF(NOT MKL_LINKTOOL)
 
-    EXECUTE_PROCESS(COMMAND ${LINKTOOL} -check_mkl_presence -libs
+    EXECUTE_PROCESS(COMMAND ${MKL_LINKTOOL} ${MKL_OPTS} -check_mkl_presence -libs
         OUTPUT_VARIABLE MKL_LDFLAGS
         OUTPUT_STRIP_TRAILING_WHITESPACE
         ERROR_VARIABLE MKL_ERROR
@@ -75,7 +75,7 @@ IF (DEFINED ENV{MKLROOT})
       message(FATAL_ERROR "MKL link tool failure while detecting library flags\n${MKL_ERROR}")
     ENDIF()
 
-    EXECUTE_PROCESS(COMMAND ${LINKTOOL} -check_mkl_presence -opts
+    EXECUTE_PROCESS(COMMAND ${MKL_LINKTOOL} ${MKL_OPTS} -check_mkl_presence -opts
         OUTPUT_VARIABLE MKL_CFLAGS
         OUTPUT_STRIP_TRAILING_WHITESPACE
         ERROR_VARIABLE MKL_ERROR
@@ -88,7 +88,7 @@ IF (DEFINED ENV{MKLROOT})
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MKL_CFLAGS}")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MKL_CFLAGS}")
 
-    EXECUTE_PROCESS(COMMAND ${LINKTOOL} -check_mkl_presence -env
+    EXECUTE_PROCESS(COMMAND ${MKL_LINKTOOL} ${MKL_OPTS} -check_mkl_presence -env
         OUTPUT_STRIP_TRAILING_WHITESPACE
         OUTPUT_VARIABLE MKL_ENV
         ERROR_VARIABLE MKL_ERROR
