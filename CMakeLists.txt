@@ -53,9 +53,9 @@ INCLUDE_DIRECTORIES(SYSTEM ${EIGEN3_INCLUDE_DIR})
 
 # Elfutils
 FIND_PACKAGE(Elfutils)
-IF (Elfutils_FOUND)
-	ADD_DEFINITIONS(-DBACKWARD_HAS_DW=1)
-ENDIF (Elfutils_FOUND)
+IF (NOT ELFUTILS_FOUND)
+	MESSAGE(STATUS "Not using fancy stack traces (install elfutils to enable).")
+ENDIF (NOT ELFUTILS_FOUND)
 
 # Intel MKL
 SET(MKL_OPTS --linking=dynamic)
@@ -122,11 +122,12 @@ SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}
 # Libraries
 #
 
-IF (Elfutils_FOUND)
+IF (ELFUTILS_FOUND)
 	ADD_LIBRARY(backward lib/backward/backward.hpp lib/backward/backward.cpp)
-	TARGET_LINK_LIBRARIES(backward ${DW_LIBRARY})
+    ADD_DEFINITIONS(-DBACKWARD_HAS_DW=1)
+	TARGET_LINK_LIBRARIES(backward ${Elfutils_LIBRARIES})
 	SET(BACKWARD -Wl,--whole-archive backward -Wl,--no-whole-archive)
-ENDIF (Elfutils_FOUND)
+ENDIF (ELFUTILS_FOUND)
 
 ADD_LIBRARY(auxiliary src/auxiliary.hpp src/auxiliary.cpp)
 ADD_LIBRARY(logger src/logger.hpp src/logger.cpp)
