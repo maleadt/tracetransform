@@ -15,21 +15,31 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 # Extra warnings
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-SET(CUDA_NVCC_FLAGS "-Xcompiler -Wall,-Wextra -arch sm_35 --ptxas-options=-v")
+IF (DEFINED ENV{VERBOSE})
+    SET(CUDA_EXTRAOPTS "--ptxas-options=-v")
+ENDIF (DEFINED ENV{VERBOSE})
+SET(CUDA_NVCC_FLAGS "-Xcompiler -Wall,-Wextra -arch sm_35 ${CUDA_EXTRAOPTS}"
+    CACHE STRING "CUDA standard compilation options")
 
 # Profile build
 SET(CMAKE_CXX_FLAGS_PROFILE "-O2 -g -DNDEBUG -fno-omit-frame-pointer -fno-inline")
 SET(CMAKE_C_FLAGS_PROFILE "-O2 -g -DNDEBUG -fno-omit-frame-pointer -fno-inline")
+SET(CUDA_NVCC_FLAGS_PROFILE "-O2 --generate-line-info -DNDEBUG -Xcompiler -g,-DNDEBUG,-fno-omit-frame-pointer,-fno-inline"
+    CACHE STRING "CUDA profile compilation options")
+
+# CUDA Release and Debug
+# FIXME: we don't propagate host flags, since nvcc doesn't support some options.
+#        This makes that we manually need to define targets.
+SET(CUDA_PROPAGATE_HOST_FLAGS OFF CACHE BOOL "Don't propagate host flags")
+SET(CUDA_NVCC_FLAGS_RELEASE "-O3 -DNDEBUG -Xcompiler -O3,-DNDEBUG"
+    CACHE STRING "CUDA release compilation options")
+SET(CUDA_NVCC_FLAGS_DEBUG "-G -Xcompiler -g"
+    CACHE STRING "CUDA debug compilation options")
 
 
 #
 # Dependencies
 #
-
-# C-compiler
-IF (NOT ${CMAKE_C_COMPILER_ID} MATCHES "GNU" OR NOT ${CMAKE_C_COMPILER_VERSION} VERSION_LESS "4.7")
-    MESSAGE(FATAL_ERROR "CUDA requires GCC <= 4.6")
-ENDIF()
 
 # Boost
 FIND_PACKAGE(Boost REQUIRED COMPONENTS program_options)
@@ -46,15 +56,6 @@ IF (NOT ELFUTILS_FOUND)
 ENDIF (NOT ELFUTILS_FOUND)
 
 # CUDA
-# FIXME: Don't propagate host flags, since nvcc doesn't support C++11.
-#        This makes that we manually need to pass some stuff (such as -g).
-SET(CUDA_PROPAGATE_HOST_FLAGS FALSE)
-IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
-	SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcompiler -g -G")
-ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-IF (CMAKE_BUILD_TYPE STREQUAL "Profile")
-	SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcompiler -g --generate-line-info")
-ENDIF(CMAKE_BUILD_TYPE STREQUAL "Profile")
 FIND_PACKAGE(CUDA)
 INCLUDE_DIRECTORIES(SYSTEM ${CUDA_INCLUDE_DIRS})
 
