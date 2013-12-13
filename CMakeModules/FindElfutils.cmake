@@ -2,7 +2,7 @@
 # This module finds the ELF utils package, including the DWARF library.
 #
 # Defined variables:
-#   ELFUTILS_FOUND        : true if everything is found
+#   ELFUTILS_FOUND        : true if everything is found.
 #   ELFUTILS_INCLUDE_DIR  : where to find dw.h, etc.
 #   ELFUTILS_LIBRARIES    : the library to link against.
 
