@@ -5,21 +5,32 @@ orthonormal circus functionals. Relevant papers are:
  * A. Frías-Velézquez et al., Object identification by using orthonormal circus
    functions from the trace transform
 
+This implementation features CUDA kernels to alleviate most of the compute-heavy
+parts of the algorithm to the GPU. There are some restrictions though:
+ * The implementation of scan() is pretty naive, and uses a separate thread for
+   each row of the padded image. This means that big images require big GPUs.
+ * SVD is pretty complex, so we use CULA's sgesvd implementation.
+
 
 How to build
 ------------
 
 Requirements are:
- * C/C++ compiler (tested: GCC >= 4.6, Clang >= 3.1, ICC >= 14)
+ * C/C++ compiler (tested: GCC 4.6)
  * Eigen 3
  * Boost (tested: >= 1.52)
  * CMake >= 2.8.7
+ * CULA Dense (tested: R17)
 
 The basic procedure to build this port is as following:
  $ mkdir build
  $ cd build
  $ cmake ../ -DCMAKE_BUILD_TYPE=Release
  $ make
+
+If your system compiler is not supported by CUDA, which is quite likely, you
+will need to install a supported compiler and instruct CMake to use that one
+(see below).
 
 Some additional notes:
  * In order to use a different compiler, specify -DCMAKE_C_COMPILER and
