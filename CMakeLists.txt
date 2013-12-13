@@ -82,7 +82,7 @@ SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}
 IF (ELFUTILS_FOUND)
 	ADD_LIBRARY(backward lib/backward/backward.hpp lib/backward/backward.cpp)
     ADD_DEFINITIONS(-DBACKWARD_HAS_DW=1)
-	TARGET_LINK_LIBRARIES(backward ${Elfutils_LIBRARIES})
+	TARGET_LINK_LIBRARIES(backward ${ELFUTILS_LIBRARIES})
 	SET(BACKWARD -Wl,--whole-archive backward -Wl,--no-whole-archive)
 ENDIF (ELFUTILS_FOUND)
 
@@ -108,10 +108,9 @@ TARGET_LINK_LIBRARIES(transform ${COMMON_LIBRARIES} sinogram circus)
 
 ADD_EXECUTABLE(demo src/demo.cpp)
 TARGET_LINK_LIBRARIES(demo ${COMMON_LIBRARIES} transform ${Boost_LIBRARIES})
-# TODO: why also linked in at Release?
-IF (Elfutils_FOUND)
+IF (ELFUTILS_FOUND)
 	TARGET_LINK_LIBRARIES(demo debug ${BACKWARD})
-ENDIF (Elfutils_FOUND)
+ENDIF (ELFUTILS_FOUND)
 
 ADD_EXECUTABLE(rottest src/rottest.cpp)
 TARGET_LINK_LIBRARIES(rottest ${COMMON_LIBRARIES})
