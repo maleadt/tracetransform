@@ -1,8 +1,8 @@
-# - Find elfutils
-# Find elfutils libraries
+# - Find ELF utils
+# This module finds the ELF utils package, including the DWARF library.
 #
-# This module defines the following variables:#
-#   ELFUTILS_FOUND        : true if everything is found
+# Defined variables:
+#   ELFUTILS_FOUND        : true if everything is found.
 #   ELFUTILS_INCLUDE_DIR  : where to find dw.h, etc.
 #   ELFUTILS_LIBRARIES    : the library to link against.
 
@@ -16,6 +16,7 @@ FIND_LIBRARY(DWARF_LIBRARY
   NAMES dw 
   PATHS /usr/lib
         /usr/$ENV{MACHTYPE}/lib)
+
 
 # Finish up
 
