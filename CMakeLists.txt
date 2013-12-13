@@ -41,9 +41,9 @@ INCLUDE_DIRECTORIES(SYSTEM ${EIGEN3_INCLUDE_DIR})
 
 # Elfutils
 FIND_PACKAGE(Elfutils)
-IF (Elfutils_FOUND)
-	ADD_DEFINITIONS(-DBACKWARD_HAS_DW=1)
-ENDIF (Elfutils_FOUND)
+IF (NOT ELFUTILS_FOUND)
+	MESSAGE(STATUS "Not using fancy stack traces (install elfutils to enable).")
+ENDIF (NOT ELFUTILS_FOUND)
 
 # CUDA
 # FIXME: Don't propagate host flags, since nvcc doesn't support C++11.
@@ -69,9 +69,12 @@ INCLUDE_DIRECTORIES(SYSTEM ${CULA_INCLUDE_DIR})
 
 ADD_SUBDIRECTORY(src/kernels)
 
-ADD_LIBRARY(backward lib/backward/backward.hpp lib/backward/backward.cpp)
-TARGET_LINK_LIBRARIES(backward ${DW_LIBRARY})
-SET(BACKWARD -Wl,--whole-archive backward -Wl,--no-whole-archive)
+IF (ELFUTILS_FOUND)
+	ADD_LIBRARY(backward lib/backward/backward.hpp lib/backward/backward.cpp)
+    ADD_DEFINITIONS(-DBACKWARD_HAS_DW=1)
+	TARGET_LINK_LIBRARIES(backward ${Elfutils_LIBRARIES})
+	SET(BACKWARD -Wl,--whole-archive backward -Wl,--no-whole-archive)
+ENDIF (ELFUTILS_FOUND)
 
 ADD_LIBRARY(auxiliary src/auxiliary.hpp src/auxiliary.cpp)
 ADD_LIBRARY(logger src/logger.hpp src/logger.cpp)
