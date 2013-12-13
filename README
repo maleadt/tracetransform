@@ -5,12 +5,13 @@ orthonormal circus functionals. Relevant papers are:
  * A. Frías-Velézquez et al., Object identification by using orthonormal circus
    functions from the trace transform
 
+The implementation also features OpenMP pragma's to parallellize computations.
 
 How to build
 ------------
 
 Requirements are:
- * C/C++ compiler (tested: GCC >= 4.6, Clang >= 3.1, ICC >= 14)
+ * C/C++ compiler (tested: GCC >= 4.6, Clang trunk, ICC >= 14)
  * Eigen 3
  * Boost (tested: >= 1.52)
  * CMake >= 2.8.7
@@ -20,6 +21,10 @@ The basic procedure to build this port is as following:
  $ cd build
  $ cmake ../ -DCMAKE_BUILD_TYPE=Release
  $ make
+
+If you use Clang, beware that the current version does not support OpenMP, so
+the build *will* fail unless you use the bleeding-edge version available at
+clang-omp.github.io.
 
 Some additional notes:
  * In order to use a different compiler, specify -DCMAKE_C_COMPILER and
