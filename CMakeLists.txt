@@ -53,63 +53,20 @@ INCLUDE_DIRECTORIES(SYSTEM ${EIGEN3_INCLUDE_DIR})
 
 # Elfutils
 FIND_PACKAGE(Elfutils)
-IF (NOT ELFUTILS_FOUND)
-	MESSAGE(STATUS "Not using fancy stack traces (install elfutils to enable).")
-ENDIF (NOT ELFUTILS_FOUND)
 
 # Intel MKL
-SET(MKL_OPTS --linking=dynamic)
-IF (DEFINED ENV{MKLROOT})
-    FIND_PROGRAM(MKL_LINKTOOL mkl_link_tool
-        PATHS $ENV{MKLROOT}/tools)
-    if(NOT MKL_LINKTOOL)
-      MESSAGE(FATAL_ERROR "Could not find 'mkl_link_tool'; verify your MKL installation")
-    ENDIF(NOT MKL_LINKTOOL)
-
-    # TODO: don't regex -lm away
-
-    EXECUTE_PROCESS(COMMAND ${MKL_LINKTOOL} ${MKL_OPTS} -check_mkl_presence -libs
-        OUTPUT_VARIABLE MKL_LDFLAGS
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_VARIABLE MKL_ERROR
-        RESULT_VARIABLE RETVAR)
-    IF (NOT "${RETVAR}" STREQUAL "0")
-      message(FATAL_ERROR "MKL link tool failure while detecting library flags\n${MKL_ERROR}")
-    ENDIF()
-    STRING(REGEX REPLACE "-lm$" "" MKL_LDFLAGS ${MKL_LDFLAGS})
-
-    EXECUTE_PROCESS(COMMAND ${MKL_LINKTOOL} ${MKL_OPTS} -check_mkl_presence -opts
-        OUTPUT_VARIABLE MKL_CFLAGS
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_VARIABLE MKL_ERROR
-        RESULT_VARIABLE RETVAR)
-    IF (NOT "${RETVAR}" STREQUAL "0")
-      message(FATAL_ERROR "MKL link tool failure while detecting compilation flags\n${MKL_ERROR}")
-    ENDIF()
-    STRING(REGEX REPLACE "-lm$" "" MKL_CFLAGS ${MKL_CFLAGS})
-
+SET(MKL_LINKTOOL_OPTS --linking=dynamic)
+FIND_PACKAGE(MKL)
+IF (MKL_FOUND)
     SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MKL_LDFLAGS}")
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MKL_CFLAGS}")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MKL_CFLAGS}")
 
-    EXECUTE_PROCESS(COMMAND ${MKL_LINKTOOL} ${MKL_OPTS} -check_mkl_presence -env
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        OUTPUT_VARIABLE MKL_ENV
-        ERROR_VARIABLE MKL_ERROR
-        RESULT_VARIABLE RETVAR)
-    IF (NOT "${RETVAR}" STREQUAL "0")
-      message(FATAL_ERROR "MKL link tool failure while detecting environment flags\n${MKL_ERROR}")
-    ENDIF()
-
+    ADD_DEFINITIONS(-DEIGEN_USE_MKL_ALL)
     IF (NOT "${MKL_ENV}" STREQUAL "")
         MESSAGE(STATUS "You will have to define the following environment variables at runtime:\n${MKL_ENV}")
     ENDIF()
-
-    MESSAGE(STATUS "Found Intel MKL")
-    ADD_DEFINITIONS(-DEIGEN_USE_MKL_ALL)
-ELSE()
-    MESSAGE(STATUS "Not using Intel MKL (specify MKLROOT to do so).")
-ENDIF()
+ENDIF (MKL_FOUND)
 
 # OpenMP
 FIND_PACKAGE(OpenMP REQUIRED)
