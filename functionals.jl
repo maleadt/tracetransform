@@ -107,8 +107,11 @@ end
 #
 
 # Julia issue #5074
-import Base.diff
-diff(a::SubArray) = diff(collect(a))
+if VERSION <= VersionNumber(0, 2, 0)
+    import Base.diff
+    warn("manually adding diff operator for SubArrays")
+    diff(a::SubArray) = diff(collect(a))
+end
 
 function p_1(data::StridedVector)
     return mean(abs(diff(data)))
