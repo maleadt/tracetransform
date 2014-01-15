@@ -53,6 +53,12 @@ std::istream &operator>>(std::istream &in, TFunctionalWrapper &wrapper) {
     } else if (wrapper.name == "5") {
         wrapper.name = "T5";
         wrapper.functional = TFunctional::T5;
+    } else if (wrapper.name == "6") {
+        wrapper.name = "T6";
+        wrapper.functional = TFunctional::T6;
+    } else if (wrapper.name == "7") {
+        wrapper.name = "T7";
+        wrapper.functional = TFunctional::T7;
     } else {
         throw boost::program_options::validation_error(
             boost::program_options::validation_error::invalid_option_value,
@@ -98,6 +104,7 @@ getSinograms(const Eigen::MatrixXf &input, unsigned int angle_stepsize,
     }
 
     // Process all angles
+    #pragma omp parallel for
     for (int a_step = 0; a_step < a_steps; a_step++) {
         // Rotate the image
         float a = a_step * angle_stepsize;
@@ -127,6 +134,12 @@ getSinograms(const Eigen::MatrixXf &input, unsigned int angle_stepsize,
                     result = TFunctional345(data, input.rows(),
                                             (TFunctional345_precalc_t *)
                                             precalculations[tfunctional]);
+                    break;
+		case TFunctional::T6:
+                    result = TFunctional6(data, input.rows());
+                    break;
+		case TFunctional::T7:
+                    result = TFunctional7(data, input.rows());
                     break;
                 }
                 outputs[t](p,     // row

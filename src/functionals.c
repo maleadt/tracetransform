@@ -8,13 +8,15 @@
 // Standard library
 #define _GNU_SOURCE // for sincosf
 #include <math.h>   // for log, sqrt, cos, sin, hypot, etc
-#include <stdlib.h> // for malloc, free, calloc
+#include <stdlib.h> // for malloc, free, calloc, qsort
 
 // M_PI is dropped in GCC's C99
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
+//
+const float *ptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Auxiliary
@@ -48,6 +50,30 @@ size_t findWeighedMedianSqrt(const float *data, const size_t length) {
     return length - 1;
 }
 
+
+int compare_function(const void *a,const void *b) {
+    float *x = (float *) a;
+    float *y = (float *) b;
+    if (*x < *y){
+    	  return -1;}
+    else if (*x > *y){ 
+    	  return 1;}
+    else{
+     return 0;}
+}
+
+int compare_function_index(const void *a,const void *b) {
+    size_t *x = (size_t *) a;
+    size_t *y = (size_t *) b;
+    if (ptr[*x] < ptr[*y]){
+    	  return -1;}
+    else if (ptr[*x] > ptr[*y]){ 
+    	  return 1;}
+    else{
+     return 0;}
+}
+
+
 float trapz(const float *x, const float *y, const size_t length) {
     float sum = 0;
     for (size_t i = 0; i < length - 1; i++) {
@@ -55,6 +81,7 @@ float trapz(const float *x, const float *y, const size_t length) {
     }
     return sum * 0.5;
 }
+
 
 float hermite_polynomial(unsigned int order, float x) {
     switch (order) {
@@ -215,6 +242,67 @@ void TFunctional345_destroy(TFunctional345_precalc_t *precalc) {
     free(precalc->real);
     free(precalc->imag);
     free(precalc);
+}
+
+//
+// T6
+//
+
+float TFunctional6(const float *data, const size_t length) {
+    // Transform the domain from t to r1
+    size_t squaredmedian = findWeighedMedianSqrt(data, length);
+
+    // Extracting data from the positive domain of r1: f(r1) = data_r1
+    // data_weighted = r1*f(r1)
+    // permutation = array that gets the permutation indices after sorting data_weighted
+    size_t length_r1 = length - squaredmedian;
+    size_t permutation[length_r1];
+    float data_r1[length_r1],data_weighted[length_r1];
+    for (size_t r1 = 0; r1 < length_r1; r1++){
+              data_r1[r1] = data[r1 + squaredmedian];
+        data_weighted[r1] = (float)r1*data[r1 + squaredmedian];
+	      permutation[r1] = r1;
+    }
+    
+    // Pointer to be used in function compare_function_index to get permutation
+    ptr = data_weighted;
+    
+    // Sorting the weighted data r1*f(r1)
+    qsort(permutation, sizeof(permutation)/sizeof(*permutation), sizeof(*permutation), compare_function_index);
+    qsort(data_weighted, sizeof(data_weighted)/sizeof(*data_weighted), sizeof(*data_weighted), compare_function);
+    
+    // Permuting the input data 
+    float data_sort[length_r1];
+    for (size_t r1 = 0; r1 < length_r1; r1++){
+		data_sort[r1] = data_r1[permutation[r1]];
+	}
+    
+    // Weighted median
+    size_t  index = findWeighedMedianSqrt(data_sort, length_r1);
+    return data_weighted[index];      
+}
+
+//
+// T7
+//
+
+float TFunctional7(const float *data, const size_t length) {
+    
+    // Transform the domain from t to r
+    size_t median = findWeighedMedian(data, length);
+
+    // Extracting data from the positive domain of r
+    size_t length_r = length - median;
+    float data_r[length_r];
+    for (size_t r = 0; r < length_r; r++)
+        data_r[r] = data[r + median];
+
+    // Sorting the transformed data
+    qsort(data_r, sizeof(data_r)/sizeof(*data_r), sizeof(*data_r), compare_function);
+
+    // Weighted median
+    size_t index = findWeighedMedianSqrt(data_r, length_r);
+    return data_r[index];    
 }
 
 

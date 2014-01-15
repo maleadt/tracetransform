@@ -16,6 +16,8 @@
 
 size_t findWeighedMedian(const float* data, const size_t length);
 size_t findWeighedMedianSquared(const float* data, const size_t length);
+int compare_function(const void *a,const void *b);
+int compare_function_index(const void *a,const void *b);
 
 //
 // T functionals
@@ -40,6 +42,12 @@ TFunctional345_precalc_t *TFunctional4_prepare(size_t rows, size_t cols);
 TFunctional345_precalc_t *TFunctional5_prepare(size_t rows, size_t cols);
 float TFunctional345(const float* data, const size_t length, TFunctional345_precalc_t *precalc);
 void TFunctional345_destroy(TFunctional345_precalc_t *precalc);
+
+// T6
+float TFunctional6(const float *data, const size_t length);
+
+// T7
+float TFunctional7(const float *data, const size_t length);
 
 
 //
