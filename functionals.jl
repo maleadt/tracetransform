@@ -107,9 +107,8 @@ end
 #
 
 # Julia issue #5074
-if VERSION <= VersionNumber(0, 2, 0)
+if VERSION < VersionNumber(0, 2, 99)
     import Base.diff
-    warn("manually adding diff operator for SubArrays")
     diff(a::SubArray) = diff(collect(a))
 end
 
