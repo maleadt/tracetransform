@@ -54,7 +54,20 @@ function getSinograms(input::Image{Float64}, angle_stepsize::Uint,
         outputs[t].properties["spatialorder"] = ["y", "x"]
     end
 
-    # TODO: precalculate
+    # Precalculate
+    precalculations = Dict{TFunctional, Any}()
+    precalculation_input = (size(input, "y"), size(input, "x"))
+    for tfunctional in tfunctionals
+        if tfunctional.functional == T3
+            precalculations[T3] = t_3_prepare(precalculation_input...)
+        end
+        if tfunctional.functional == T4
+            precalculations[T4] = t_4_prepare(precalculation_input...)
+        end
+        if tfunctional.functional == T5
+            precalculations[T5] = t_5_prepare(precalculation_input...)
+        end
+    end
 
     # Process all angles
     for a in 0:angle_stepsize:359
@@ -74,12 +87,11 @@ function getSinograms(input::Image{Float64}, angle_stepsize::Uint,
                     outputs[t].data[p, a_index] = t_1(data)
                 elseif tfunctionals[t].functional == T2
                     outputs[t].data[p, a_index] = t_2(data)
-                elseif tfunctionals[t].functional == T3
-                    outputs[t].data[p, a_index] = t_3(data)
-                elseif tfunctionals[t].functional == T4
-                    outputs[t].data[p, a_index] = t_4(data)
-                elseif tfunctionals[t].functional == T5
-                    outputs[t].data[p, a_index] = t_5(data)
+                elseif tfunctionals[t].functional == T3 ||
+                       tfunctionals[t].functional == T4 ||
+                       tfunctionals[t].functional == T5
+                    outputs[t].data[p, a_index] =
+                        t_345(data, precalculations[tfunctionals[t].functional])
                 end
             end
         end

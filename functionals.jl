@@ -38,11 +38,11 @@ end
 # T-functionals
 #
 
-function t_radon(data::StridedVector)
+function t_radon(data::StridedVector{Float64})
     return sum(data)
 end
 
-function t_1(data::StridedVector)
+function t_1(data::StridedVector{Float64})
     median = find_weighted_median(data)
 
     integral = 0
@@ -52,7 +52,7 @@ function t_1(data::StridedVector)
     return integral
 end
 
-function t_2(data::StridedVector)
+function t_2(data::StridedVector{Float64})
     median = find_weighted_median(data)
 
     integral = 0
@@ -62,41 +62,38 @@ function t_2(data::StridedVector)
     return integral
 end
 
-function t_3(data::StridedVector)
+function t_3_prepare(rows, cols)
+    precalc = Array(Complex{Float64}, rows)
+    for r in 1:rows
+        precalc[r] = r * exp(5im*log(r))
+    end
+    return precalc
+end
+
+function t_4_prepare(rows, cols)
+    precalc = Array(Complex{Float64}, rows)
+    for r in 1:rows
+        precalc[r] = exp(3im*log(r))
+    end
+    return precalc
+end
+
+function t_5_prepare(rows, cols)
+    precalc = Array(Complex{Float64}, rows)
+    for r in 1:rows
+        precalc[r] = sqrt(r) * exp(4im*log(r))
+    end
+    return precalc
+end
+
+function t_345(data::StridedVector{Float64}, precalc::Vector{Complex{Float64}})
     squaredmedian = find_weighted_median(sqrt(data))
 
     integral = 0 + 0im
     factor = 0 + 5im
-    for r1 in squaredmedian+1:length(data)
+    for r in 1:(length(data)-squaredmedian)
         # From +1, since exp(i*log(0)) == 0
-        integral += exp(factor*log(r1-squaredmedian)) *
-        data[r1] * (r1-squaredmedian)
-    end
-    return abs(integral)
-end
-
-function t_4(data::StridedVector)
-    squaredmedian = find_weighted_median(sqrt(data))
-
-    integral = 0 + 0im
-    factor = 0 + 3im
-    for r1 in squaredmedian+1:length(data)
-        # From +1, since exp(i*log(0)) == 0
-        integral += exp(factor*log(r1-squaredmedian)) *
-        data[r1]
-    end
-    return abs(integral)
-end
-
-function t_5(data::StridedVector)
-    squaredmedian = find_weighted_median(sqrt(data))
-
-    integral = 0 + 0im
-    factor = 0 + 4im
-    for r1 in squaredmedian+1:length(data)
-        # From +1, since exp(i*log(0)) == 0
-        integral += exp(factor*log(r1-squaredmedian)) *
-        data[r1] * sqrt(r1-squaredmedian)
+        integral += precalc[r] * data[r+squaredmedian]
     end
     return abs(integral)
 end
@@ -112,20 +109,20 @@ if VERSION < v"0.3.0-"
     diff(a::SubArray) = diff(collect(a))
 end
 
-function p_1(data::StridedVector)
+function p_1(data::StridedVector{Float64})
     return mean(abs(diff(data)))
 end
 
-function p_2(data::StridedVector)
+function p_2(data::StridedVector{Float64})
     median = find_weighted_median(data)
     return data[median]
 end
 
-function p_3(data::StridedVector)
+function p_3(data::StridedVector{Float64})
     return sum(abs(fft(data)).^4)
 end
 
-function p_hermite(data::StridedVector, order::Uint, center::Uint)
+function p_hermite(data::StridedVector{Float64}, order::Uint, center::Uint)
     # Discretize the [-10, 10] domain to fit the column iterator
     z = -10
     stepsize_lower = 10 / center

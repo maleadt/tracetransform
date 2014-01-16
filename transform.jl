@@ -36,12 +36,12 @@ function get_transform(input::Image{Float64},
         tfunctional = tfunctionals[t]
         if write_data
             # Save the sinogram trace
-            writecsv("trace_$(tfunctional.functional).csv", sinogram.data);
+            writecsv("trace_$(tfunctional.functional).csv", sinograms[t].data);
 
             if want_log(debug_l)
                 # Save the sinogram image
                 # FIXME: why does imwrite generate a transposed image?
-                imwrite(mat2gray(sinogram),
+                imwrite(mat2gray(sinograms[t]),
                     "trace_$(tfunctional.functional).ppm")
             end
         end
@@ -49,7 +49,7 @@ function get_transform(input::Image{Float64},
         # Orthonormal functionals require the nearest orthonormal sinogram
         if orthonormal
             print_debug("Orthonormalizing sinogram\n")
-            (sinogram_center, sinogram) = nearest_orthonormal_sinogram(sinogram)
+            (sinogram_center, sinograms[t]) = nearest_orthonormal_sinogram(sinograms[t])
             for pfunctional in pfunctionals
                 if pfunctional.functional == Hermite
                     pfunctional.arguments.center = sinogram_center
@@ -63,7 +63,7 @@ function get_transform(input::Image{Float64},
             print_debug("Calculating circus function using P-functional ",
                 repr(pfunctional.functional), "\n")
             circus::Vector = getCircusFunction(
-                sinogram,
+                sinograms[t],
                 pfunctional
                 )
 
