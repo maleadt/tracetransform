@@ -43,7 +43,7 @@ function parse_pfunctionals(args::Vector{String})
     return pfunctionals
 end
 
-function nearest_orthonormal_sinogram(input::Image{Float64})
+function nearest_orthonormal_sinogram(input::Image{Float32})
     @assert length(size(input)) == 2
 
     cols = size(input, "x")
@@ -51,7 +51,7 @@ function nearest_orthonormal_sinogram(input::Image{Float64})
 
     # Detect the offset of each column to the sinogram center
     sinogram_center = ifloor(rows / 2);
-    offset::Vector = Array(Float64, cols)
+    offset::Vector = Array(Float32, cols)
     for p in 1:cols
         median = find_weighted_median(input["y", p])
         offset[p] = median - sinogram_center
@@ -77,12 +77,12 @@ function nearest_orthonormal_sinogram(input::Image{Float64})
 end
 
 function getCircusFunction(
-    input::Image{Float64},
+    input::Image{Float32},
     pfunctional::PFunctionalWrapper)
 
     # Allocate the output matrix
     output::Vector = Array(
-        Float64,
+        Float32,
         size(input, "x")
         )
 

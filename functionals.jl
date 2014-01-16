@@ -38,11 +38,11 @@ end
 # T-functionals
 #
 
-function t_radon(data::StridedVector{Float64})
+function t_radon(data::StridedVector{Float32})
     return sum(data)
 end
 
-function t_1(data::StridedVector{Float64})
+function t_1(data::StridedVector{Float32})
     median = find_weighted_median(data)
 
     integral = 0
@@ -52,7 +52,7 @@ function t_1(data::StridedVector{Float64})
     return integral
 end
 
-function t_2(data::StridedVector{Float64})
+function t_2(data::StridedVector{Float32})
     median = find_weighted_median(data)
 
     integral = 0
@@ -63,7 +63,7 @@ function t_2(data::StridedVector{Float64})
 end
 
 function t_3_prepare(rows, cols)
-    precalc = Array(Complex{Float64}, rows)
+    precalc = Array(Complex{Float32}, rows)
     for r in 1:rows
         precalc[r] = r * exp(5im*log(r))
     end
@@ -71,7 +71,7 @@ function t_3_prepare(rows, cols)
 end
 
 function t_4_prepare(rows, cols)
-    precalc = Array(Complex{Float64}, rows)
+    precalc = Array(Complex{Float32}, rows)
     for r in 1:rows
         precalc[r] = exp(3im*log(r))
     end
@@ -79,14 +79,14 @@ function t_4_prepare(rows, cols)
 end
 
 function t_5_prepare(rows, cols)
-    precalc = Array(Complex{Float64}, rows)
+    precalc = Array(Complex{Float32}, rows)
     for r in 1:rows
         precalc[r] = sqrt(r) * exp(4im*log(r))
     end
     return precalc
 end
 
-function t_345(data::StridedVector{Float64}, precalc::Vector{Complex{Float64}})
+function t_345(data::StridedVector{Float32}, precalc::Vector{Complex{Float32}})
     squaredmedian = find_weighted_median(sqrt(data))
 
     integral = 0 + 0im
@@ -109,20 +109,20 @@ if VERSION < v"0.3.0-"
     diff(a::SubArray) = diff(collect(a))
 end
 
-function p_1(data::StridedVector{Float64})
+function p_1(data::StridedVector{Float32})
     return mean(abs(diff(data)))
 end
 
-function p_2(data::StridedVector{Float64})
+function p_2(data::StridedVector{Float32})
     median = find_weighted_median(data)
     return data[median]
 end
 
-function p_3(data::StridedVector{Float64})
+function p_3(data::StridedVector{Float32})
     return sum(abs(fft(data)).^4)
 end
 
-function p_hermite(data::StridedVector{Float64}, order::Uint, center::Uint)
+function p_hermite(data::StridedVector{Float32}, order::Uint, center::Uint)
     # Discretize the [-10, 10] domain to fit the column iterator
     z = -10
     stepsize_lower = 10 / center

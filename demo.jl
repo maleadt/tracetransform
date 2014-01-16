@@ -96,7 +96,7 @@ function main(args)
     #
 
     # Read the image
-    input::Image{Float64} = gray2mat(imread(opts["input"]))
+    input::Image{Float32} = gray2mat(imread(opts["input"]))
     input = prepare_transform(input, opts["angle"], orthonormal)
 
     if opts["mode"] == "calculate"

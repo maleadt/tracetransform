@@ -8,7 +8,7 @@ cols(input::Image) = size(input, 2)
 @deprecate  rows(A)     size(A, 1)
 @deprecate  cols(A)     size(A, 2)
 
-function interpolate(input::Image{Float64}, i::Float64, j::Float64)
+function interpolate(input::Image{Float32}, i::Float32, j::Float32)
     # Get fractional and integral part of the coordinates
     (j_fract, j_int) = modf(j)
     (i_fract, i_int) = modf(i)
@@ -20,7 +20,7 @@ function interpolate(input::Image{Float64}, i::Float64, j::Float64)
       input.data[i_int+1, j_int+1] * j_fract     * i_fract)
 end
 
-function resize(input::Image{Float64}, new_size::(Uint, Uint))
+function resize(input::Image{Float32}, new_size::(Uint, Uint))
     @assert length(size(input)) == 2
     # TODO: extract colordim? use wrapper for each cd?
     @assert length(new_size) == 2
@@ -55,7 +55,7 @@ function resize(input::Image{Float64}, new_size::(Uint, Uint))
     share(input, output)
 end
 
-function pad(input::Image{Float64})
+function pad(input::Image{Float32})
     @assert length(size(input)) == 2
 
     origin::Vector = ifloor(([size(input)...] .+ 1) ./ 2)
@@ -71,7 +71,7 @@ function pad(input::Image{Float64})
     share(input, padded)
 end
 
-function rotate(input::Image{Float64}, origin::Vector{Float64}, angle::Real)
+function rotate(input::Image{Float32}, origin::Vector{Float32}, angle::Real)
     @assert length(size(input)) == 2
 
     # Calculate part of transform matrix
@@ -79,7 +79,7 @@ function rotate(input::Image{Float64}, origin::Vector{Float64}, angle::Real)
     angle_sin = sind(angle)
 
     # Allocate output matrix
-    output::Matrix{Float64} = zeros(size(input))
+    output::Matrix{Float32} = zeros(size(input))
 
     # Process all pixels
     for i in 1:size(input, 1)
@@ -87,10 +87,10 @@ function rotate(input::Image{Float64}, origin::Vector{Float64}, angle::Real)
             # Get the source pixel
             # FIXME: this was a nice matrix multiplication before, but Julia
             #        can't manage these small-matrix multiplications (issue 3239)
-            i_t::Float64 = i - origin[1]
-            j_t::Float64 = j - origin[2]
-            i_r::Float64 = -j_t*angle_sin + i_t*angle_cos + origin[1]
-            j_r::Float64 =  j_t*angle_cos + i_t*angle_sin + origin[2]
+            i_t::Float32 = i - origin[1]
+            j_t::Float32 = j - origin[2]
+            i_r::Float32 = -j_t*angle_sin + i_t*angle_cos + origin[1]
+            j_r::Float32 =  j_t*angle_cos + i_t*angle_sin + origin[2]
 
             # Copy if within bounds
             if 1 <= i_r < size(input, 1) && 1 <= j_r < size(input, 2)
