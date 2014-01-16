@@ -107,7 +107,7 @@ end
 #
 
 # Julia issue #5074
-if VERSION < VersionNumber(0, 2, 99)
+if VERSION < v"0.3.0-"
     import Base.diff
     diff(a::SubArray) = diff(collect(a))
 end
