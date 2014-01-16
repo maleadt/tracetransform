@@ -9,7 +9,7 @@ include("log.jl")
 using ArgParse
 using Images
 
-function main(args::Vector{Any})
+function main(args)
     #
     # Initialization
     #
