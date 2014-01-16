@@ -39,8 +39,8 @@ function parse_tfunctionals(args::Vector{String})
     return tfunctionals
 end
 
-function getSinogram(input::Image{Float64}, angle_stepsize::Uint,
-                     tfunctional::TFunctionalWrapper)
+function getSinograms(input::Image{Float64}, angle_stepsize::Uint,
+                      tfunctionals::Vector{TFunctionalWrapper})
     @assert length(size(input)) == 2
     @assert size(input, 1) == size(input, 2)        # Padded image!
 
@@ -48,8 +48,13 @@ function getSinogram(input::Image{Float64}, angle_stepsize::Uint,
     origin::Vector{Float64} = floor(([size(input)...] .+ 1) ./ 2)
 
     # Allocate the output matrix
-    output = similar(input, (size(input, "y"), ifloor(360/angle_stepsize)))
-    output.properties["spatialorder"] = ["y", "x"]
+    outputs = Array(Image, length(tfunctionals))
+    for t in 1:length(tfunctionals)
+        outputs[t] = similar(input, (size(input, "y"), ifloor(360/angle_stepsize)))
+        outputs[t].properties["spatialorder"] = ["y", "x"]
+    end
+
+    # TODO: precalculate
 
     # Process all angles
     for a in 0:angle_stepsize:359
@@ -59,21 +64,26 @@ function getSinogram(input::Image{Float64}, angle_stepsize::Uint,
         # Process all projection bands
         a_index::Uint = a / angle_stepsize + 1
         for p in 1:size(input, "x")-1
-            if tfunctional.functional == Radon
-                output.data[p, a_index] = t_radon(slice(input_rotated, "x", p))
-            elseif tfunctional.functional == T1
-                output.data[p, a_index] = t_1(slice(input_rotated, "x", p))
-            elseif tfunctional.functional == T2
-                output.data[p, a_index] = t_2(slice(input_rotated, "x", p))
-            elseif tfunctional.functional == T3
-                output.data[p, a_index] = t_3(slice(input_rotated, "x", p))
-            elseif tfunctional.functional == T4
-                output.data[p, a_index] = t_4(slice(input_rotated, "x", p))
-            elseif tfunctional.functional == T5
-                output.data[p, a_index] = t_5(slice(input_rotated, "x", p))
+            data = slice(input_rotated, "x", p)
+
+            # Process all T-functionals
+            for t in 1:length(tfunctionals)
+                if tfunctionals[t].functional == Radon
+                    outputs[t].data[p, a_index] = t_radon(data)
+                elseif tfunctionals[t].functional == T1
+                    outputs[t].data[p, a_index] = t_1(data)
+                elseif tfunctionals[t].functional == T2
+                    outputs[t].data[p, a_index] = t_2(data)
+                elseif tfunctionals[t].functional == T3
+                    outputs[t].data[p, a_index] = t_3(data)
+                elseif tfunctionals[t].functional == T4
+                    outputs[t].data[p, a_index] = t_4(data)
+                elseif tfunctionals[t].functional == T5
+                    outputs[t].data[p, a_index] = t_5(data)
+                end
             end
         end
     end
 
-    return output
+    return outputs
 end

@@ -29,13 +29,11 @@ function get_transform(input::Image{Float64},
     pfunctionals::Vector{PFunctionalWrapper},
     angle_stepsize::Uint, orthonormal::Bool, write_data::Bool)
     # Process all T-functionals
-    for tfunctional in tfunctionals
-        # Calculate the trace transform sinogram
-        print_debug("Calculating sinogram using T-functional ",
-            repr(tfunctional.functional), "\n")
-        sinogram::Image{Float64} = getSinogram(input, angle_stepsize, 
-                                               tfunctional)
-
+    print_debug("Calculating sinograms for given T-functionals\n")
+    sinograms::Vector{Image{Float64}} = getSinograms(input, angle_stepsize,
+                                           tfunctionals)
+    for t in 1:length(tfunctionals)
+        tfunctional = tfunctionals[t]
         if write_data
             # Save the sinogram trace
             writecsv("trace_$(tfunctional.functional).csv", sinogram.data);
