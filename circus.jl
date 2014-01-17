@@ -1,5 +1,5 @@
-include("functionals.jl")
-include("enum.jl")
+require("functionals")
+require("enum")
 
 @enum PFunctional Hermite P1 P2 P3
 

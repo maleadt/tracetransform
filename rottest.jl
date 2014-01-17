@@ -1,7 +1,7 @@
 #!/usr/bin/julia
 
-include("geometry.jl")
-include("auxiliary.jl")
+require("geometry")
+require("auxiliary")
 
 using Images
 

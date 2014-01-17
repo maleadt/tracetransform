@@ -1,10 +1,10 @@
 #!/usr/bin/julia
 
-include("geometry.jl")
-include("transform.jl")
-include("auxiliary.jl")
-include("enum.jl")
-include("log.jl")
+require("geometry")
+require("transform")
+require("auxiliary")
+require("enum")
+require("log")
 
 using ArgParse
 using Images

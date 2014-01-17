@@ -1,7 +1,7 @@
-include("functionals.jl")
-include("geometry.jl")
-include("sinogram.jl")
-include("circus.jl")
+require("functionals")
+require("geometry")
+require("sinogram")
+require("circus")
 
 using Images
 
