@@ -122,4 +122,6 @@ function main(args)
     end
 end
 
-main(ARGS)
+if !isinteractive()
+    main(ARGS)
+end
