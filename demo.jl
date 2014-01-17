@@ -108,6 +108,10 @@ function main(args)
             error("required argument iterations was not provided")
         end
 
+        # Warm-up
+        get_transform(input, tfunctionals, pfunctionals, opts["angle"],
+                      orthonormal, false)
+
         for i = 1:opts["iterations"]
             time = @elapsed get_transform(input, tfunctionals, pfunctionals,
                                           opts["angle"], orthonormal, false)
