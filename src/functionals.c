@@ -49,7 +49,7 @@ size_t findWeightedMedianSqrt(const float *data, const size_t length) {
     return length - 1;
 }
 
-int compareNormal(const void *a, const void *b) {
+int compareFloat(const void *a, const void *b) {
     float *x = (float *)a;
     float *y = (float *)b;
 
@@ -62,12 +62,12 @@ int compareNormal(const void *a, const void *b) {
     }
 }
 
-int compareArgument(const void *a, const void *b, void *arg) {
+int compareIndexedFloat(const void *a, const void *b, void *arg) {
     size_t *x = (size_t *)a;
     size_t *y = (size_t *)b;
     float *data_weighted = (float *)arg;
 
-    return compareNormal(data_weighted+*x, data_weighted+*y);
+    return compareFloat(data_weighted + *x, data_weighted + *y);
 }
 
 float trapz(const float *x, const float *y, const size_t length) {
@@ -261,8 +261,8 @@ float TFunctional6(const float *data, const size_t length) {
     // Sort the weighted data
     // NOTE: since we need the indexes later on, we don't actually sort the
     //       array but save the indexes of the sorted elements
-    qsort_r(data_weighted_index, length_r1, sizeof(size_t), compareArgument,
-        &data_weighted);
+    qsort_r(data_weighted_index, length_r1, sizeof(size_t), compareIndexedFloat,
+            &data_weighted);
 
     // Permuting the input data
     float data_sort[length_r1];
@@ -287,10 +287,10 @@ float TFunctional7(const float *data, const size_t length) {
 
     // Extract data from the positive domain of r
     float data_r[length_r];
-    memcpy(data_r, data + median, length_r*sizeof(float));
+    memcpy(data_r, data + median, length_r * sizeof(float));
 
     // Sorting the transformed data
-    qsort(data_r, length_r, sizeof(float), compareNormal);
+    qsort(data_r, length_r, sizeof(float), compareFloat);
 
     // Weighted median
     size_t index = findWeightedMedianSqrt(data_r, length_r);
