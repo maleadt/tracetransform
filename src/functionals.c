@@ -246,6 +246,7 @@ void TFunctional345_destroy(TFunctional345_precalc_t *precalc) {
     free(precalc);
 }
 
+
 //
 // T6
 //
@@ -253,12 +254,12 @@ void TFunctional345_destroy(TFunctional345_precalc_t *precalc) {
 float TFunctional6(const float *data, const size_t length) {
     // Transform the domain from t to r1
     size_t squaredmedian = findWeighedMedianSqrt(data, length);
+    size_t length_r1 = length - squaredmedian;
 
     // Extracting data from the positive domain of r1: f(r1) = data_r1
     // data_weighted = r1*f(r1)
     // permutation = array that gets the permutation indices after sorting
     // data_weighted
-    size_t length_r1 = length - squaredmedian;
     size_t permutation[length_r1];
     float data_r1[length_r1], data_weighted[length_r1];
     for (size_t r1 = 0; r1 < length_r1; r1++) {
@@ -271,10 +272,8 @@ float TFunctional6(const float *data, const size_t length) {
     ptr = data_weighted;
 
     // Sorting the weighted data r1*f(r1)
-    qsort(permutation, sizeof(permutation) / sizeof(*permutation),
-          sizeof(*permutation), compare_function_index);
-    qsort(data_weighted, sizeof(data_weighted) / sizeof(*data_weighted),
-          sizeof(*data_weighted), compare_function);
+    qsort(permutation, length_r1, sizeof(*permutation), compare_function_index);
+    qsort(data_weighted, length_r1, sizeof(*data_weighted), compare_function);
 
     // Permuting the input data
     float data_sort[length_r1];
@@ -286,6 +285,7 @@ float TFunctional6(const float *data, const size_t length) {
     size_t index = findWeighedMedianSqrt(data_sort, length_r1);
     return data_weighted[index];
 }
+
 
 //
 // T7
