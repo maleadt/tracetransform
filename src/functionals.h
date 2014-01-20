@@ -16,8 +16,7 @@
 
 size_t findWeighedMedian(const float *data, const size_t length);
 size_t findWeighedMedianSquared(const float *data, const size_t length);
-int compare_function(const void *a, const void *b);
-int compare_function_index(const void *a, const void *b);
+
 
 //
 // T functionals

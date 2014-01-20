@@ -8,15 +8,13 @@
 // Standard library
 #define _GNU_SOURCE // for sincosf
 #include <math.h>   // for log, sqrt, cos, sin, hypot, etc
-#include <stdlib.h> // for malloc, free, calloc, qsort
+#include <stdlib.h> // for malloc, free, calloc, qsort, qsort_r
 
 // M_PI is dropped in GCC's C99
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
-//
-const float *ptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Auxiliary
@@ -50,10 +48,10 @@ size_t findWeighedMedianSqrt(const float *data, const size_t length) {
     return length - 1;
 }
 
-
 int compare_function(const void *a, const void *b) {
     float *x = (float *)a;
     float *y = (float *)b;
+
     if (*x < *y) {
         return -1;
     } else if (*x > *y) {
@@ -63,18 +61,19 @@ int compare_function(const void *a, const void *b) {
     }
 }
 
-int compare_function_index(const void *a, const void *b) {
+int compare_function_index(const void *a, const void *b, void *arg) {
     size_t *x = (size_t *)a;
     size_t *y = (size_t *)b;
-    if (ptr[*x] < ptr[*y]) {
+    float *data_weighted = (float *)arg;
+
+    if (data_weighted[*x] < data_weighted[*y]) {
         return -1;
-    } else if (ptr[*x] > ptr[*y]) {
+    } else if (data_weighted[*x] > data_weighted[*y]) {
         return 1;
     } else {
         return 0;
     }
 }
-
 
 float trapz(const float *x, const float *y, const size_t length) {
     float sum = 0;
@@ -268,11 +267,9 @@ float TFunctional6(const float *data, const size_t length) {
         permutation[r1] = r1;
     }
 
-    // Pointer to be used in function compare_function_index to get permutation
-    ptr = data_weighted;
-
     // Sorting the weighted data r1*f(r1)
-    qsort(permutation, length_r1, sizeof(*permutation), compare_function_index);
+    qsort_r(permutation, length_r1, sizeof(*permutation),
+            compare_function_index, &data_weighted);
     qsort(data_weighted, length_r1, sizeof(*data_weighted), compare_function);
 
     // Permuting the input data
