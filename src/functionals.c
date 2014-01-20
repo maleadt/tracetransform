@@ -83,7 +83,6 @@ float trapz(const float *x, const float *y, const size_t length) {
     return sum * 0.5;
 }
 
-
 float hermite_polynomial(unsigned int order, float x) {
     switch (order) {
     case 0:
@@ -328,6 +327,7 @@ float PFunctional1(const float *data, const size_t length) {
     return sum;
 }
 
+
 //
 // P2
 //
@@ -336,6 +336,7 @@ float PFunctional2(const float *data, const size_t length) {
     size_t median = findWeighedMedian(data, length);
     return data[median];
 }
+
 
 //
 // P3
@@ -376,6 +377,7 @@ float PFunctional3(const float *data, const size_t length) {
     free(fourier_imag);
     return sum;
 }
+
 
 //
 // Hermite P-functionals
