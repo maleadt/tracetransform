@@ -51,26 +51,28 @@ size_t findWeighedMedianSqrt(const float *data, const size_t length) {
 }
 
 
-int compare_function(const void *a,const void *b) {
-    float *x = (float *) a;
-    float *y = (float *) b;
-    if (*x < *y){
-    	  return -1;}
-    else if (*x > *y){ 
-    	  return 1;}
-    else{
-     return 0;}
+int compare_function(const void *a, const void *b) {
+    float *x = (float *)a;
+    float *y = (float *)b;
+    if (*x < *y) {
+        return -1;
+    } else if (*x > *y) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
-int compare_function_index(const void *a,const void *b) {
-    size_t *x = (size_t *) a;
-    size_t *y = (size_t *) b;
-    if (ptr[*x] < ptr[*y]){
-    	  return -1;}
-    else if (ptr[*x] > ptr[*y]){ 
-    	  return 1;}
-    else{
-     return 0;}
+int compare_function_index(const void *a, const void *b) {
+    size_t *x = (size_t *)a;
+    size_t *y = (size_t *)b;
+    if (ptr[*x] < ptr[*y]) {
+        return -1;
+    } else if (ptr[*x] > ptr[*y]) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 
@@ -254,32 +256,35 @@ float TFunctional6(const float *data, const size_t length) {
 
     // Extracting data from the positive domain of r1: f(r1) = data_r1
     // data_weighted = r1*f(r1)
-    // permutation = array that gets the permutation indices after sorting data_weighted
+    // permutation = array that gets the permutation indices after sorting
+    // data_weighted
     size_t length_r1 = length - squaredmedian;
     size_t permutation[length_r1];
-    float data_r1[length_r1],data_weighted[length_r1];
-    for (size_t r1 = 0; r1 < length_r1; r1++){
-              data_r1[r1] = data[r1 + squaredmedian];
-        data_weighted[r1] = (float)r1*data[r1 + squaredmedian];
-	      permutation[r1] = r1;
+    float data_r1[length_r1], data_weighted[length_r1];
+    for (size_t r1 = 0; r1 < length_r1; r1++) {
+        data_r1[r1] = data[r1 + squaredmedian];
+        data_weighted[r1] = (float)r1 * data[r1 + squaredmedian];
+        permutation[r1] = r1;
     }
-    
+
     // Pointer to be used in function compare_function_index to get permutation
     ptr = data_weighted;
-    
+
     // Sorting the weighted data r1*f(r1)
-    qsort(permutation, sizeof(permutation)/sizeof(*permutation), sizeof(*permutation), compare_function_index);
-    qsort(data_weighted, sizeof(data_weighted)/sizeof(*data_weighted), sizeof(*data_weighted), compare_function);
-    
-    // Permuting the input data 
+    qsort(permutation, sizeof(permutation) / sizeof(*permutation),
+          sizeof(*permutation), compare_function_index);
+    qsort(data_weighted, sizeof(data_weighted) / sizeof(*data_weighted),
+          sizeof(*data_weighted), compare_function);
+
+    // Permuting the input data
     float data_sort[length_r1];
-    for (size_t r1 = 0; r1 < length_r1; r1++){
-		data_sort[r1] = data_r1[permutation[r1]];
-	}
-    
+    for (size_t r1 = 0; r1 < length_r1; r1++) {
+        data_sort[r1] = data_r1[permutation[r1]];
+    }
+
     // Weighted median
-    size_t  index = findWeighedMedianSqrt(data_sort, length_r1);
-    return data_weighted[index];      
+    size_t index = findWeighedMedianSqrt(data_sort, length_r1);
+    return data_weighted[index];
 }
 
 //
@@ -287,7 +292,7 @@ float TFunctional6(const float *data, const size_t length) {
 //
 
 float TFunctional7(const float *data, const size_t length) {
-    
+
     // Transform the domain from t to r
     size_t median = findWeighedMedian(data, length);
 
@@ -298,11 +303,12 @@ float TFunctional7(const float *data, const size_t length) {
         data_r[r] = data[r + median];
 
     // Sorting the transformed data
-    qsort(data_r, sizeof(data_r)/sizeof(*data_r), sizeof(*data_r), compare_function);
+    qsort(data_r, sizeof(data_r) / sizeof(*data_r), sizeof(*data_r),
+          compare_function);
 
     // Weighted median
     size_t index = findWeighedMedianSqrt(data_r, length_r);
-    return data_r[index];    
+    return data_r[index];
 }
 
 
