@@ -14,8 +14,8 @@
 // Auxiliary
 //
 
-size_t findWeighedMedian(const float *data, const size_t length);
-size_t findWeighedMedianSquared(const float *data, const size_t length);
+size_t findWeightedMedian(const float *data, const size_t length);
+size_t findWeightedMedianSquared(const float *data, const size_t length);
 
 
 //

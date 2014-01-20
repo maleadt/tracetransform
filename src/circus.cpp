@@ -73,7 +73,7 @@ Eigen::MatrixXf nearest_orthonormal_sinogram(const Eigen::MatrixXf &input,
     std::vector<int> offset(input.cols()); // TODO: Eigen vector
     for (int p = 0; p < input.cols(); p++) {
         size_t median =
-            findWeighedMedian(input.data() + p * input.rows(), input.rows());
+            findWeightedMedian(input.data() + p * input.rows(), input.rows());
         offset[p] = median - sinogram_center;
     }
 

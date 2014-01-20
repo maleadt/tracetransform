@@ -20,7 +20,7 @@
 // Auxiliary
 //
 
-size_t findWeighedMedian(const float *data, const size_t length) {
+size_t findWeightedMedian(const float *data, const size_t length) {
     float sum = 0;
     for (size_t i = 0; i < length; i++)
         sum += data[i];
@@ -33,7 +33,7 @@ size_t findWeighedMedian(const float *data, const size_t length) {
     return length - 1;
 }
 
-size_t findWeighedMedianSqrt(const float *data, const size_t length) {
+size_t findWeightedMedianSqrt(const float *data, const size_t length) {
     float sum = 0;
     for (size_t i = 0; i < length; i++)
         sum += sqrt(data[i]);
@@ -130,7 +130,7 @@ float TFunctionalRadon(const float *data, const size_t length) {
 
 float TFunctional1(const float *data, const size_t length) {
     // Transform the domain from t to r
-    size_t median = findWeighedMedian(data, length);
+    size_t median = findWeightedMedian(data, length);
 
     // Integrate
     float integral = 0;
@@ -146,7 +146,7 @@ float TFunctional1(const float *data, const size_t length) {
 
 float TFunctional2(const float *data, const size_t length) {
     // Transform the domain from t to r
-    size_t median = findWeighedMedian(data, length);
+    size_t median = findWeightedMedian(data, length);
 
     // Integrate
     float integral = 0;
@@ -226,7 +226,7 @@ TFunctional345_precalc_t *TFunctional5_prepare(size_t rows, size_t cols) {
 float TFunctional345(const float *data, const size_t length,
                      TFunctional345_precalc_t *precalc) {
     // Transform the domain from t to r1
-    size_t squaredmedian = findWeighedMedianSqrt(data, length);
+    size_t squaredmedian = findWeightedMedianSqrt(data, length);
 
     // Integrate
     float integral_real = 0, integral_imag = 0;
@@ -251,7 +251,7 @@ void TFunctional345_destroy(TFunctional345_precalc_t *precalc) {
 
 float TFunctional6(const float *data, const size_t length) {
     // Transform the domain from t to r1
-    size_t squaredmedian = findWeighedMedianSqrt(data, length);
+    size_t squaredmedian = findWeightedMedianSqrt(data, length);
     size_t length_r1 = length - squaredmedian;
 
     // Extracting data from the positive domain of r1: f(r1) = data_r1
@@ -278,7 +278,7 @@ float TFunctional6(const float *data, const size_t length) {
     }
 
     // Weighted median
-    size_t index = findWeighedMedianSqrt(data_sort, length_r1);
+    size_t index = findWeightedMedianSqrt(data_sort, length_r1);
     return data_weighted[index];
 }
 
@@ -290,7 +290,7 @@ float TFunctional6(const float *data, const size_t length) {
 float TFunctional7(const float *data, const size_t length) {
 
     // Transform the domain from t to r
-    size_t median = findWeighedMedian(data, length);
+    size_t median = findWeightedMedian(data, length);
 
     // Extracting data from the positive domain of r
     size_t length_r = length - median;
@@ -303,7 +303,7 @@ float TFunctional7(const float *data, const size_t length) {
           compare_function);
 
     // Weighted median
-    size_t index = findWeighedMedianSqrt(data_r, length_r);
+    size_t index = findWeightedMedianSqrt(data_r, length_r);
     return data_r[index];
 }
 
@@ -333,7 +333,7 @@ float PFunctional1(const float *data, const size_t length) {
 //
 
 float PFunctional2(const float *data, const size_t length) {
-    size_t median = findWeighedMedian(data, length);
+    size_t median = findWeightedMedian(data, length);
     return data[median];
 }
 
