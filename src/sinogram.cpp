@@ -104,7 +104,6 @@ getSinograms(const Eigen::MatrixXf &input, unsigned int angle_stepsize,
     }
 
     // Process all angles
-    #pragma omp parallel for
     for (int a_step = 0; a_step < a_steps; a_step++) {
         // Rotate the image
         float a = a_step * angle_stepsize;
