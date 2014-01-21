@@ -5,10 +5,10 @@ end
 
 function [sinogram circus_function] = get_transform(padded ,tfunctionals, pfunctionals, angle_stepsize, orthonormal)
     sinogram = TraceTransform(padded, tfunctionals, pfunctionals, angle_stepsize, orthonormal); 
-    if length(pfunctionals) > 0
-        error('P-functionals not implemented yet')
-    end
-    circus_function = []
+%     if length(pfunctionals) > 0
+%         error('P-functionals not implemented yet')
+%     end
+    circus_function = sum(abs(diff(sinogram)));%[]
 end
 
 function padded = prepare_transform(input, angle_stepsize, orthonormal)
