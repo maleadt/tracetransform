@@ -4,11 +4,7 @@ function load_transform
 end
 
 function [sinogram circus_function] = get_transform(padded ,tfunctionals, pfunctionals, angle_stepsize, orthonormal)
-    sinogram = TraceTransform(padded, tfunctionals, pfunctionals, angle_stepsize, orthonormal); 
-%     if length(pfunctionals) > 0
-%         error('P-functionals not implemented yet')
-%     end
-    circus_function = sum(abs(diff(sinogram)));%[]
+    [sinogram circus_function] = TraceTransform(padded, tfunctionals, pfunctionals, angle_stepsize, orthonormal);     
 end
 
 function padded = prepare_transform(input, angle_stepsize, orthonormal)
