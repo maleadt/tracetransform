@@ -586,7 +586,8 @@ __global__ void transformMedianDomain_kernel(const float *input,
         output[row + col * rows] = 0;
 }
 
-__global__ void sortBitonicStep_kernel(float *input, unsigned int major,
+// TODO: support non-pow2 row lengths
+__device__ void sortBitonicStep(float *input, unsigned int major,
                                        unsigned int minor) {
     // Compute the thread dimensions
     const int col = blockIdx.x;
@@ -617,6 +618,21 @@ __global__ void sortBitonicStep_kernel(float *input, unsigned int major,
             }
         }
     }
+}
+
+__global__ void sortBitonic_kernel(float *input) {
+    // Compute the thread dimensions
+    const int rows = blockDim.y;
+
+    for (unsigned int major = 2; major <= rows;
+         major <<= 1) {
+        for (unsigned int minor = major >> 1; minor > 0;
+             minor = minor >> 1) {
+            sortBitonicStep(input, major, minor);
+            __syncthreads();
+        }
+    }
+
 }
 
 // NOTE: this is just the weighted median kernel + value writeback
@@ -680,16 +696,8 @@ void TFunctional7(const CUDAHelper::GlobalMemory<float> *input,
     {
         dim3 threads(1, precalc->transformed->rows());
         dim3 blocks(precalc->transformed->cols(), 1);
-        for (unsigned int major = 2; major <= precalc->transformed->rows();
-             major <<= 1) {
-            /* Minor step */
-            for (unsigned int minor = major >> 1; minor > 0;
-                 minor = minor >> 1) {
-                sortBitonicStep_kernel <<<blocks, threads>>>
-                    (*precalc->transformed, major, minor);
-                CUDAHelper::checkState();
-            }
-        }
+        sortBitonic_kernel <<<blocks, threads>>>(*precalc->transformed);
+        CUDAHelper::checkState();
     }
 
     // Launch prefix sum kernel
