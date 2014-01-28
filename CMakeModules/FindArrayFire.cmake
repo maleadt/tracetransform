@@ -11,20 +11,37 @@
 
 FIND_PATH(ArrayFire_INCLUDE_DIR "arrayfire.h"
           PATH_SUFFIXES "include"
-          PATHS $ENV{AF_PATH}
+          PATHS ${ArrayFire_ROOT_DIR}
+                $ENV{AF_PATH}
                 /usr
-                /usr/local)
+                /usr/local
+                /opt/arrayfire)
 
-FIND_LIBRARY(ArrayFire_LIBRARY
+get_filename_component(ArrayFire_ACTUAL_ROOT_DIR ${ArrayFire_INCLUDE_DIR} DIRECTORY)
+
+# 1.9
+FIND_LIBRARY(ArrayFire_LIBRARY19
+             NAMES "af"
+             PATH_SUFFIXES "lib64"
+             PATHS ${ArrayFire_ACTUAL_ROOT_DIR}
+                   /usr
+                   /usr/local
+                   /opt/arrayfire)
+
+# 2.0
+FIND_LIBRARY(ArrayFire_LIBRARY20
              NAMES "afcu"
              PATH_SUFFIXES "lib64"
-             PATHS $ENV{AF_PATH}
+             PATHS ${ArrayFire_ACTUAL_ROOT_DIR}
                    /usr
-                   usr/local)
+                   /usr/local
+                   /opt/arrayfire)
 
-if (ArrayFire_LIBRARY)
-  list(APPEND ArrayFire_LIBRARIES ${ArrayFire_LIBRARY})
-endif (ArrayFire_LIBRARY)
+if (ArrayFire_LIBRARY19)
+  list(APPEND ArrayFire_LIBRARIES ${ArrayFire_LIBRARY19})
+elseif (ArrayFire_LIBRARY20)
+  list(APPEND ArrayFire_LIBRARIES ${ArrayFire_LIBRARY20})
+endif()
 
 
 # GFX library
@@ -32,7 +49,10 @@ endif (ArrayFire_LIBRARY)
 FIND_LIBRARY(ArrayFire_GFX_LIBRARY
              NAMES "afGFX"
              PATH_SUFFIXES "lib64"
-             PATHS /usr/ usr/local /opt $ENV{AF_PATH})
+             PATHS ${ArrayFire_ACTUAL_ROOT_DIR}
+                   /usr
+                   /usr/local
+                   /opt/arrayfire)
 
 if (ArrayFire_GFX_LIBRARY)
   list(APPEND ArrayFire_LIBRARIES ${ArrayFire_GFX_LIBRARY})

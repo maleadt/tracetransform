@@ -8,7 +8,8 @@
 
 FIND_PATH(CULA_INCLUDE_DIR "cula.h"
           PATH_SUFFIXES "include"
-          PATHS /usr
+          PATHS ${CULA_ROOT_DIR}
+                /usr
                 /usr/local
                 /opt/cula)
 
@@ -18,7 +19,8 @@ FIND_PATH(CULA_INCLUDE_DIR "cula.h"
 FIND_LIBRARY(CULA_LIBRARY
              NAMES "cula"
              PATH_SUFFIXES "lib64"
-             PATHS /usr
+             PATHS ${CULA_ROOT_DIR}
+                   /usr
                    /usr/local
                    /opt/cula)
 
@@ -32,14 +34,16 @@ endif (CULA_LIBRARY)
 FIND_LIBRARY(CULA_LAPACK_LIBRARY
              NAMES "cula_lapack"
              PATH_SUFFIXES "lib64"
-             PATHS /usr
+             PATHS ${CULA_ROOT_DIR}
+                   /usr
                    /usr/local
                    /opt/cula)
 
 FIND_LIBRARY(CULA_CORE_LIBRARY
              NAMES "cula_core"
              PATH_SUFFIXES "lib64"
-             PATHS /usr
+             PATHS ${CULA_ROOT_DIR}
+                   /usr
                    /usr/local
                    /opt/cula)
 
