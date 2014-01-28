@@ -80,10 +80,6 @@ ELSE()
     MESSAGE(WARNING "CULA not found -- orthonormal P-functionals will not be available")
 ENDIF()
 
-# ArrayFire
-FIND_PACKAGE(ArrayFire REQUIRED)
-INCLUDE_DIRECTORIES(SYSTEM ${ArrayFire_INCLUDE_DIR})
-
 
 #
 # Libraries

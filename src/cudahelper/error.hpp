@@ -13,10 +13,6 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 
-// ArrayFire
-#include <arrayfire.h>
-#undef print
-
 
 //
 // Module definitions
@@ -28,8 +24,6 @@ class Error : public std::runtime_error {
   public:
     explicit Error(cudaError_t errorCode)
         : std::runtime_error(cudaGetErrorString(errorCode)) {}
-    explicit Error(afError)
-        : std::runtime_error(af_errstr()) {}
 };
 }
 

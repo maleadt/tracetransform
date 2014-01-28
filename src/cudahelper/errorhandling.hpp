@@ -10,10 +10,6 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 
-// ArrayFire
-#include <arrayfire.h>
-#undef print
-
 // Local
 #include "error.hpp"
 
@@ -27,13 +23,6 @@ namespace CUDAHelper {
 // if given state indicates an error
 inline void checkError(cudaError_t state) {
     if (state != cudaSuccess) {
-        throw Error(state);
-    }
-}
-// Check ArrayFire API return code, throws Error
-// if given state indicates an error
-inline void checkError(afError state) {
-    if (state != AF_SUCCESS) {
         throw Error(state);
     }
 }

@@ -4,7 +4,7 @@ CUDA_ADD_LIBRARY(rotate rotate.hpp rotate.cu)
 TARGET_LINK_LIBRARIES(rotate common)
 
 CUDA_ADD_LIBRARY(functionals functionals.hpp functionals.cu)
-TARGET_LINK_LIBRARIES(functionals common ${ArrayFire_LIBRARIES})
+TARGET_LINK_LIBRARIES(functionals common)
 
 SET(KERNELS rotate functionals PARENT_SCOPE)
 

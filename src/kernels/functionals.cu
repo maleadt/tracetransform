@@ -8,9 +8,6 @@
 // Standard library
 #include <stdio.h>
 
-// ArrayFire
-#include <arrayfire.h>
-
 // Local
 #include "../logger.hpp"
 
