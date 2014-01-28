@@ -96,7 +96,7 @@ __global__ void prescan_kernel(const float *input, float *output,
 }
 
 __global__ void findWeightedMedian_kernel(const float *input,
-                                         const float *prescan, int *output) {
+                                          const float *prescan, int *output) {
     // Shared memory
     extern __shared__ float temp[];
 
@@ -179,7 +179,7 @@ void TFunctionalRadon(const CUDAHelper::GlobalMemory<float> *input,
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
         TFunctionalRadon_kernel
-                << <blocks, threads, 2 * input->rows() * sizeof(float)>>>
+                <<<blocks, threads, 2 * input->rows() * sizeof(float)>>>
             (*input, *output, a);
         CUDAHelper::checkState();
     }
@@ -238,7 +238,7 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input,
     {
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
-        prescan_kernel << <blocks, threads, 2 * input->rows() * sizeof(float)>>>
+        prescan_kernel <<<blocks, threads, 2 * input->rows() * sizeof(float)>>>
             (*input, *precalc->prescan, NONE);
         CUDAHelper::checkState();
     }
@@ -248,7 +248,7 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input,
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
         findWeightedMedian_kernel
-                << <blocks, threads, input->rows() * sizeof(float)>>>
+                <<<blocks, threads, input->rows() * sizeof(float)>>>
             (*input, *precalc->prescan, *precalc->medians);
         CUDAHelper::checkState();
     }
@@ -258,7 +258,7 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input,
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
         TFunctional1_kernel
-                << <blocks, threads, 2 * input->rows() * sizeof(float)>>>
+                <<<blocks, threads, 2 * input->rows() * sizeof(float)>>>
             (*input, *precalc->medians, *output, a);
         CUDAHelper::checkState();
     }
@@ -311,7 +311,7 @@ void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
     {
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
-        prescan_kernel << <blocks, threads, 2 * input->rows() * sizeof(float)>>>
+        prescan_kernel <<<blocks, threads, 2 * input->rows() * sizeof(float)>>>
             (*input, *precalc->prescan, NONE);
         CUDAHelper::checkState();
     }
@@ -321,7 +321,7 @@ void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
         findWeightedMedian_kernel
-                << <blocks, threads, input->rows() * sizeof(float)>>>
+                <<<blocks, threads, input->rows() * sizeof(float)>>>
             (*input, *precalc->prescan, *precalc->medians);
         CUDAHelper::checkState();
     }
@@ -331,7 +331,7 @@ void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
         TFunctional2_kernel
-                << <blocks, threads, 2 * input->rows() * sizeof(float)>>>
+                <<<blocks, threads, 2 * input->rows() * sizeof(float)>>>
             (*input, *precalc->medians, *output, a);
         CUDAHelper::checkState();
     }
@@ -492,7 +492,7 @@ void TFunctional345(const CUDAHelper::GlobalMemory<float> *input,
     {
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
-        prescan_kernel << <blocks, threads, 2 * input->rows() * sizeof(float)>>>
+        prescan_kernel <<<blocks, threads, 2 * input->rows() * sizeof(float)>>>
             (*input, *precalc->prescan, SQRT);
         CUDAHelper::checkState();
     }
@@ -502,7 +502,7 @@ void TFunctional345(const CUDAHelper::GlobalMemory<float> *input,
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
         findWeightedMedian_kernel
-                << <blocks, threads, input->rows() * sizeof(float)>>>
+                <<<blocks, threads, input->rows() * sizeof(float)>>>
             (*input, *precalc->prescan, *precalc->medians);
         CUDAHelper::checkState();
     }
@@ -512,7 +512,7 @@ void TFunctional345(const CUDAHelper::GlobalMemory<float> *input,
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
         TFunctional345_kernel
-                << <blocks, threads, 2 * input->rows() * sizeof(float)>>>
+                <<<blocks, threads, 2 * input->rows() * sizeof(float)>>>
             (*input, *precalc->medians, *precalc->real, *precalc->imag, *output,
              a);
         CUDAHelper::checkState();
@@ -586,7 +586,7 @@ void PFunctional1(const CUDAHelper::GlobalMemory<float> *input,
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
         PFunctional1_kernel
-                << <blocks, threads, 2 * input->rows() * sizeof(float)>>>
+                <<<blocks, threads, 2 * input->rows() * sizeof(float)>>>
             (*input, *output);
         CUDAHelper::checkState();
     }
@@ -614,7 +614,7 @@ void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
     {
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
-        prescan_kernel << <blocks, threads, 2 * input->rows() * sizeof(float)>>>
+        prescan_kernel <<<blocks, threads, 2 * input->rows() * sizeof(float)>>>
             (*input, *prescan, NONE);
         CUDAHelper::checkState();
     }
@@ -627,7 +627,7 @@ void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
         findWeightedMedian_kernel
-                << <blocks, threads, input->rows() * sizeof(float)>>>
+                <<<blocks, threads, input->rows() * sizeof(float)>>>
             (*input, *prescan, *medians);
         CUDAHelper::checkState();
     }
@@ -637,7 +637,7 @@ void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
     {
         dim3 threads(1, 1);
         dim3 blocks(input->cols(), 1);
-        PFunctional2_kernel << <blocks, threads>>>
+        PFunctional2_kernel <<<blocks, threads>>>
             (*input, *medians, *output, input->rows());
         CUDAHelper::checkState();
     }
@@ -699,7 +699,7 @@ void PFunctionalHermite(const CUDAHelper::GlobalMemory<float> *input,
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
         PFunctionalHermite_kernel
-                << <blocks, threads, 2 * input->rows() * sizeof(float)>>>
+                <<<blocks, threads, 2 * input->rows() * sizeof(float)>>>
             (*input, *output, order, center);
         CUDAHelper::checkState();
     }

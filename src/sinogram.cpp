@@ -70,7 +70,6 @@ getSinograms(const CUDAHelper::GlobalMemory<float> *input,
 
     // Pre-calculate
     // NOTE: some of these pre-calculations are just memory allocations
-    // TODO: also do this on CPU?
     std::map<TFunctional, void *> precalculations;
     for (size_t t = 0; t < tfunctionals.size(); t++) {
         TFunctional tfunctional = tfunctionals[t].functional;
