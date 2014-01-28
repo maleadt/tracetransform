@@ -13,9 +13,9 @@ FIND_PATH(ELFUTILS_INCLUDE_DIR elfutils/version.h
 # DWARF library
 
 FIND_LIBRARY(DWARF_LIBRARY 
-  NAMES dw 
-  PATHS /usr/lib
-        /usr/$ENV{MACHTYPE}/lib)
+             NAMES dw 
+             PATHS /usr/lib
+                   /usr/$ENV{MACHTYPE}/lib)
 
 
 # Finish up
