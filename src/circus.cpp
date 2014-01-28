@@ -35,6 +35,7 @@ std::istream &operator>>(std::istream &in, PFunctionalWrapper &wrapper) {
     } else if (wrapper.name == "3") {
         wrapper.name = "P3";
         wrapper.functional = PFunctional::P3;
+#ifdef WITH_CULA
     } else if (wrapper.name[0] == 'H') {
         wrapper.functional = PFunctional::Hermite;
         if (wrapper.name.size() < 2)
@@ -50,6 +51,7 @@ std::istream &operator>>(std::istream &in, PFunctionalWrapper &wrapper) {
                 boost::program_options::validation_error::invalid_option_value,
                 "Unparseable order parameter for Hermite P-functional");
         }
+#endif
     } else {
         throw boost::program_options::validation_error(
             boost::program_options::validation_error::invalid_option_value,
@@ -76,10 +78,12 @@ getCircusFunction(const CUDAHelper::GlobalMemory<float> *input,
     case PFunctional::P3:
         PFunctional3(input, output);
         break;
+#ifdef WITH_CULA
     case PFunctional::Hermite:
         PFunctionalHermite(input, output, *pfunctional.arguments.order,
                            *pfunctional.arguments.center);
         break;
+#endif
     }
 
     return output;

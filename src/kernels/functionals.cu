@@ -651,6 +651,8 @@ void PFunctional3(const CUDAHelper::GlobalMemory<float> *,
 // Hermite P-functionals
 //
 
+#ifdef WITH_CULA
+
 __global__ void PFunctionalHermite_kernel(const float *input, float *output,
                                           unsigned int order, int center) {
     // Shared memory
@@ -698,3 +700,5 @@ void PFunctionalHermite(const CUDAHelper::GlobalMemory<float> *input,
         CUDAHelper::checkState();
     }
 }
+
+#endif

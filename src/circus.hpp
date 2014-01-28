@@ -26,7 +26,9 @@
 
 // TODO: make this an enum class when ICC 14 is released
 enum PFunctional {
+#ifdef WITH_CULA
     Hermite,
+#endif
     P1,
     P2,
     P3

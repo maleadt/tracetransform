@@ -14,17 +14,26 @@
 // Local
 #include "logger.hpp"
 #include "auxiliary.hpp"
+#ifdef WITH_CULA
 #include "kernels/nos.hpp"
+#endif
 
 
 //
 // Module definitions
 //
 
+#ifdef WITH_CULA
 Transformer::Transformer(const Eigen::MatrixXf &image,
-                         unsigned int angle_stepsize, bool orthonormal)
-    : _image(image), _orthonormal(orthonormal),
-      _angle_stepsize(angle_stepsize) {
+                         unsigned int angle_stepsize, bool orthonormal) :
+             _orthonormal(orthonormal),
+  _angle_stepsize(angle_stepsize) {
+#else
+Transformer::Transformer(const Eigen::MatrixXf &image,
+                         unsigned int angle_stepsize) :
+#endif
+    _image(image), _angle_stepsize(angle_stepsize) {
+#ifdef WITH_CULA
     // Orthonormal P-functionals need a stretched image in order to ensure a
     // square sinogram
     if (_orthonormal) {
@@ -34,6 +43,7 @@ Transformer::Transformer(const Eigen::MatrixXf &image,
                     << std::endl;
         _image = resize(_image, nsize, nsize);
     }
+#endif
 
     // Pad the images so we can freely rotate without losing information
     _image = pad(_image);
@@ -74,6 +84,7 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
             }
         }
 
+#ifdef WITH_CULA
         // Orthonormal functionals require the nearest orthonormal sinogram
         if (_orthonormal) {
             clog(trace) << "Orthonormalizing sinogram" << std::endl;
@@ -88,6 +99,7 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
                 }
             }
         }
+#endif
 
         // Process all P-functionals
         for (size_t p = 0; p < pfunctionals.size(); p++) {

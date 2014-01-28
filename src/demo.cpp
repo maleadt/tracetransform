@@ -115,6 +115,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+#ifdef WITH_CULA
     // Check for orthonormal P-functionals
     unsigned int orthonormal_count = 0;
     bool orthonormal;
@@ -130,6 +131,7 @@ int main(int argc, char **argv) {
         throw boost::program_options::validation_error(
             boost::program_options::validation_error::invalid_option_value,
             "Cannot mix regular and orthonormal P-functionals");
+#endif
 
     // Configure logging
     if (vm.count("debug")) {
@@ -210,7 +212,11 @@ int main(int argc, char **argv) {
 
     // Read the image
     Eigen::MatrixXf input = gray2mat(readpgm(vm["input"].as<std::string>()));
+#ifdef WITH_CULA
     Transformer transformer(input, vm["angle"].as<unsigned int>(), orthonormal);
+#else
+    Transformer transformer(input, vm["angle"].as<unsigned int>());
+#endif
 
     if (vm["mode"].as<std::string>() == "calculate") {
         transformer.getTransform(tfunctionals, pfunctionals, true);

@@ -75,9 +75,11 @@ void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
 void PFunctional3(const CUDAHelper::GlobalMemory<float> *input,
                   CUDAHelper::GlobalMemory<float> *output);
 
+#ifdef WITH_CULA
 // Hermite P-functionals
 void PFunctionalHermite(const CUDAHelper::GlobalMemory<float> *input,
                         CUDAHelper::GlobalMemory<float> *output,
                         unsigned int order, int center);
+#endif
 
 #endif
