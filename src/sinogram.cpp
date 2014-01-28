@@ -44,6 +44,12 @@ std::istream &operator>>(std::istream &in, TFunctionalWrapper &wrapper) {
     } else if (wrapper.name == "5") {
         wrapper.name = "T5";
         wrapper.functional = TFunctional::T5;
+    } else if (wrapper.name == "6") {
+        wrapper.name = "T6";
+        wrapper.functional = TFunctional::T6;
+    } else if (wrapper.name == "7") {
+        wrapper.name = "T7";
+        wrapper.functional = TFunctional::T7;
     } else {
         throw boost::program_options::validation_error(
             boost::program_options::validation_error::invalid_option_value,
@@ -91,9 +97,12 @@ getSinograms(const CUDAHelper::GlobalMemory<float> *input,
             precalculations[tfunctional] =
                 TFunctional5_prepare(input->rows(), input->cols());
             break;
+        case TFunctional::T7:
+            precalculations[tfunctional] =
+                TFunctional7_prepare(input->rows(), input->cols());
+            break;
         case TFunctional::Radon:
         case TFunctional::T6:
-        case TFunctional::T7:
         default:
             break;
         }
@@ -140,8 +149,11 @@ getSinograms(const CUDAHelper::GlobalMemory<float> *input,
             	TFunctional6(input_rotated, outputs[t], a_step);
             	break;
             case TFunctional::T7:
-            	TFunctional7(input_rotated, outputs[t], a_step);
-            	break;
+                TFunctional7(
+                    input_rotated,
+                    (TFunctional7_precalc_t *)precalculations[tfunctional],
+                    outputs[t], a_step);
+                break;
             }
         }
     }
@@ -167,9 +179,14 @@ getSinograms(const CUDAHelper::GlobalMemory<float> *input,
             TFunctional345_destroy(precalc);
             break;
         }
+        case TFunctional::T7: {
+            TFunctional7_precalc_t *precalc =
+                (TFunctional7_precalc_t *)it->second;
+            TFunctional7_destroy(precalc);
+            break;
+        }
         case TFunctional::Radon:
         case TFunctional::T6:
-        case TFunctional::T7:
         default:
             break;
         }

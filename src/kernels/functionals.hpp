@@ -55,8 +55,16 @@ void TFunctional6(const CUDAHelper::GlobalMemory<float> *input,
                   CUDAHelper::GlobalMemory<float> *output, int a);
 
 // T7
+typedef struct {
+    CUDAHelper::GlobalMemory<float> *prescan;
+    CUDAHelper::GlobalMemory<int> *medians;
+    CUDAHelper::GlobalMemory<float> *transformed;
+} TFunctional7_precalc_t;
+TFunctional7_precalc_t *TFunctional7_prepare(size_t rows, size_t cols);
 void TFunctional7(const CUDAHelper::GlobalMemory<float> *input,
+                  TFunctional7_precalc_t *precalc,
                   CUDAHelper::GlobalMemory<float> *output, int a);
+void TFunctional7_destroy(TFunctional7_precalc_t *precalc);
 
 
 //
