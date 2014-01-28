@@ -98,13 +98,13 @@ nearest_orthonormal_sinogram(const CUDAHelper::GlobalMemory<float> *input,
         CUDAHelper::checkState();
     }
 
-    // Launch weighed median kernel
+    // Launch weighted median kernel
     CUDAHelper::GlobalMemory<int> *medians =
         new CUDAHelper::GlobalMemory<int>(CUDAHelper::size_1d(cols), 0);
     {
         dim3 threads(1, rows);
         dim3 blocks(cols, 1);
-        findWeighedMedian_kernel << <blocks, threads, rows * sizeof(float)>>>
+        findWeightedMedian_kernel << <blocks, threads, rows * sizeof(float)>>>
             (*input, *prescan, *medians);
         CUDAHelper::checkState();
     }

@@ -91,7 +91,7 @@ __global__ void prescan_kernel(const float *input, float *output,
     output[row + col * rows] = temp[rows + row];
 }
 
-__global__ void findWeighedMedian_kernel(const float *input,
+__global__ void findWeightedMedian_kernel(const float *input,
                                          const float *prescan, int *output) {
     // Shared memory
     extern __shared__ float temp[];
@@ -239,11 +239,11 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input,
         CUDAHelper::checkState();
     }
 
-    // Launch weighed median kernel
+    // Launch weighted median kernel
     {
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
-        findWeighedMedian_kernel
+        findWeightedMedian_kernel
                 << <blocks, threads, input->rows() * sizeof(float)>>>
             (*input, *precalc->prescan, *precalc->medians);
         CUDAHelper::checkState();
@@ -312,11 +312,11 @@ void TFunctional2(const CUDAHelper::GlobalMemory<float> *input,
         CUDAHelper::checkState();
     }
 
-    // Launch weighed median kernel
+    // Launch weighted median kernel
     {
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
-        findWeighedMedian_kernel
+        findWeightedMedian_kernel
                 << <blocks, threads, input->rows() * sizeof(float)>>>
             (*input, *precalc->prescan, *precalc->medians);
         CUDAHelper::checkState();
@@ -493,11 +493,11 @@ void TFunctional345(const CUDAHelper::GlobalMemory<float> *input,
         CUDAHelper::checkState();
     }
 
-    // Launch weighed median kernel
+    // Launch weighted median kernel
     {
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
-        findWeighedMedian_kernel
+        findWeightedMedian_kernel
                 << <blocks, threads, input->rows() * sizeof(float)>>>
             (*input, *precalc->prescan, *precalc->medians);
         CUDAHelper::checkState();
@@ -596,14 +596,14 @@ void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
         CUDAHelper::checkState();
     }
 
-    // Launch weighed median kernel
+    // Launch weighted median kernel
     // TODO: precalculate
     CUDAHelper::GlobalMemory<int> *medians = new CUDAHelper::GlobalMemory<int>(
         CUDAHelper::size_1d(input->cols()), 0);
     {
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
-        findWeighedMedian_kernel
+        findWeightedMedian_kernel
                 << <blocks, threads, input->rows() * sizeof(float)>>>
             (*input, *prescan, *medians);
         CUDAHelper::checkState();
