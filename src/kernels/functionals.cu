@@ -113,6 +113,7 @@ __global__ void findWeightedMedian_kernel(const float *input,
     }
 }
 
+#ifdef WITH_CULA
 __device__ float hermite_polynomial(unsigned int order, float x) {
     switch (order) {
     case 0:
@@ -136,6 +137,7 @@ __device__ float hermite_function(unsigned int order, float x) {
            (sqrt(pow(2.0, (double)order) * factorial(order) * sqrt(M_PI)) *
             exp(x * x / 2));
 }
+#endif
 
 
 
