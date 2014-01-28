@@ -137,10 +137,10 @@ __device__ float hermite_function(unsigned int order, float x) {
 }
 
 
+
 ////////////////////////////////////////////////////////////////////////////////
 // T-functionals
 //
-
 
 //
 // Radon
@@ -524,6 +524,25 @@ void TFunctional345_destroy(TFunctional345_precalc_t *precalc) {
 }
 
 
+//
+// T6
+//
+
+void TFunctional6(const CUDAHelper::GlobalMemory<float> *input,
+                  CUDAHelper::GlobalMemory<float> *output, int a) {
+}
+
+
+//
+// T7
+//
+
+void TFunctional7(const CUDAHelper::GlobalMemory<float> *input,
+                  CUDAHelper::GlobalMemory<float> *output, int a) {
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // P-functionals
 //
@@ -625,8 +644,8 @@ void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
 // P3
 //
 
-void PFunctional3(const CUDAHelper::GlobalMemory<float> *input,
-                  CUDAHelper::GlobalMemory<float> *output) {}
+void PFunctional3(const CUDAHelper::GlobalMemory<float> *,
+                  CUDAHelper::GlobalMemory<float> *) {}
 
 //
 // Hermite P-functionals

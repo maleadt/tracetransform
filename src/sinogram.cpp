@@ -57,7 +57,7 @@ getSinograms(const CUDAHelper::GlobalMemory<float> *input,
              unsigned int angle_stepsize,
              const std::vector<TFunctionalWrapper> &tfunctionals) {
     assert(input->size(0) == input->size(1)); // padded image!
-    const int rows = input->size(0);
+    //const int rows = input->size(0);
     const int cols = input->size(1);
 
     // Calculate and allocate the output matrix
@@ -69,6 +69,8 @@ getSinograms(const CUDAHelper::GlobalMemory<float> *input,
             CUDAHelper::size_2d(p_steps, a_steps), 0);
 
     // Pre-calculate
+    // NOTE: some of these pre-calculations are just memory allocations
+    // TODO: also do this on CPU?
     std::map<TFunctional, void *> precalculations;
     for (size_t t = 0; t < tfunctionals.size(); t++) {
         TFunctional tfunctional = tfunctionals[t].functional;
@@ -91,8 +93,6 @@ getSinograms(const CUDAHelper::GlobalMemory<float> *input,
                 TFunctional5_prepare(input->rows(), input->cols());
             break;
         case TFunctional::Radon:
-        case TFunctional::T1:
-        case TFunctional::T2:
         case TFunctional::T6:
         case TFunctional::T7:
         default:
@@ -137,6 +137,12 @@ getSinograms(const CUDAHelper::GlobalMemory<float> *input,
                     (TFunctional345_precalc_t *)precalculations[tfunctional],
                     outputs[t], a_step);
                 break;
+            case TFunctional::T6:
+            	TFunctional6(input_rotated, outputs[t], a_step);
+            	break;
+            case TFunctional::T7:
+            	TFunctional7(input_rotated, outputs[t], a_step);
+            	break;
             }
         }
     }
@@ -163,8 +169,6 @@ getSinograms(const CUDAHelper::GlobalMemory<float> *input,
             break;
         }
         case TFunctional::Radon:
-        case TFunctional::T1:
-        case TFunctional::T2:
         case TFunctional::T6:
         case TFunctional::T7:
         default:

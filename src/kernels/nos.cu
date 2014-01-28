@@ -55,7 +55,7 @@ __global__ void alignment_kernel(const float *input, const int *offsets,
                                  float *output) {
     // Compute the thread dimensions
     const int col = blockIdx.x;
-    const int cols = gridDim.x;
+    //const int cols = gridDim.x;
     const int row = threadIdx.y;
     const int rows = blockDim.y;
 
@@ -66,7 +66,7 @@ __global__ void alignment_kernel(const float *input, const int *offsets,
 __global__ void identity_kernel(float *output) {
     // Compute the thread dimensions
     const int col = blockIdx.x;
-    const int cols = gridDim.x;
+    //const int cols = gridDim.x;
     const int row = threadIdx.y;
     const int rows = blockDim.y;
 

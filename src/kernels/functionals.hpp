@@ -9,6 +9,7 @@
 // Local
 #include "../cudahelper/memory.hpp"
 
+
 //
 // T functionals
 //
@@ -48,6 +49,15 @@ void TFunctional345(const CUDAHelper::GlobalMemory<float> *input,
                     TFunctional345_precalc_t *precalc,
                     CUDAHelper::GlobalMemory<float> *output, int a);
 void TFunctional345_destroy(TFunctional345_precalc_t *precalc);
+
+// T6
+void TFunctional6(const CUDAHelper::GlobalMemory<float> *input,
+                  CUDAHelper::GlobalMemory<float> *output, int a);
+
+// T7
+void TFunctional7(const CUDAHelper::GlobalMemory<float> *input,
+                  CUDAHelper::GlobalMemory<float> *output, int a);
+
 
 //
 // P-functionals
