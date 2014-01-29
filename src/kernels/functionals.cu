@@ -487,7 +487,6 @@ TFunctional7_precalc_t *TFunctional7_prepare(size_t rows, size_t cols) {
     return precalc;
 }
 
-// TODO: memcpy?
 __global__ void transformMedianDomain_kernel(const float *input,
                                              const int *medians,
                                              float *output) {
