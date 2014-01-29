@@ -8,92 +8,16 @@
 // Standard library
 #include <stdio.h>
 
-// CUDA
-#include <math_constants.h>
-
 // Local
 #include "../logger.hpp"
+#include "scan.cu"
+#include "sort.cu"
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Auxiliary
 //
-
-enum scan_operation_t {
-    SUM = 0,
-    MIN,
-    MAX
-};
-
-// TODO: replace with faster tree-based algorithm
-//       http://stackoverflow.com/questions/11385475/scan-array-cuda
-__device__ void scan_array(float *temp, int index, int length,
-                           scan_operation_t operation) {
-    int pout = 0, pin = 1;
-    for (int offset = 1; offset < length; offset *= 2) {
-        // Swap double buffer indices
-        pout = 1 - pout;
-        pin = 1 - pin;
-        if (index >= offset) {
-            switch (operation) {
-            case SUM:
-                temp[pout * length + index] =
-                    temp[pin * length + index] +
-                    temp[pin * length + index - offset];
-                break;
-            case MIN:
-                temp[pout * length + index] =
-                    fmin(temp[pin * length + index],
-                         temp[pin * length + index - offset]);
-                break;
-            case MAX:
-                temp[pout * length + index] =
-                    fmax(temp[pin * length + index],
-                         temp[pin * length + index - offset]);
-                break;
-            }
-        } else {
-            temp[pout * length + index] = temp[pin * length + index];
-        }
-        __syncthreads();
-    }
-    temp[pin * length + index] = temp[pout * length + index];
-}
-
-enum prescan_function_t {
-    NONE = 0,
-    SQRT
-};
-
-__global__ void prescan_kernel(const float *input, float *output,
-                               const prescan_function_t prescan_function) {
-    // Shared memory
-    extern __shared__ float temp[];
-
-    // Compute the thread dimensions
-    const int col = blockIdx.x;
-    const int row = threadIdx.y;
-    const int rows = blockDim.y;
-
-    // Fetch
-    switch (prescan_function) {
-    case SQRT:
-        temp[row] = sqrt(input[row + col * rows]);
-        break;
-    case NONE:
-    default:
-        temp[row] = input[row + col * rows];
-        break;
-    }
-    __syncthreads();
-
-    // Scan
-    scan_array(temp, row, rows, SUM);
-
-    // Write back
-    output[row + col * rows] = temp[rows + row];
-}
 
 __global__ void findWeightedMedian_kernel(const float *input,
                                           const float *prescan, int *output) {
@@ -141,6 +65,14 @@ __device__ float hermite_function(unsigned int order, float x) {
             exp(x * x / 2));
 }
 #endif
+
+unsigned int pow2ge(unsigned int n) {
+    unsigned int k = 1;
+    while (k < n)
+        k *= 2;
+    return k;
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -579,66 +511,6 @@ __global__ void transformMedianDomain_kernel(const float *input,
         output[row + col * rows] = 0;
 }
 
-__device__ inline void swap(float &a, float &b) {
-    // Alternative swap doesn't use a temporary register:
-    // a ^= b;
-    // b ^= a;
-    // a ^= b;
-
-    float tmp = a;
-    a = b;
-    b = tmp;
-}
-
-// TODO: properly support non-pow2 row lengths
-//       http://www.iti.fh-flensburg.de/lang/algorithmen/sortieren/bitonic/oddn.htm
-__global__ void sortBitonic_kernel(float *input, const int rows_input) {
-    // Shared memory
-    extern __shared__ float temp[];
-
-    // Compute the thread dimensions
-    const int col = blockIdx.x;
-    const int row = threadIdx.y;
-    const int rows = blockDim.y;
-
-    // Fetch
-    if (row < rows_input)
-        temp[row] = input[row + col * rows_input];
-    else
-        temp[row] = CUDART_INF_F;
-    __syncthreads();
-
-    // Sort
-    for (unsigned int major = 2; major <= rows; major *= 2) {
-        // Merge
-        for (unsigned int minor = major / 2; minor > 0; minor /= 2) {
-            // Find sorting partner
-            unsigned int row2 = row ^ minor;
-
-            // The threads processing the lowest row sort the array
-            if (row2 > row) {
-        if ((row & major) == 0) {
-            // Sort ascending
-            if (temp[row] > temp[row2]) {
-                swap(temp[row], temp[row2]);
-            }
-        } else {
-            // Sort descending
-            if (temp[row] < temp[row2]) {
-                swap(temp[row], temp[row2]);
-            }
-        }
-            }
-
-            __syncthreads();
-    }
-    }
-
-    // Write back
-    if (row < rows_input)
-        input[row + col * rows_input] = temp[row];
-}
-
 // NOTE: this is just the weighted median kernel + value writeback
 __global__ void TFunctional7_kernel(const float *input, const float *prescan,
                                     float *output, const int a) {
@@ -660,13 +532,6 @@ __global__ void TFunctional7_kernel(const float *input, const float *prescan,
         if (temp[row - 1] < threshold && temp[row] >= threshold)
             output[col + a * rows] = input[row + col * rows];
     }
-}
-
-unsigned int pow2ge(unsigned int n) {
-    unsigned int k = 1;
-    while (k < n)
-        k *= 2;
-    return k;
 }
 
 void TFunctional7(const CUDAHelper::GlobalMemory<float> *input,
@@ -845,11 +710,11 @@ void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
 void PFunctional3(const CUDAHelper::GlobalMemory<float> *,
                   CUDAHelper::GlobalMemory<float> *) {}
 
+#ifdef WITH_CULA
+
 //
 // Hermite P-functionals
 //
-
-#ifdef WITH_CULA
 
 __global__ void PFunctionalHermite_kernel(const float *input, float *output,
                                           unsigned int order, int center) {
