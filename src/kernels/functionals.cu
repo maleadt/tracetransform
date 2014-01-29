@@ -487,7 +487,7 @@ TFunctional7_precalc_t *TFunctional7_prepare(size_t rows, size_t cols) {
     return precalc;
 }
 
-__global__ void transformMedianDomain_kernel(const float *input,
+__global__ void extractMedianDomain_kernel(const float *input,
                                              const int *medians,
                                              float *output) {
     // Shared memory
@@ -561,7 +561,7 @@ void TFunctional7(const CUDAHelper::GlobalMemory<float> *input,
     {
         dim3 threads(1, input->rows());
         dim3 blocks(input->rows(), 1);
-        transformMedianDomain_kernel <<<blocks, threads>>>
+        extractMedianDomain_kernel <<<blocks, threads>>>
             (*input, *precalc->medians, *precalc->transformed);
         CUDAHelper::checkState();
     }
