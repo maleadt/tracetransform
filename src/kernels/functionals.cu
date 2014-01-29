@@ -465,8 +465,183 @@ void TFunctional345_destroy(TFunctional345_precalc_t *precalc) {
 // T6
 //
 
+TFunctional6_precalc_t *TFunctional6_prepare(size_t rows, size_t cols) {
+    TFunctional6_precalc_t *precalc =
+        (TFunctional6_precalc_t *)malloc(sizeof(TFunctional6_precalc_t));
+    precalc->prescan =
+        new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
+    precalc->medians =
+        new CUDAHelper::GlobalMemory<int>(CUDAHelper::size_1d(cols), 0);
+    precalc->extracted =
+        new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
+    precalc->weighted =
+        new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
+    precalc->indices =
+        new CUDAHelper::GlobalMemory<int>(CUDAHelper::size_2d(rows, cols));
+    precalc->permuted =
+        new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
+
+    return precalc;
+}
+
+// Extract the positive domain specified by the median, and weigh it
+// NOTE: this just sets [0,median[ to 0, which we account for in other kernels
+__global__ void TFunctional6_extract_kernel(const float *input,
+                                           const int *medians,
+                                           float *output1, float *output2) {
+    // Shared memory
+    __shared__ int median;
+
+    // Compute the thread dimensions
+    const int col = blockIdx.x;
+    const int row = threadIdx.y;
+    const int rows = blockDim.y;
+
+    // Fetch index
+    if (row == 0)
+        median = medians[col];
+    __syncthreads();
+
+    // Copy (and optionally weight) the positive domain, set to 0 otherwise
+    if (row >= median) {
+    	float value = input[row + col * rows];
+		output1[row + col * rows] = value;
+		output2[row + col * rows] = value * (row-median);
+    } else {
+        output1[row + col * rows] = 0;
+        output2[row + col * rows] = 0;
+    }
+}
+
+// Permute the unweighted input based on sorting indices of the weighted input
+__global__ void TFunctional6_permute_kernel(const float *input, const int *indices,
+		                         const int *medians, float *output)
+{
+    // Shared memory
+    __shared__ int median;
+
+    // Compute the thread dimensions
+    const int col = blockIdx.x;
+    const int row = threadIdx.y;
+    const int rows = blockDim.y;
+
+    // Fetch index
+    if (row == 0)
+        median = medians[col];
+    __syncthreads();
+
+    // Permute the array
+    if (row >= median) {
+		int permuted_row = indices[row + col * rows];
+		output[row + col * rows] = input[permuted_row + col * rows];
+    } else {
+    	output[row + col * rows] = 0;
+    }
+}
+
+// TODO: this is just findWeighedMedian + value writeback
+__global__ void TFunctional6_kernel(const float *input, const float *prescan,
+                                    float *output, const int a) {
+    // Shared memory
+    extern __shared__ float temp[];
+
+    // Compute the thread dimensions
+    const int col = blockIdx.x;
+    const int row = threadIdx.y;
+    const int rows = blockDim.y;
+
+    // Fetch
+    temp[row] = prescan[row + col * rows];
+    __syncthreads();
+
+    // Find median value
+    if (row > 0) {
+        float threshold = temp[rows - 1] / 2;
+        if (temp[row - 1] < threshold && temp[row] >= threshold) {
+            output[col + a * rows] = input[row + col * rows];
+        }
+    }
+}
+
 void TFunctional6(const CUDAHelper::GlobalMemory<float> *input,
+        TFunctional6_precalc_t *precalc,
                   CUDAHelper::GlobalMemory<float> *output, int a) {
+    // Launch prefix sum kernel
+    {
+        dim3 threads(1, input->rows());
+        dim3 blocks(input->cols(), 1);
+        prescan_kernel <<<blocks, threads, 2 * input->rows() * sizeof(float)>>>
+            (*input, *precalc->prescan, SQRT);
+        CUDAHelper::checkState();
+    }
+
+    // Launch weighted median kernel
+    {
+        dim3 threads(1, input->rows());
+        dim3 blocks(input->cols(), 1);
+        findWeightedMedian_kernel
+                <<<blocks, threads, input->rows() * sizeof(float)>>>
+            (*input, *precalc->prescan, *precalc->medians);
+        CUDAHelper::checkState();
+    }
+
+    // Extract and weight the positive domain of r
+    {
+        dim3 threads(1, input->rows());
+        dim3 blocks(input->cols(), 1);
+        TFunctional6_extract_kernel<<<blocks, threads>>>
+            (*input, *precalc->medians, *precalc->extracted, *precalc->weighted);
+        CUDAHelper::checkState();
+    }
+
+    // Sort the weighted data, and keep the indices
+    {
+        const int rows_padded = pow2ge(input->rows());
+        dim3 threads(1, rows_padded);
+        dim3 blocks(input->cols(), 1);
+        sortBitonic_kernel <<<blocks, threads, 2 * rows_padded * sizeof(float)>>>
+            (*precalc->weighted, input->rows(), *precalc->indices);
+        CUDAHelper::checkState();
+    }
+
+    // Permute
+    {
+        dim3 threads(1, input->rows());
+        dim3 blocks(input->cols(), 1);
+        TFunctional6_permute_kernel<<<blocks,  threads>>>
+        		(*precalc->extracted, *precalc->indices,
+        		 *precalc->medians, *precalc->permuted);
+        CUDAHelper::checkState();
+    }
+
+    // Launch prefix sum kernel
+    {
+        dim3 threads(1, input->rows());
+        dim3 blocks(input->cols(), 1);
+        prescan_kernel <<<blocks, threads, 2 * input->rows() * sizeof(float)>>>
+            (*precalc->permuted, *precalc->prescan, SQRT);
+        CUDAHelper::checkState();
+    }
+
+    // Launch T6 kernel
+    {
+        dim3 threads(1, input->rows());
+        dim3 blocks(input->cols(), 1);
+        TFunctional6_kernel
+                <<<blocks, threads, input->rows() * sizeof(float)>>>
+            (*precalc->weighted, *precalc->prescan, *output, a);
+        CUDAHelper::checkState();
+    }
+}
+
+void TFunctional6_destroy(TFunctional6_precalc_t *precalc) {
+    free(precalc->prescan);
+    free(precalc->medians);
+    free(precalc->extracted);
+    free(precalc->weighted);
+    free(precalc->indices);
+    free(precalc->permuted);
+    free(precalc);
 }
 
 
@@ -481,15 +656,17 @@ TFunctional7_precalc_t *TFunctional7_prepare(size_t rows, size_t cols) {
         new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
     precalc->medians =
         new CUDAHelper::GlobalMemory<int>(CUDAHelper::size_1d(cols), 0);
-    precalc->transformed =
+    precalc->extracted =
         new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
 
     return precalc;
 }
 
-__global__ void extractMedianDomain_kernel(const float *input,
-                                             const int *medians,
-                                             float *output) {
+// Extract the positive domain specified by the median
+// NOTE: this just sets [0,median[ to 0, which we account for in other kernels
+__global__ void TFunctional7_extract_kernel(const float *input,
+                                           const int *medians,
+                                           float *output) {
     // Shared memory
     __shared__ int median;
 
@@ -503,14 +680,14 @@ __global__ void extractMedianDomain_kernel(const float *input,
         median = medians[col];
     __syncthreads();
 
-    // Copy the positive domain, set to 0 otherwise
-    if (row >= median)
-        output[row + col * rows] = input[row + col * rows];
-    else
+    // Copy (and optionally weight) the positive domain, set to 0 otherwise
+    if (row >= median) {
+		output[row + col * rows] = input[row + col * rows];
+    } else
         output[row + col * rows] = 0;
 }
 
-// NOTE: this is just the weighted median kernel + value writeback
+// TODO: this is just findWeighedMedian + value writeback
 __global__ void TFunctional7_kernel(const float *input, const float *prescan,
                                     float *output, const int a) {
     // Shared memory
@@ -556,23 +733,21 @@ void TFunctional7(const CUDAHelper::GlobalMemory<float> *input,
     }
 
     // Extract the positive domain of r
-    // NOTE: this doesn't actually make the domain smaller but just sets values
-    //       falling outside of it to 0, since this simplifies quite a lot
     {
         dim3 threads(1, input->rows());
-        dim3 blocks(input->rows(), 1);
-        extractMedianDomain_kernel <<<blocks, threads>>>
-            (*input, *precalc->medians, *precalc->transformed);
+        dim3 blocks(input->cols(), 1);
+        TFunctional7_extract_kernel <<<blocks, threads>>>
+            (*input, *precalc->medians, *precalc->extracted);
         CUDAHelper::checkState();
     }
 
-    // Sort the transformed data
+    // Sort the extracted data
     {
         const int rows_padded = pow2ge(input->rows());
         dim3 threads(1, rows_padded);
-        dim3 blocks(input->rows(), 1);
+        dim3 blocks(input->cols(), 1);
         sortBitonic_kernel <<<blocks, threads, rows_padded * sizeof(float)>>>
-            (*precalc->transformed, input->rows());
+            (*precalc->extracted, input->rows(), NULL);
         CUDAHelper::checkState();
     }
 
@@ -581,7 +756,7 @@ void TFunctional7(const CUDAHelper::GlobalMemory<float> *input,
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
         prescan_kernel <<<blocks, threads, 2 * input->rows() * sizeof(float)>>>
-            (*precalc->transformed, *precalc->prescan, SQRT);
+            (*precalc->extracted, *precalc->prescan, SQRT);
         CUDAHelper::checkState();
     }
 
@@ -591,7 +766,7 @@ void TFunctional7(const CUDAHelper::GlobalMemory<float> *input,
         dim3 blocks(input->cols(), 1);
         TFunctional7_kernel
                 <<<blocks, threads, input->rows() * sizeof(float)>>>
-            (*precalc->transformed, *precalc->prescan, *output, a);
+            (*precalc->extracted, *precalc->prescan, *output, a);
         CUDAHelper::checkState();
     }
 }
@@ -599,7 +774,7 @@ void TFunctional7(const CUDAHelper::GlobalMemory<float> *input,
 void TFunctional7_destroy(TFunctional7_precalc_t *precalc) {
     free(precalc->prescan);
     free(precalc->medians);
-    free(precalc->transformed);
+    free(precalc->extracted);
     free(precalc);
 }
 

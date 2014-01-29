@@ -97,12 +97,15 @@ getSinograms(const CUDAHelper::GlobalMemory<float> *input,
             precalculations[tfunctional] =
                 TFunctional5_prepare(input->rows(), input->cols());
             break;
+        case TFunctional::T6:
+            precalculations[tfunctional] =
+                TFunctional6_prepare(input->rows(), input->cols());
+            break;
         case TFunctional::T7:
             precalculations[tfunctional] =
                 TFunctional7_prepare(input->rows(), input->cols());
             break;
         case TFunctional::Radon:
-        case TFunctional::T6:
         default:
             break;
         }
@@ -146,7 +149,10 @@ getSinograms(const CUDAHelper::GlobalMemory<float> *input,
                     outputs[t], a_step);
                 break;
             case TFunctional::T6:
-            	TFunctional6(input_rotated, outputs[t], a_step);
+                TFunctional6(
+                    input_rotated,
+                    (TFunctional6_precalc_t *)precalculations[tfunctional],
+                    outputs[t], a_step);
             	break;
             case TFunctional::T7:
                 TFunctional7(
@@ -179,6 +185,12 @@ getSinograms(const CUDAHelper::GlobalMemory<float> *input,
             TFunctional345_destroy(precalc);
             break;
         }
+        case TFunctional::T6: {
+            TFunctional6_precalc_t *precalc =
+                (TFunctional6_precalc_t *)it->second;
+            TFunctional6_destroy(precalc);
+            break;
+        }
         case TFunctional::T7: {
             TFunctional7_precalc_t *precalc =
                 (TFunctional7_precalc_t *)it->second;
@@ -186,7 +198,6 @@ getSinograms(const CUDAHelper::GlobalMemory<float> *input,
             break;
         }
         case TFunctional::Radon:
-        case TFunctional::T6:
         default:
             break;
         }
