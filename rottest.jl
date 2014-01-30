@@ -14,12 +14,12 @@ function main(args::Vector{Any})
     angle = uint(args[2])
 
     # Read image
-    input::Image{Float32} = gray2mat(imread(filename))
+    input::Image{Float64} = gray2mat(imread(filename))
     printmat(int(255*input))
 
     # Rotate image
-    origin::Vector{Float32} = floor(([size(input)...] .+ 1) ./ 2)
-    input_rotated::Image{Float32} = rotate(input, origin, angle)
+    origin::Vector{Float64} = floor(([size(input)...] .+ 1) ./ 2)
+    input_rotated::Image{Float64} = rotate(input, origin, angle)
 
     # Output image
     print("\n")
