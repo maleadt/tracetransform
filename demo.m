@@ -7,9 +7,9 @@ elseif exist('tfunctionals') == 0
     error('tfunctionals not defined');
 elseif exist('pfunctionals') == 0
     error('pfunctionals not defined');
-elseif exist('wmode') == 0            % Renaming mode by wmode to avoid conflicts with Matlab's predefined function
+elseif exist('program_mode') == 0
     error('mode not defined');
-    if strcmp(wmode, 'benchmark')
+    if strcmp(program_mode, 'benchmark')
         if exist('iterations') == 0
             error('iterations not defined');
         end
@@ -17,7 +17,7 @@ elseif exist('wmode') == 0            % Renaming mode by wmode to avoid conflict
 end
 
 % Check optional arguments
-if exist('angle_interval') == 0      % Renaming angle by angle_interval to avoid conflicts with Matlab's predefined function
+if exist('angle_interval') == 0
         angle_interval = 1;
 end
 
@@ -40,7 +40,7 @@ end
 image = mat2gray(imread(imageFile, 'pgm'));
 padded = prepare_transform(image, angle_interval, orthonormal);
 
-if strcmp(wmode, 'calculate')
+if strcmp(program_mode, 'calculate')
     % Get output data
     [sinogram circus] = get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
 
@@ -72,7 +72,7 @@ if strcmp(wmode, 'calculate')
         end
     end
 
-elseif strcmp(wmode, 'benchmark')
+elseif strcmp(program_mode, 'benchmark')
     % Warm-up
     get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
 
