@@ -324,10 +324,13 @@ float PFunctional1(const float *data, const size_t length) {
 
 float PFunctional2(const float *data, const size_t length) {
     // Sorting the data
-    qsort((float *)data, length, sizeof(float), compareFloat);
+    float sorted[length];
+    memcpy(sorted, data, length * sizeof(float));
+    qsort(sorted, length, sizeof(float), compareFloat);
+
     // Find the weighted median
-    size_t median = findWeightedMedian(data, length);
-    return data[median];
+    size_t median = findWeightedMedian(sorted, length);
+    return sorted[median];
 }
 
 
