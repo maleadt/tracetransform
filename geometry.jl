@@ -62,7 +62,7 @@ function pad(input::Image{Float32})
     rLast::Int = iceil(hypot(([size(input)...] .- 1 - origin)...)) + 1
     rFirst::Int = -rLast
     nBins::Int = rLast - rFirst + 1
-    padded::Array = zeros(nBins, nBins)
+    padded::Array{Float32} = zeros(nBins, nBins)
     origin_padded::Vector = ifloor(([size(padded)...] .+ 1) ./ 2)
     offset::Vector = origin_padded - origin
     endpoint::Vector = offset+([size(input)...])

@@ -33,7 +33,7 @@ function parse_pfunctionals(args::Vector{String})
             wrapper = PFunctionalWrapper(P3)
         elseif functional[1] == 'H'
             wrapper = PFunctionalWrapper(Hermite)
-            wrapper.arguments.order = parseint(functional[2:])
+            wrapper.arguments.order = parseint(functional[2:end])
         else
             error("unknown P-functional")
         end
