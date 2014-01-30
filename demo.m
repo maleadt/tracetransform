@@ -18,7 +18,11 @@ end
 
 % Check optional arguments
 if exist('angle_interval') == 0
-        angle_interval = 1;
+    angle_interval = 1;
+end
+if exist('directory') ~= 0
+    addpath(pwd())
+    cd(directory);
 end
 
 % Check orthonormal
