@@ -48,12 +48,6 @@ Eigen::MatrixXf resize(const Eigen::MatrixXf &input, const size_t rows,
 
 Eigen::MatrixXf pad(const Eigen::MatrixXf &image);
 
-float arithmetic_mean(const Eigen::VectorXf &input);
-
-float standard_deviation(const Eigen::VectorXf &input);
-
-Eigen::VectorXf zscore(const Eigen::VectorXf &input);
-
 template <typename T> int sgn(T val) { return (T(0) < val) - (val < T(0)); }
 
 std::string readable_si(double number, const std::string unit,

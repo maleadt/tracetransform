@@ -22,27 +22,6 @@
 // Auxiliary
 //
 
-__global__ void findWeightedMedian_kernel(const float *input,
-                                          const float *prescan, int *output) {
-    // Shared memory
-    extern __shared__ float temp[];
-
-    // Compute the thread dimensions
-    const int col = blockIdx.x;
-    const int row = threadIdx.y;
-    const int rows = blockDim.y;
-
-    // Fetch
-    temp[row] = prescan[row + col * rows];
-    __syncthreads();
-
-    if (row > 0) {
-        float threshold = temp[rows - 1] / 2;
-        if (temp[row - 1] < threshold && temp[row] >= threshold)
-            output[col] = row;
-    }
-}
-
 #ifdef WITH_CULA
 __device__ float hermite_polynomial(unsigned int order, float x) {
     switch (order) {

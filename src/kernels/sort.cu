@@ -39,7 +39,7 @@ __global__ void sortBitonic_kernel(float *input, const int rows_input, int *indi
     const int row = threadIdx.y;
     const int rows = blockDim.y;
 
-    // Offset into shared memory (only valid if indices is set)
+    // Offsets into shared memory (only valid if indices is set)
     // TODO: int?
     float *local_indices = &temp[rows];
 

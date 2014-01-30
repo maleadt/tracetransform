@@ -17,6 +17,7 @@
 #ifdef WITH_CULA
 #include "kernels/nos.hpp"
 #endif
+#include "kernels/stats.hpp"
 
 
 //
@@ -109,20 +110,23 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
             std::vector<CUDAHelper::GlobalMemory<float> *> circusfunctions =
                 getCircusFunctions(sinograms[t], pfunctionals);
         for (size_t p = 0; p < pfunctionals.size(); p++) {
-            // TEMPORARY: download the image
-            Eigen::VectorXf circusfunction_data(circusfunctions[p]->size(0));
-            circusfunctions[p]->download(circusfunction_data.data());
-
             // Normalize
-            Eigen::VectorXf normalized = zscore(circusfunction_data);
+            CUDAHelper::GlobalMemory<float> *normalized =
+                zscore(circusfunctions[p]);
 
             if (write_data) {
+                // Download the trace
+                Eigen::VectorXf normalized_data(circusfunctions[p]->size(0));
+                normalized->download(normalized_data.data());
+
                 // Save the circus trace
                 std::stringstream fn_trace_data;
                 fn_trace_data << "trace_" << tfunctionals[t].name << "-"
                               << pfunctionals[p].name << ".csv";
-                writecsv(fn_trace_data.str(), normalized);
+                writecsv(fn_trace_data.str(), normalized_data);
             }
+
+            delete normalized;
         }
 
         // Clean-up

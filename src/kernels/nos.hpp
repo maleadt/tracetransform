@@ -14,7 +14,7 @@
 // Routines
 //
 
-extern CUDAHelper::GlobalMemory<float> *
+CUDAHelper::GlobalMemory<float> *
 nearest_orthonormal_sinogram(const CUDAHelper::GlobalMemory<float> *input,
                              size_t &new_center);
 

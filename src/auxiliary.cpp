@@ -206,49 +206,6 @@ Eigen::MatrixXf pad(const Eigen::MatrixXf &image) {
     return image_padded;
 }
 
-float arithmetic_mean(const Eigen::VectorXf &input) {
-    if (input.size() == 0)
-        return NAN;
-
-    float sum = 0;
-    for (int i = 0; i < input.size(); i++) {
-        sum += input(i);
-    }
-
-    return sum / input.size();
-}
-
-float standard_deviation(const Eigen::VectorXf &input) {
-    if (input.size() <= 0)
-        return NAN;
-
-    float mean = arithmetic_mean(input);
-    float sum = 0;
-    for (int i = 0; i < input.size(); i++) {
-        float diff = input(i) - mean;
-        sum += diff * diff;
-    }
-
-    // NOTE: this is the default MATLAB interpretation, Wiki's std()
-    //       uses vector.cols
-    return std::sqrt(sum / (input.size() - 1));
-}
-
-Eigen::VectorXf zscore(const Eigen::VectorXf &input) {
-    if (input.size() == 0)
-        return Eigen::VectorXf();
-
-    float mean = arithmetic_mean(input);
-    float stdev = standard_deviation(input);
-
-    Eigen::VectorXf transformed(input.size());
-    for (int i = 0; i < input.size(); i++) {
-        transformed(i) = (input(i) - mean) / stdev;
-    }
-
-    return transformed;
-}
-
 std::string readable_si(double number, const std::string unit, double base) {
     const std::vector<std::string> dimensions = { "",  "K", "M", "G", "T",
                                                   "P", "E", "Z", "Y" };

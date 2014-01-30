@@ -14,7 +14,7 @@
 
 // Local
 #include "../logger.hpp"
-#include "functionals.cu"
+#include "scan.cu"
 
 
 //
@@ -93,7 +93,7 @@ nearest_orthonormal_sinogram(const CUDAHelper::GlobalMemory<float> *input,
     {
         dim3 threads(1, rows);
         dim3 blocks(cols, 1);
-        prescan_kernel << <blocks, threads, 2 * rows * sizeof(float)>>>
+        prescan_kernel <<<blocks, threads, 2 * rows * sizeof(float)>>>
             (*input, *prescan, NONE);
         CUDAHelper::checkState();
     }
@@ -104,7 +104,7 @@ nearest_orthonormal_sinogram(const CUDAHelper::GlobalMemory<float> *input,
     {
         dim3 threads(1, rows);
         dim3 blocks(cols, 1);
-        findWeightedMedian_kernel << <blocks, threads, rows * sizeof(float)>>>
+        findWeightedMedian_kernel <<<blocks, threads, rows * sizeof(float)>>>
             (*input, *prescan, *medians);
         CUDAHelper::checkState();
     }
@@ -117,7 +117,7 @@ nearest_orthonormal_sinogram(const CUDAHelper::GlobalMemory<float> *input,
     {
         dim3 threads(1, cols);
         dim3 blocks(1, 1);
-        offset_kernel << <blocks, threads, 2 * cols * sizeof(float)>>>
+        offset_kernel <<<blocks, threads, 2 * cols * sizeof(float)>>>
             (*input, *medians, sinogram_center, *offsets);
     }
     int min, max;
@@ -136,7 +136,7 @@ nearest_orthonormal_sinogram(const CUDAHelper::GlobalMemory<float> *input,
     {
         dim3 threads(1, rows);
         dim3 blocks(cols, 1);
-        alignment_kernel << <blocks, threads>>>
+        alignment_kernel <<<blocks, threads>>>
             (*input, *offsets, padding, max, *aligned);
         CUDAHelper::checkState();
     }
