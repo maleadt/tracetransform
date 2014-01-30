@@ -42,11 +42,11 @@ end
 
 % Gather input data
 image = mat2gray(imread(imageFile, 'pgm'));
-padded = prepare_transform(image, angle, orthonormal);
+padded = prepare_transform(image, angle_interval, orthonormal);
 
 if strcmp(program_mode, 'calculate')
     % Get output data
-    [sinogram circus] = get_transform(padded, tfunctionals, pfunctionals, angle, orthonormal);
+    [sinogram circus] = get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
 
     % Save sinograms
     for t_i = 1:length(tfunctionals)
@@ -78,7 +78,7 @@ if strcmp(program_mode, 'calculate')
 
 elseif strcmp(program_mode, 'benchmark')
     % Warm-up
-    get_transform(padded, tfunctionals, pfunctionals, angle, orthonormal);
+    get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
 
     for i=1:iterations
        tstart = tic;
