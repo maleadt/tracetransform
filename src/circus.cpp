@@ -73,7 +73,7 @@ Eigen::MatrixXf nearest_orthonormal_sinogram(const Eigen::MatrixXf &input,
     std::vector<int> offset(input.cols()); // TODO: Eigen vector
     for (int p = 0; p < input.cols(); p++) {
         size_t median =
-            findWeighedMedian(input.data() + p * input.rows(), input.rows());
+            findWeightedMedian(input.data() + p * input.rows(), input.rows());
         offset[p] = median - sinogram_center;
     }
 
@@ -101,35 +101,42 @@ Eigen::MatrixXf nearest_orthonormal_sinogram(const Eigen::MatrixXf &input,
     return nos;
 }
 
-Eigen::VectorXf getCircusFunction(const Eigen::MatrixXf &input,
-                                  const PFunctionalWrapper &pfunctional) {
-    // Allocate the output matrix
-    Eigen::VectorXf output(input.cols());
+std::vector<Eigen::VectorXf>
+getCircusFunctions(const Eigen::MatrixXf &input,
+                   const std::vector<PFunctionalWrapper> &pfunctionals) {
+    // Allocate the output matrices
+    std::vector<Eigen::VectorXf> outputs(pfunctionals.size());
+    for (size_t p = 0; p < pfunctionals.size(); p++)
+        outputs[p] = Eigen::VectorXf(input.cols());
 
     // Trace all columns
     #pragma omp parallel for
-    for (int p = 0; p < input.cols(); p++) {
-        float *data = (float *)(input.data() + p * input.rows());
-        size_t length = input.rows();
-        float result;
-        switch (pfunctional.functional) {
-        case PFunctional::P1:
-            result = PFunctional1(data, length);
-            break;
-        case PFunctional::P2:
-            result = PFunctional2(data, length);
-            break;
-        case PFunctional::P3:
-            result = PFunctional3(data, length);
-            break;
-        case PFunctional::Hermite:
-            result =
-                PFunctionalHermite(data, length, *pfunctional.arguments.order,
-                                   *pfunctional.arguments.center);
-            break;
+    for (int column = 0; column < input.cols(); column++) {
+        float *data = (float *)(input.data() + column * input.rows());
+
+        // Process all P-functionals
+        for (size_t p = 0; p < pfunctionals.size(); p++) {
+            PFunctional pfunctional = pfunctionals[p].functional;
+            float result;
+            switch (pfunctional) {
+            case PFunctional::P1:
+                result = PFunctional1(data, input.rows());
+                break;
+            case PFunctional::P2:
+                result = PFunctional2(data, input.rows());
+                break;
+            case PFunctional::P3:
+                result = PFunctional3(data, input.rows());
+                break;
+            case PFunctional::Hermite:
+                result = PFunctionalHermite(data, input.rows(),
+                                            *pfunctionals[p].arguments.order,
+                                            *pfunctionals[p].arguments.center);
+                break;
+            }
+            outputs[p](column) = result;
         }
-        output(p) = result;
     }
 
-    return output;
+    return outputs;
 }

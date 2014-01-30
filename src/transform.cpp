@@ -82,15 +82,13 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
         }
 
         // Process all P-functionals
+        clog(debug) << "Calculating circusfunctions for given P-functionals"
+                    << std::endl;
+        std::vector<Eigen::VectorXf> circusfunctions =
+            getCircusFunctions(sinograms[t], pfunctionals);
         for (size_t p = 0; p < pfunctionals.size(); p++) {
-            // Calculate the circus function
-            clog(debug) << "Calculating circus function using P-functional "
-                        << pfunctionals[p].name << std::endl;
-            Eigen::VectorXf circus =
-                getCircusFunction(sinograms[t], pfunctionals[p]);
-
             // Normalize
-            Eigen::VectorXf normalized = zscore(circus);
+            Eigen::VectorXf normalized = zscore(circusfunctions[p]);
 
             if (write_data) {
                 // Save the circus trace

@@ -34,27 +34,39 @@ int main(int argc, char **argv) {
 
     // Declare named options
     boost::program_options::options_description desc("Allowed options");
-    desc.add_options()("help,h", "produce help message")(
-        "quiet,q", "only display errors and warnings")(
-        "verbose,v", "display some more details")("debug,d",
-                                                  "display even more details")(
-        "t-functional,T",
-        boost::program_options::value<std::vector<TFunctionalWrapper> >(
-            &tfunctionals)->required(),
-        "T-functionals")(
-        "p-functional,P",
-        boost::program_options::value<std::vector<PFunctionalWrapper> >(
-            &pfunctionals),
-        "P-functionals")(
-        "angle,a",
-        boost::program_options::value<unsigned int>()->default_value(1),
-        "angle stepsize")(
-        "mode,m", boost::program_options::value<std::string>()->required(),
-        "execution mode ('calculate' or 'benchmark')")(
-        "iterations,n", boost::program_options::value<unsigned int>(),
-        "amount of iterations to run")(
-        "input,i", boost::program_options::value<std::string>()->required(),
-        "image to process");
+    desc.add_options()
+        ("help,h",
+            "produce help message")
+        ("quiet,q",
+            "only display errors and warnings")
+        ("verbose,v",
+            "display some more details")
+        ("debug,d",
+            "display even more details")
+        ("t-functional,T",
+            boost::program_options::value<
+                    std::vector<TFunctionalWrapper>>(&tfunctionals)
+                ->required(),
+            "T-functionals")
+        ("p-functional,P",
+            boost::program_options::value<std::vector<PFunctionalWrapper>>(&pfunctionals),
+            "P-functionals")
+        ("angle,a",
+            boost::program_options::value<unsigned int>()
+                ->default_value(1),
+            "angle stepsize")
+        ("mode,m",
+            boost::program_options::value<std::string>()
+                ->required(),
+            "execution mode ('calculate' or 'benchmark')")
+        ("iterations,n",
+            boost::program_options::value<unsigned int>(),
+            "amount of iterations to run")
+        ("input,i",
+            boost::program_options::value<std::string>()
+                ->required(),
+            "image to process")
+    ;
 
     // Declare positional options
     boost::program_options::positional_options_description pod;

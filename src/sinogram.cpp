@@ -53,6 +53,12 @@ std::istream &operator>>(std::istream &in, TFunctionalWrapper &wrapper) {
     } else if (wrapper.name == "5") {
         wrapper.name = "T5";
         wrapper.functional = TFunctional::T5;
+    } else if (wrapper.name == "6") {
+        wrapper.name = "T6";
+        wrapper.functional = TFunctional::T6;
+    } else if (wrapper.name == "7") {
+        wrapper.name = "T7";
+        wrapper.functional = TFunctional::T7;
     } else {
         throw boost::program_options::validation_error(
             boost::program_options::validation_error::invalid_option_value,
@@ -70,7 +76,7 @@ getSinograms(const Eigen::MatrixXf &input, unsigned int angle_stepsize,
     Point<float>::type origin((input.cols() - 1) / 2.0,
                               (input.rows() - 1) / 2.0);
 
-    // Calculate and allocate the output matrix
+    // Calculate and allocate the output matrices
     int a_steps = (int)std::floor(360 / angle_stepsize);
     int p_steps = input.cols();
     std::vector<Eigen::MatrixXf> outputs(tfunctionals.size());
@@ -94,6 +100,13 @@ getSinograms(const Eigen::MatrixXf &input, unsigned int angle_stepsize,
             precalculations[tfunctional] =
                 TFunctional5_prepare(input.rows(), input.cols());
             break;
+        case TFunctional::Radon:
+        case TFunctional::T1:
+        case TFunctional::T2:
+        case TFunctional::T6:
+        case TFunctional::T7:
+        default:
+            break;
         }
     }
 
@@ -105,6 +118,7 @@ getSinograms(const Eigen::MatrixXf &input, unsigned int angle_stepsize,
         Eigen::MatrixXf input_rotated = rotate(input, origin, deg2rad(a));
 
         // Process all projection bands
+        // TODO: rename p
         for (int p = 0; p < p_steps; p++) {
             float *data = input_rotated.data() + p * input.rows();
 
@@ -129,6 +143,12 @@ getSinograms(const Eigen::MatrixXf &input, unsigned int angle_stepsize,
                                             (TFunctional345_precalc_t *)
                                             precalculations[tfunctional]);
                     break;
+		case TFunctional::T6:
+                    result = TFunctional6(data, input.rows());
+                    break;
+		case TFunctional::T7:
+                    result = TFunctional7(data, input.rows());
+                    break;
                 }
                 outputs[t](p,     // row
                            a_step // column
@@ -149,6 +169,13 @@ getSinograms(const Eigen::MatrixXf &input, unsigned int angle_stepsize,
             TFunctional345_destroy(precalc);
             break;
         }
+        case TFunctional::Radon:
+        case TFunctional::T1:
+        case TFunctional::T2:
+        case TFunctional::T6:
+        case TFunctional::T7:
+        default:
+            break;
         }
         ++it;
     }
