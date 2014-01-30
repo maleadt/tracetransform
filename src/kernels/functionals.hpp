@@ -98,8 +98,14 @@ void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
 void PFunctional2_destroy(PFunctional2_precalc_t *precalc);
 
 // P3
+typedef struct {
+    CUDAHelper::GlobalMemory<float> *real, *imag;
+} PFunctional3_precalc_t;
+PFunctional3_precalc_t *PFunctional3_prepare(size_t rows, size_t cols);
 void PFunctional3(const CUDAHelper::GlobalMemory<float> *input,
+                  PFunctional3_precalc_t *precalc,
                   CUDAHelper::GlobalMemory<float> *output);
+void PFunctional3_destroy(PFunctional3_precalc_t *precalc);
 
 #ifdef WITH_CULA
 // Hermite P-functionals

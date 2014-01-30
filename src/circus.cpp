@@ -79,8 +79,11 @@ getCircusFunctions(const CUDAHelper::GlobalMemory<float> *input,
             precalculations[pfunctional] =
                 PFunctional2_prepare(input->rows(), input->cols());
             break;
-        case PFunctional::P1:
         case PFunctional::P3:
+            precalculations[pfunctional] =
+                PFunctional3_prepare(input->rows(), input->cols());
+            break;
+        case PFunctional::P1:
         default:
             break;
         }
@@ -99,7 +102,9 @@ getCircusFunctions(const CUDAHelper::GlobalMemory<float> *input,
                          outputs[p]);
             break;
         case PFunctional::P3:
-            PFunctional3(input, outputs[p]);
+            PFunctional3(input,
+                         (PFunctional3_precalc_t *)precalculations[pfunctional],
+                         outputs[p]);
             break;
 #ifdef WITH_CULA
         case PFunctional::Hermite:
@@ -120,8 +125,13 @@ getCircusFunctions(const CUDAHelper::GlobalMemory<float> *input,
             PFunctional2_destroy(precalc);
             break;
         }
+        case PFunctional::P3: {
+            PFunctional3_precalc_t *precalc =
+                (PFunctional3_precalc_t *)it->second;
+            PFunctional3_destroy(precalc);
+            break;
+        }
         case PFunctional::P1:
-        case PFunctional::P3:
         default:
             break;
         }
