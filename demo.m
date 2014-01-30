@@ -7,9 +7,9 @@ elseif exist('tfunctionals') == 0
     error('tfunctionals not defined');
 elseif exist('pfunctionals') == 0
     error('pfunctionals not defined');
-elseif exist('mode') == 0
+elseif exist('program_mode') == 0
     error('mode not defined');
-    if strcmp(mode, 'benchmark')
+    if strcmp(program_mode, 'benchmark')
         if exist('iterations') == 0
             error('iterations not defined');
         end
@@ -17,9 +17,9 @@ elseif exist('mode') == 0
 end
 
 % Check optional arguments
-if exist('angle') == 0
-        angle = 1;
-    end
+if exist('angle_interval') == 0
+        angle_interval = 1;
+end
 
 % Check orthonormal
 orthonormal_count = 0;
@@ -40,7 +40,7 @@ end
 image = mat2gray(imread(imageFile, 'pgm'));
 padded = prepare_transform(image, angle, orthonormal);
 
-if strcmp(mode, 'calculate')
+if strcmp(program_mode, 'calculate')
     % Get output data
     [sinogram circus] = get_transform(padded, tfunctionals, pfunctionals, angle, orthonormal);
 
@@ -72,7 +72,7 @@ if strcmp(mode, 'calculate')
         end
     end
 
-elseif strcmp(mode, 'benchmark')
+elseif strcmp(program_mode, 'benchmark')
     % Warm-up
     get_transform(padded, tfunctionals, pfunctionals, angle, orthonormal);
 
