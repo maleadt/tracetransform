@@ -198,8 +198,8 @@ void TFunctional1(const CUDAHelper::GlobalMemory<float> *input,
 }
 
 void TFunctional12_destroy(TFunctional12_precalc_t *precalc) {
-    free(precalc->prescan);
-    free(precalc->medians);
+    delete precalc->prescan;
+    delete precalc->medians;
     free(precalc);
 }
 
@@ -453,10 +453,10 @@ void TFunctional345(const CUDAHelper::GlobalMemory<float> *input,
 }
 
 void TFunctional345_destroy(TFunctional345_precalc_t *precalc) {
-    free(precalc->real);
-    free(precalc->imag);
-    free(precalc->prescan);
-    free(precalc->medians);
+    delete precalc->real;
+    delete precalc->imag;
+    delete precalc->prescan;
+    delete precalc->medians;
     free(precalc);
 }
 
@@ -637,12 +637,12 @@ void TFunctional6(const CUDAHelper::GlobalMemory<float> *input,
 }
 
 void TFunctional6_destroy(TFunctional6_precalc_t *precalc) {
-    free(precalc->prescan);
-    free(precalc->medians);
-    free(precalc->extracted);
-    free(precalc->weighted);
-    free(precalc->indices);
-    free(precalc->permuted);
+    delete precalc->prescan;
+    delete precalc->medians;
+    delete precalc->extracted;
+    delete precalc->weighted;
+    delete precalc->indices;
+    delete precalc->permuted;
     free(precalc);
 }
 
@@ -773,9 +773,9 @@ void TFunctional7(const CUDAHelper::GlobalMemory<float> *input,
 }
 
 void TFunctional7_destroy(TFunctional7_precalc_t *precalc) {
-    free(precalc->prescan);
-    free(precalc->medians);
-    free(precalc->extracted);
+    delete precalc->prescan;
+    delete precalc->medians;
+    delete precalc->extracted;
     free(precalc);
 }
 
