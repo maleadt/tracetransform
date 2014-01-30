@@ -98,6 +98,24 @@ function t_345(data::StridedVector{Float32}, precalc::Vector{Complex{Float32}})
     return abs(integral)
 end
 
+function t_6(data::StridedVector{Float32})
+    median = find_weighted_median(sqrt(data))
+    positive = slice(data, median:length(data))
+    weighted = map (x -> x[1] * x[2], zip(positive, [0:median-1]))
+    indices = sortperm(weighted)
+    permuted = map(x -> positive[x], indices)
+    median = find_weighted_median(sqrt(permuted))
+    return weighted[indices[median]]
+end
+
+function t_7(data::StridedVector{Float32})
+    median = find_weighted_median(data)
+    positive = slice(data, median:length(data))
+    sorted = sort(positive)
+    median = find_weighted_median(sqrt(sorted))
+    return sorted[median]
+end
+
 
 #
 # P-functionals

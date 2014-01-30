@@ -2,7 +2,7 @@ require("functionals")
 require("geometry")
 require("enum")
 
-@enum TFunctional Radon T1 T2 T3 T4 T5
+@enum TFunctional Radon T1 T2 T3 T4 T5 T6 T7
 
 type TFunctionalArguments
 end
@@ -30,6 +30,10 @@ function parse_tfunctionals(args::Vector{String})
             wrapper = TFunctionalWrapper(T4)
         elseif functional == "5"
             wrapper = TFunctionalWrapper(T5)
+        elseif functional == "6"
+            wrapper = TFunctionalWrapper(T6)
+        elseif functional == "7"
+            wrapper = TFunctionalWrapper(T7)
         else
             error("unknown T-functional")
         end
@@ -92,6 +96,10 @@ function getSinograms(input::Image{Float32}, angle_stepsize::Uint,
                        tfunctionals[t].functional == T5
                     outputs[t].data[p, a_index] =
                         t_345(data, precalculations[tfunctionals[t].functional])
+                elseif tfunctionals[t].functional == T6
+                    outputs[t].data[p, a_index] = t_6(data)
+                elseif tfunctionals[t].functional == T7
+                    outputs[t].data[p, a_index] = t_7(data)
                 end
             end
         end
