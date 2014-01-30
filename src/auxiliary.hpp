@@ -46,9 +46,6 @@ float interpolate(const Eigen::MatrixXf &source, const Point<float>::type &p);
 Eigen::MatrixXf resize(const Eigen::MatrixXf &input, const size_t rows,
                        const size_t cols);
 
-Eigen::MatrixXf rotate(const Eigen::MatrixXf &input,
-                       const Point<float>::type &origin, const float angle);
-
 Eigen::MatrixXf pad(const Eigen::MatrixXf &image);
 
 float arithmetic_mean(const Eigen::VectorXf &input);

@@ -182,32 +182,6 @@ Eigen::MatrixXf resize(const Eigen::MatrixXf &input, const size_t rows,
     return output;
 }
 
-Eigen::MatrixXf rotate(const Eigen::MatrixXf &input,
-                       const Point<float>::type &origin, const float angle) {
-    // Calculate transform matrix
-    // TODO: use Eigen::Geometry
-    Eigen::Matrix2f transform;
-    transform << std::cos(angle), -std::sin(angle), std::sin(angle),
-        std::cos(angle);
-
-    // Allocate output matrix
-    Eigen::MatrixXf output = Eigen::MatrixXf::Zero(input.rows(), input.cols());
-
-    // Process all points
-    for (int col = 0; col < input.cols(); col++) {
-        for (int row = 0; row < input.rows(); row++) {
-            Point<float>::type p(col, row);
-            p -= origin; // TODO: why no pixel center offset?
-            p *= transform;
-            p += origin;
-            if (p.x() >= 0 && p.x() < input.cols() - 1 && p.y() >= 0 &&
-                p.y() < input.rows() - 1)
-                output(row, col) = interpolate(input, p);
-        }
-    }
-    return output;
-}
-
 Eigen::MatrixXf pad(const Eigen::MatrixXf &image) {
     // Pad the images so we can freely rotate without losing information
     Point<float>::type origin(std::floor((image.cols() + 1) / 2.0) - 1,
