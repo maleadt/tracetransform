@@ -323,8 +323,14 @@ float PFunctional1(const float *data, const size_t length) {
 //
 
 float PFunctional2(const float *data, const size_t length) {
-    size_t median = findWeightedMedian(data, length);
-    return data[median];
+    // Sorting the data
+    float sorted[length];
+    memcpy(sorted, data, length * sizeof(float));
+    qsort(sorted, length, sizeof(float), compareFloat);
+
+    // Find the weighted median
+    size_t median = findWeightedMedian(sorted, length);
+    return sorted[median];
 }
 
 
@@ -334,6 +340,7 @@ float PFunctional2(const float *data, const size_t length) {
 
 float PFunctional3(const float *data, const size_t length) {
     // Calculate the discrete Fourier transform
+    // TODO: calloc already sets to 0?
     float *fourier_real = (float *)calloc(length, sizeof(float));
     float *fourier_imag = (float *)calloc(length, sizeof(float));
     for (size_t i = 0; i < length; i++) {
