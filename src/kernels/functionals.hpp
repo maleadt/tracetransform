@@ -88,6 +88,7 @@ void PFunctional1(const CUDAHelper::GlobalMemory<float> *input,
 
 // P2
 typedef struct {
+    CUDAHelper::GlobalMemory<float> *sorted;
     CUDAHelper::GlobalMemory<float> *prescan;
     CUDAHelper::GlobalMemory<int> *medians;
 } PFunctional2_precalc_t;

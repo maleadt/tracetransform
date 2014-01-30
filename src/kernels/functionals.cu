@@ -762,6 +762,7 @@ void TFunctional7_destroy(TFunctional7_precalc_t *precalc) {
 }
 
 
+
 ////////////////////////////////////////////////////////////////////////////////
 // P-functionals
 //
@@ -814,6 +815,8 @@ void PFunctional1(const CUDAHelper::GlobalMemory<float> *input,
 PFunctional2_precalc_t *PFunctional2_prepare(size_t rows, size_t cols) {
     PFunctional2_precalc_t *precalc =
         (PFunctional2_precalc_t *)malloc(sizeof(PFunctional2_precalc_t));
+    precalc->sorted =
+        new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
     precalc->prescan =
         new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
     precalc->medians =
@@ -834,12 +837,25 @@ __global__ void PFunctional2_kernel(const float *input, const int *medians,
 void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
                   PFunctional2_precalc_t *precalc,
                   CUDAHelper::GlobalMemory<float> *output) {
+    // Sort the data
+    {
+        CUDAHelper::checkError(cudaMemcpy(*precalc->sorted, *input,
+                                          input->bytes(),
+                                          cudaMemcpyDeviceToDevice));
+        const int rows_padded = pow2ge(input->rows());
+        dim3 threads(1, rows_padded);
+        dim3 blocks(input->cols(), 1);
+        sortBitonic_kernel <<<blocks, threads, rows_padded * sizeof(float)>>>
+            (*precalc->sorted, input->rows(), NULL);
+        CUDAHelper::checkState();
+    }
+
     // Launch prefix sum kernel
     {
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
         prescan_kernel <<<blocks, threads, 2 * input->rows() * sizeof(float)>>>
-            (*input, *precalc->prescan, NONE);
+            (*precalc->sorted, *precalc->prescan, NONE);
         CUDAHelper::checkState();
     }
 
@@ -849,7 +865,7 @@ void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
         dim3 blocks(input->cols(), 1);
         findWeightedMedian_kernel
                 <<<blocks, threads, input->rows() * sizeof(float)>>>
-            (*input, *precalc->prescan, *precalc->medians);
+            (*precalc->sorted, *precalc->prescan, *precalc->medians);
         CUDAHelper::checkState();
     }
 
@@ -858,12 +874,13 @@ void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
         dim3 threads(1, 1);
         dim3 blocks(input->cols(), 1);
         PFunctional2_kernel <<<blocks, threads>>>
-            (*input, *precalc->medians, *output, input->rows());
+            (*precalc->sorted, *precalc->medians, *output, input->rows());
         CUDAHelper::checkState();
     }
 }
 
 void PFunctional2_destroy(PFunctional2_precalc_t *precalc) {
+    delete precalc->sorted;
     delete precalc->prescan;
     delete precalc->medians;
     free(precalc);
