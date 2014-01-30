@@ -10,6 +10,7 @@
 #include <cstddef> // for size_t
 #include <iosfwd>  // for istream
 #include <string>  // for string
+#include <vector>
 
 // Boost
 #include <boost/none.hpp>     // for none
@@ -66,7 +67,8 @@ std::istream &operator>>(std::istream &in, PFunctionalWrapper &wrapper);
 Eigen::MatrixXf nearest_orthonormal_sinogram(const Eigen::MatrixXf &input,
                                              size_t &new_center);
 
-Eigen::VectorXf getCircusFunction(const Eigen::MatrixXf &input,
-                                  const PFunctionalWrapper &pfunctional);
+std::vector<Eigen::VectorXf>
+getCircusFunctions(const Eigen::MatrixXf &input,
+                   const std::vector<PFunctionalWrapper> &pfunctionals);
 
 #endif

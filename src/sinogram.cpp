@@ -76,7 +76,7 @@ getSinograms(const Eigen::MatrixXf &input, unsigned int angle_stepsize,
     Point<float>::type origin((input.cols() - 1) / 2.0,
                               (input.rows() - 1) / 2.0);
 
-    // Calculate and allocate the output matrix
+    // Calculate and allocate the output matrices
     int a_steps = (int)std::floor(360 / angle_stepsize);
     int p_steps = input.cols();
     std::vector<Eigen::MatrixXf> outputs(tfunctionals.size());
@@ -117,6 +117,7 @@ getSinograms(const Eigen::MatrixXf &input, unsigned int angle_stepsize,
         Eigen::MatrixXf input_rotated = rotate(input, origin, deg2rad(a));
 
         // Process all projection bands
+        // TODO: rename p
         for (int p = 0; p < p_steps; p++) {
             float *data = input_rotated.data() + p * input.rows();
 
