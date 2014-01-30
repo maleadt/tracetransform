@@ -8,6 +8,7 @@
 
 // Standard library
 #include <cstddef>
+#include <vector>
 
 // Boost
 #include <boost/optional.hpp>
@@ -64,8 +65,8 @@ std::istream &operator>>(std::istream &in, PFunctionalWrapper &wrapper);
 // Module definitions
 //
 
-CUDAHelper::GlobalMemory<float> *
-getCircusFunction(const CUDAHelper::GlobalMemory<float> *input,
-                  const PFunctionalWrapper &pfunctional);
+std::vector<CUDAHelper::GlobalMemory<float> *>
+getCircusFunctions(const CUDAHelper::GlobalMemory<float> *input,
+                   const std::vector<PFunctionalWrapper> &pfunctionals);
 
 #endif

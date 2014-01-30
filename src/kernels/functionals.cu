@@ -829,6 +829,17 @@ void PFunctional1(const CUDAHelper::GlobalMemory<float> *input,
 // P2
 //
 
+PFunctional2_precalc_t *PFunctional2_prepare(size_t rows, size_t cols) {
+    PFunctional2_precalc_t *precalc =
+        (PFunctional2_precalc_t *)malloc(sizeof(PFunctional2_precalc_t));
+    precalc->prescan =
+        new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
+    precalc->medians =
+        new CUDAHelper::GlobalMemory<int>(CUDAHelper::size_1d(cols), 0);
+
+    return precalc;
+}
+
 __global__ void PFunctional2_kernel(const float *input, const int *medians,
                                     float *output, int rows) {
     // Compute the thread dimensions
@@ -839,42 +850,41 @@ __global__ void PFunctional2_kernel(const float *input, const int *medians,
 }
 
 void PFunctional2(const CUDAHelper::GlobalMemory<float> *input,
+                  PFunctional2_precalc_t *precalc,
                   CUDAHelper::GlobalMemory<float> *output) {
     // Launch prefix sum kernel
-    // TODO: precalculate
-    CUDAHelper::GlobalMemory<float> *prescan =
-        new CUDAHelper::GlobalMemory<float>(input->sizes());
     {
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
         prescan_kernel <<<blocks, threads, 2 * input->rows() * sizeof(float)>>>
-            (*input, *prescan, NONE);
+            (*input, *precalc->prescan, NONE);
         CUDAHelper::checkState();
     }
 
     // Launch weighted median kernel
-    // TODO: precalculate
-    CUDAHelper::GlobalMemory<int> *medians = new CUDAHelper::GlobalMemory<int>(
-        CUDAHelper::size_1d(input->cols()), 0);
     {
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
         findWeightedMedian_kernel
                 <<<blocks, threads, input->rows() * sizeof(float)>>>
-            (*input, *prescan, *medians);
+            (*input, *precalc->prescan, *precalc->medians);
         CUDAHelper::checkState();
     }
-    delete prescan;
 
     // Launch P2 kernel
     {
         dim3 threads(1, 1);
         dim3 blocks(input->cols(), 1);
         PFunctional2_kernel <<<blocks, threads>>>
-            (*input, *medians, *output, input->rows());
+            (*input, *precalc->medians, *output, input->rows());
         CUDAHelper::checkState();
     }
-    delete medians;
+}
+
+void PFunctional2_destroy(PFunctional2_precalc_t *precalc) {
+    delete precalc->prescan;
+    delete precalc->medians;
+    free(precalc);
 }
 
 //

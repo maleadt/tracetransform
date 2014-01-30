@@ -66,7 +66,7 @@ getSinograms(const CUDAHelper::GlobalMemory<float> *input,
     //const int rows = input->size(0);
     const int cols = input->size(1);
 
-    // Calculate and allocate the output matrix
+    // Calculate and allocate the output matrices
     int a_steps = (int)std::floor(360 / angle_stepsize);
     int p_steps = cols;
     std::vector<CUDAHelper::GlobalMemory<float> *> outputs(tfunctionals.size());

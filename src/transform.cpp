@@ -51,6 +51,7 @@ Transformer::Transformer(const Eigen::MatrixXf &image,
                 << std::endl;
 
     // Upload the image to device memory
+    // TODO: rename _memory
     _memory = new CUDAHelper::GlobalMemory<float>(
         CUDAHelper::size_2d(_image.rows(), _image.cols()));
     _memory->upload(_image.data());
@@ -102,20 +103,18 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
 #endif
 
         // Process all P-functionals
+            clog(debug)
+                << "Calculating circus functions for given P-functionals"
+                << std::endl;
+            std::vector<CUDAHelper::GlobalMemory<float> *> circusfunctions =
+                getCircusFunctions(sinograms[t], pfunctionals);
         for (size_t p = 0; p < pfunctionals.size(); p++) {
-            // Calculate the circus function
-            clog(debug) << "Calculating circus function using P-functional "
-                        << pfunctionals[p].name << std::endl;
-            CUDAHelper::GlobalMemory<float> *circus =
-                getCircusFunction(sinograms[t], pfunctionals[p]);
-
             // TEMPORARY: download the image
-            Eigen::VectorXf circus_data(circus->size(0));
-            circus->download(circus_data.data());
-            delete circus;
+            Eigen::VectorXf circusfunction_data(circusfunctions[p]->size(0));
+            circusfunctions[p]->download(circusfunction_data.data());
 
             // Normalize
-            Eigen::VectorXf normalized = zscore(circus_data);
+            Eigen::VectorXf normalized = zscore(circusfunction_data);
 
             if (write_data) {
                 // Save the circus trace
@@ -125,6 +124,10 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
                 writecsv(fn_trace_data.str(), normalized);
             }
         }
+
+        // Clean-up
+        for (size_t p = 0; p < pfunctionals.size(); p++)
+            delete circusfunctions[p];
     }
 
     // Clean-up
