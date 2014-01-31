@@ -7,7 +7,7 @@ function [sinogram circus_function] = get_transform(padded ,tfunctionals, pfunct
     [sinogram circus_function] = TraceTransform(padded, tfunctionals, pfunctionals, angle_stepsize, orthonormal);     
 end
 
-function padded = prepare_transform(input, angle_stepsize, orthonormal)
+function [padded basename] = prepare_transform(input, filename, angle_stepsize, orthonormal)
     if orthonormal
         %% Resizing and padding the image with zeros
         ndiag = ceil(360/angle_stepsize);
@@ -35,4 +35,7 @@ function padded = prepare_transform(input, angle_stepsize, orthonormal)
     df = origin_padded - origin;
     padded(1+df(1):M+df(1),1+df(2):N+df(2)) = input_resized; 
     padded = im2double(uint8(padded));
+
+    %% Find out the file basename
+    [~, basename, ~] = fileparts(filename)
 end

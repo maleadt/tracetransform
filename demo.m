@@ -42,7 +42,7 @@ end
 
 % Gather input data
 image = mat2gray(imread(imageFile, 'pgm'));
-padded = prepare_transform(image, angle_interval, orthonormal);
+[padded basename] = prepare_transform(image, imageFile, angle_interval, orthonormal);
 
 if strcmp(program_mode, 'calculate')
     % Get output data
@@ -53,9 +53,9 @@ if strcmp(program_mode, 'calculate')
         t = tfunctionals(t_i);
 
         trace = sinogram(:, :, t_i);
-        csvwrite(sprintf('trace_T%d.csv', t), trace);
+        csvwrite(sprintf('%s-T%d.csv', basename, t), trace);
         % TODO: debug flag
-        imwrite(mat2gray(trace), sprintf('trace_T%d.pgm', t));
+        imwrite(mat2gray(trace), sprintf('%s-T%d.pgm', basename, t));
     end
 
     % Save circus functions
@@ -72,7 +72,7 @@ if strcmp(program_mode, 'calculate')
             end
 
             trace = circus(:, p_i + (t_i-1)*length(pfunctionals));
-            csvwrite(sprintf('trace_T%d-%s%d.csv', t, type, p_real), trace);
+            csvwrite(sprintf('%s-T%d_%s%d.csv', basename, t, type, p_real), trace);
         end
     end
 
