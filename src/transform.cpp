@@ -26,8 +26,9 @@
 //
 
 Transformer::Transformer(const Eigen::MatrixXf &image,
+                         const std::string &basename,
                          unsigned int angle_stepsize, bool orthonormal)
-    : _image(image), _orthonormal(orthonormal),
+    : _image(image), _basename(basename), _orthonormal(orthonormal),
       _angle_stepsize(angle_stepsize) {
     // Orthonormal P-functionals need a stretched image in order to ensure a
     // square sinogram
@@ -57,13 +58,14 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
         if (write_data) {
             // Save the sinogram trace
             std::stringstream fn_trace_data;
-            fn_trace_data << "trace_" << tfunctionals[t].name << ".csv";
+            fn_trace_data << _basename << "-" << tfunctionals[t].name << ".csv";
             writecsv(fn_trace_data.str(), sinograms[t]);
 
             if (clog(debug)) {
                 // Save the sinogram image
                 std::stringstream fn_trace_image;
-                fn_trace_image << "trace_" << tfunctionals[t].name << ".pgm";
+                fn_trace_image << _basename << "-" << tfunctionals[t].name
+                               << ".pgm";
                 writepgm(fn_trace_image.str(), mat2gray(sinograms[t]));
             }
         }
@@ -93,7 +95,7 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
             if (write_data) {
                 // Save the circus trace
                 std::stringstream fn_trace_data;
-                fn_trace_data << "trace_" << tfunctionals[t].name << "-"
+                fn_trace_data << _basename << "-" << tfunctionals[t].name << "_"
                               << pfunctionals[p].name << ".csv";
                 writecsv(fn_trace_data.str(), normalized);
             }
