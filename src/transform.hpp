@@ -28,10 +28,11 @@
 class Transformer {
   public:
 #ifdef WITH_CULA
-    Transformer(const Eigen::MatrixXf &image, unsigned int angle_step,
-                bool orthonormal);
+    Transformer(const Eigen::MatrixXf &image, const std::string &basename,
+                unsigned int angle_step, bool orthonormal);
 #else
-    Transformer(const Eigen::MatrixXf &image, unsigned int angle_step);
+    Transformer(const Eigen::MatrixXf &image, const std::string &basename,
+                unsigned int angle_step);
 #endif
 
     void getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
@@ -40,6 +41,7 @@ class Transformer {
 
   private:
     Eigen::MatrixXf _image;
+    std::string _basename;
     unsigned int _angle_stepsize;
     CUDAHelper::GlobalMemory<float> *_memory;
 #ifdef WITH_CULA

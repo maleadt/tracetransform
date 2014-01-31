@@ -44,7 +44,7 @@ SET(CUDA_NVCC_FLAGS_DEBUG "-G -Xcompiler -g"
 #
 
 # Boost
-FIND_PACKAGE(Boost REQUIRED COMPONENTS program_options)
+FIND_PACKAGE(Boost REQUIRED COMPONENTS program_options system filesystem)
 INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIR})
 
 # Eigen
