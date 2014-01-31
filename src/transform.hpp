@@ -23,8 +23,8 @@
 
 class Transformer {
   public:
-    Transformer(const Eigen::MatrixXf &image, unsigned int angle_step,
-                bool orthonormal);
+    Transformer(const Eigen::MatrixXf &image, const std::string &basename,
+                unsigned int angle_step, bool orthonormal);
 
     void getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
                       std::vector<PFunctionalWrapper> &pfunctionals,
@@ -32,6 +32,7 @@ class Transformer {
 
   private:
     Eigen::MatrixXf _image;
+    std::string _basename;
     bool _orthonormal;
     unsigned int _angle_stepsize;
 };

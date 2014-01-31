@@ -44,7 +44,7 @@ SET(CMAKE_C_FLAGS_PROFILE "-O2 -g -DNDEBUG -fno-omit-frame-pointer -fno-inline")
 IF (WIN32)
 	SET(Boost_USE_STATIC_LIBS ON)
 ENDIF (WIN32)
-FIND_PACKAGE(Boost REQUIRED COMPONENTS program_options)
+FIND_PACKAGE(Boost REQUIRED COMPONENTS program_options system filesystem)
 INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIR})
 
 # Eigen

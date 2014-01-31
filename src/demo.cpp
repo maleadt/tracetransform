@@ -12,6 +12,7 @@
 
 // Boost
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
 
 // Local
 #include "logger.hpp"
@@ -62,15 +63,15 @@ int main(int argc, char **argv) {
         ("iterations,n",
             boost::program_options::value<unsigned int>(),
             "amount of iterations to run")
-        ("input,i",
-            boost::program_options::value<std::string>()
+        ("inputs,i",
+            boost::program_options::value<std::vector<std::string>>()
                 ->required(),
-            "image to process")
+            "images to process")
     ;
 
     // Declare positional options
     boost::program_options::positional_options_description pod;
-    pod.add("input", -1);
+    pod.add("inputs", -1);
 
     // Parse the options
     boost::program_options::variables_map vm;
@@ -136,46 +137,58 @@ int main(int argc, char **argv) {
     // Execution
     //
 
-    // Read the image
-    Eigen::MatrixXf input = gray2mat(readpgm(vm["input"].as<std::string>()));
-    Transformer transformer(input, vm["angle"].as<unsigned int>(), orthonormal);
+    for (std::string input : vm["inputs"].as<std::vector<std::string> >()) {
+        // Get the image basename
+        boost::filesystem::path path(input);
+        if (!exists(path))
+            throw boost::program_options::validation_error(
+                boost::program_options::validation_error::invalid_option_value,
+                "Nonexistent input file");
+        std::string basename = path.stem().string();
 
-    if (vm["mode"].as<std::string>() == "calculate") {
-        transformer.getTransform(tfunctionals, pfunctionals, true);
-    } else if (vm["mode"].as<std::string>() == "profile") {
-        transformer.getTransform(tfunctionals, pfunctionals, false);
-    } else if (vm["mode"].as<std::string>() == "benchmark") {
-        if (!vm.count("iterations"))
-            throw boost::program_options::required_option("iterations");
+        // Read the image
+        Eigen::MatrixXf image = gray2mat(readpgm(input));
+        Transformer transformer(image, basename, vm["angle"].as<unsigned int>(),
+                                orthonormal);
 
-        // Allocate array for time measurements
-        unsigned int iterations = vm["iterations"].as<unsigned int>();
-        std::vector<std::chrono::time_point<
-            std::chrono::high_resolution_clock> > timings(iterations + 1);
-
-        // Warm-up
-        transformer.getTransform(tfunctionals, pfunctionals, false);
-
-        // Transform the image
-        // NOTE: although the use of elapsed real time rather than CPU
-        //       time might seem inaccurate, it is necessary because
-        //       some of the ports execute code on non-CPU hardware
-        std::chrono::time_point<std::chrono::high_resolution_clock> last,
-            current;
-        for (unsigned int n = 0; n < iterations; n++) {
-            last = std::chrono::high_resolution_clock::now();
+        if (vm["mode"].as<std::string>() == "calculate") {
+            transformer.getTransform(tfunctionals, pfunctionals, true);
+        } else if (vm["mode"].as<std::string>() == "profile") {
             transformer.getTransform(tfunctionals, pfunctionals, false);
-            current = std::chrono::high_resolution_clock::now();
+        } else if (vm["mode"].as<std::string>() == "benchmark") {
+            if (!vm.count("iterations"))
+                throw boost::program_options::required_option("iterations");
 
-            clog(info) << "t_" << n + 1 << "="
-                       << std::chrono::duration_cast<std::chrono::microseconds>(
-                              current - last).count() /
-                              1000000.0 << std::endl;
+            // Allocate array for time measurements
+            unsigned int iterations = vm["iterations"].as<unsigned int>();
+            std::vector<std::chrono::time_point<
+                std::chrono::high_resolution_clock> > timings(iterations + 1);
+
+            // Warm-up
+            transformer.getTransform(tfunctionals, pfunctionals, false);
+
+            // Transform the image
+            // NOTE: although the use of elapsed real time rather than CPU
+            //       time might seem inaccurate, it is necessary because
+            //       some of the ports execute code on non-CPU hardware
+            std::chrono::time_point<std::chrono::high_resolution_clock> last,
+                current;
+            for (unsigned int n = 0; n < iterations; n++) {
+                last = std::chrono::high_resolution_clock::now();
+                transformer.getTransform(tfunctionals, pfunctionals, false);
+                current = std::chrono::high_resolution_clock::now();
+
+                clog(info)
+                    << "t_" << n + 1 << "="
+                    << std::chrono::duration_cast<std::chrono::microseconds>(
+                           current - last).count() /
+                           1000000.0 << std::endl;
+            }
+        } else {
+            throw boost::program_options::validation_error(
+                boost::program_options::validation_error::invalid_option_value,
+                "Invalid execution mode");
         }
-    } else {
-        throw boost::program_options::validation_error(
-            boost::program_options::validation_error::invalid_option_value,
-            "Invalid execution mode");
     }
 
     return 0;
