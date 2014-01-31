@@ -61,8 +61,7 @@ std::istream &operator>>(std::istream &in, TFunctionalWrapper &wrapper) {
         wrapper.functional = TFunctional::T7;
     } else {
         throw boost::program_options::validation_error(
-            boost::program_options::validation_error::invalid_option_value,
-            "Unknown T-functional");
+            boost::program_options::validation_error::invalid_option_value);
     }
     return in;
 }
