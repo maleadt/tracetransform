@@ -10,6 +10,7 @@
 #include <cmath>
 #include <algorithm>
 #include <vector>
+#include <iostream>
 
 // Eigen
 #include <Eigen/SVD>
@@ -38,24 +39,25 @@ std::istream &operator>>(std::istream &in, PFunctionalWrapper &wrapper) {
 #ifdef WITH_CULA
     } else if (wrapper.name[0] == 'H') {
         wrapper.functional = PFunctional::Hermite;
-        if (wrapper.name.size() < 2)
+        if (wrapper.name.size() < 2) {
+            std::cerr << "ERROR: Missing order parameter for Hermite P-functional" << std::endl;
             throw boost::program_options::validation_error(
-                boost::program_options::validation_error::invalid_option_value,
-                "Missing order parameter for Hermite P-functional");
+                boost::program_options::validation_error::invalid_option_value);
+        }
         try {
             wrapper.arguments.order =
                 boost::lexical_cast<unsigned int>(wrapper.name.substr(1));
         }
         catch (boost::bad_lexical_cast &) {
+            std::cerr << "Unparseable order parameter for Hermite P-functional"
+                     << std::endl;
             throw boost::program_options::validation_error(
-                boost::program_options::validation_error::invalid_option_value,
-                "Unparseable order parameter for Hermite P-functional");
+                boost::program_options::validation_error::invalid_option_value);
         }
 #endif
     } else {
         throw boost::program_options::validation_error(
-            boost::program_options::validation_error::invalid_option_value,
-            "Unknown P-functional");
+            boost::program_options::validation_error::invalid_option_value);
     }
     return in;
 }

@@ -35,14 +35,43 @@
 // Main application
 //
 
+// TODO: make this an enum class when ICC 14 is released
+enum ProgramMode {
+    CALCULATE,
+    PROFILE,
+    BENCHMARK
+};
+
+std::istream &operator>>(std::istream &in, ProgramMode &mode) {
+    std::string name;
+    in >> name;
+    if (name == "calculate") {
+        mode = CALCULATE;
+    } else if (name == "profile") {
+        mode = PROFILE;
+    } else if (name == "benchmark") {
+        mode = BENCHMARK;
+    } else {
+        throw boost::program_options::validation_error(
+            boost::program_options::validation_error::invalid_option_value);
+    }
+    return in;
+}
+
 int main(int argc, char **argv) {
     //
     // Initialization
     //
 
+    // Program input
+    ProgramMode mode;
+
     // List of functionals
     std::vector<TFunctionalWrapper> tfunctionals;
     std::vector<PFunctionalWrapper> pfunctionals;
+
+    // List of inputs
+    std::vector<std::string> inputs;
 
     // Declare named options
     boost::program_options::options_description desc("Allowed options");
@@ -61,21 +90,22 @@ int main(int argc, char **argv) {
                 ->required(),
             "T-functionals")
         ("p-functional,P",
-            boost::program_options::value<std::vector<PFunctionalWrapper>>(&pfunctionals),
+            boost::program_options::value<
+                    std::vector<PFunctionalWrapper>>(&pfunctionals),
             "P-functionals")
         ("angle,a",
             boost::program_options::value<unsigned int>()
                 ->default_value(1),
             "angle stepsize")
         ("mode,m",
-            boost::program_options::value<std::string>()
+            boost::program_options::value<ProgramMode>(&mode)
                 ->required(),
-            "execution mode ('calculate' or 'benchmark')")
+            "execution mode ('calculate', 'profile' or 'benchmark')")
         ("iterations,n",
             boost::program_options::value<unsigned int>(),
             "amount of iterations to run")
         ("inputs,i",
-            boost::program_options::value<std::vector<std::string>>()
+            boost::program_options::value<std::vector<std::string>>(&inputs)
                 ->required(),
             "image to process")
     ;
@@ -117,24 +147,6 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-#ifdef WITH_CULA
-    // Check for orthonormal P-functionals
-    unsigned int orthonormal_count = 0;
-    bool orthonormal;
-    for (size_t p = 0; p < pfunctionals.size(); p++) {
-        if (pfunctionals[p].functional == PFunctional::Hermite)
-            orthonormal_count++;
-    }
-    if (orthonormal_count == 0)
-        orthonormal = false;
-    else if (orthonormal_count == pfunctionals.size())
-        orthonormal = true;
-    else
-        throw boost::program_options::validation_error(
-            boost::program_options::validation_error::invalid_option_value,
-            "Cannot mix regular and orthonormal P-functionals");
-#endif
-
     // Configure logging
     bool showProgress = false;
     if (vm.count("debug")) {
@@ -147,6 +159,28 @@ int main(int argc, char **argv) {
         logger.settings.threshold = warning;
     else
         showProgress = true;
+    if (mode == BENCHMARK)
+        showProgress = false;
+
+#ifdef WITH_CULA
+    // Check for orthonormal P-functionals
+    unsigned int orthonormal_count = 0;
+    bool orthonormal;
+    for (size_t p = 0; p < pfunctionals.size(); p++) {
+        if (pfunctionals[p].functional == PFunctional::Hermite)
+            orthonormal_count++;
+    }
+    if (orthonormal_count == 0)
+        orthonormal = false;
+    else if (orthonormal_count == pfunctionals.size())
+        orthonormal = true;
+    else {
+        clog(error) << "Cannot mix regular and orthonormal P-functionals" << std::endl;
+        throw boost::program_options::validation_error(
+            boost::program_options::validation_error::invalid_option_value,
+            "pfunctionals");
+    }
+#endif
 
 
     //
@@ -215,17 +249,18 @@ int main(int argc, char **argv) {
     }
     CUDAHelper::checkError(cudaDeviceSynchronize());
 
-    std::vector<std::string> inputs = vm["inputs"].as<std::vector<std::string>>();
     Progress indicator(inputs.size());
     if (showProgress)
         indicator.start();
     for (const std::string &input : inputs) {
         // Get the image basename
         boost::filesystem::path path(input);
-        if (!exists(path))
+        if (!exists(path)) {
+            clog(error) << "Input file does not exist" << std::endl;
             throw boost::program_options::validation_error(
                 boost::program_options::validation_error::invalid_option_value,
-                "Nonexistent input file");
+                "inputs", input);
+        }
         std::string basename = path.stem().string();
 
         // Read the image
@@ -238,13 +273,13 @@ int main(int argc, char **argv) {
                                 vm["angle"].as<unsigned int>());
 #endif
 
-        if (vm["mode"].as<std::string>() == "calculate") {
+        if (mode == CALCULATE) {
             transformer.getTransform(tfunctionals, pfunctionals, true);
-        } else if (vm["mode"].as<std::string>() == "profile") {
+        } else if (mode == PROFILE) {
             cudaProfilerStart();
             transformer.getTransform(tfunctionals, pfunctionals, false);
             cudaProfilerStop();
-        } else if (vm["mode"].as<std::string>() == "benchmark") {
+        } else if (mode == BENCHMARK) {
             if (!vm.count("iterations"))
                 throw boost::program_options::required_option("iterations");
 
@@ -284,10 +319,6 @@ int main(int argc, char **argv) {
                                       1000000.0 << std::endl;
                 }
             }
-        } else {
-            throw boost::program_options::validation_error(
-                boost::program_options::validation_error::invalid_option_value,
-                "Invalid execution mode");
         }
 
         if (showProgress)

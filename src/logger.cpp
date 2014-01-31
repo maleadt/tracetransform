@@ -49,7 +49,7 @@ std::ostream &Logger::log(LogLevel level) {
         if (last_char == '\r' || last_char == '\n') {
             if (settings.prefix_timestamp)
                 std::cout << timestamp() << "  ";
-            if (settings.prefix_level)
+            if (settings.prefix_level || level <= warning)
                 std::cout << prefix(level) << "\t";
         }
 
