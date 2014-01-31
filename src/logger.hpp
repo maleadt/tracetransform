@@ -37,6 +37,7 @@ class keepbuf : public std::streambuf {
 
     virtual int_type overflow(int_type c) {
         _buf->sputc(c);
+        _buf->pubsync();
         _last_char = c;
         return c;
     }

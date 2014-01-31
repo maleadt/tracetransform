@@ -18,6 +18,7 @@
 #include "logger.hpp"
 #include "auxiliary.hpp"
 #include "transform.hpp"
+#include "progress.hpp"
 
 
 //
@@ -123,6 +124,7 @@ int main(int argc, char **argv) {
             "Cannot mix regular and orthonormal P-functionals");
 
     // Configure logging
+    bool showProgress = false;
     if (vm.count("debug")) {
         logger.settings.threshold = trace;
         logger.settings.prefix_timestamp = true;
@@ -131,13 +133,19 @@ int main(int argc, char **argv) {
         logger.settings.threshold = debug;
     else if (vm.count("quiet"))
         logger.settings.threshold = warning;
+    else
+        showProgress = true;
 
 
     //
     // Execution
     //
 
-    for (std::string input : vm["inputs"].as<std::vector<std::string> >()) {
+    std::vector<std::string> inputs = vm["inputs"].as<std::vector<std::string>>();
+    Progress indicator(inputs.size());
+    if (showProgress)
+        indicator.start();
+    for (const std::string &input : inputs) {
         // Get the image basename
         boost::filesystem::path path(input);
         if (!exists(path))
@@ -189,6 +197,9 @@ int main(int argc, char **argv) {
                 boost::program_options::validation_error::invalid_option_value,
                 "Invalid execution mode");
         }
+
+        if (showProgress)
+            ++indicator;
     }
 
     return 0;
