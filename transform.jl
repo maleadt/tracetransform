@@ -5,8 +5,8 @@ require("circus")
 
 using Images
 
-function prepare_transform(input::Image{Float64}, angle_stepsize::Uint,
-                           orthonormal::Bool)
+function prepare_transform(input::Image{Float64}, filename::String,
+                           angle_stepsize::Uint, orthonormal::Bool)
     # Orthonormal P-functionals need a stretched image in order to ensure a
     # square sinogram
     if orthonormal
@@ -21,10 +21,14 @@ function prepare_transform(input::Image{Float64}, angle_stepsize::Uint,
     input = pad(input)
     print_debug("Padded image from $(oldsize) to $(size(input)).\n")
 
-    return input
+    # Find the basename
+    (path, file) = splitdir(filename)
+    basename = splitext(file)[1]
+
+    return (input, basename)
 end
 
-function get_transform(input::Image{Float64},
+function get_transform(input::Image{Float64}, basename::String,
     tfunctionals::Vector{TFunctionalWrapper},
     pfunctionals::Vector{PFunctionalWrapper},
     angle_stepsize::Uint, orthonormal::Bool, write_data::Bool)
@@ -36,13 +40,13 @@ function get_transform(input::Image{Float64},
         tfunctional = tfunctionals[t]
         if write_data
             # Save the sinogram trace
-            writecsv("trace_$(tfunctional.functional).csv", sinograms[t].data);
+            writecsv("$(basename)-$(tfunctional.functional).csv", sinograms[t].data);
 
             if want_log(debug_l)
                 # Save the sinogram image
                 # FIXME: why does imwrite generate a transposed image?
                 imwrite(mat2gray(sinograms[t]),
-                    "trace_$(tfunctional.functional).ppm")
+                    "$(basename)-$(tfunctional.functional).ppm")
             end
         end
 
@@ -72,7 +76,7 @@ function get_transform(input::Image{Float64},
 
             if write_data
                 # Save the circus trace
-                writecsv("trace_$(tfunctional.functional)-$(pfunctional.functional).csv",
+                writecsv("$(basename)-$(tfunctional.functional)_$(pfunctional.functional).csv",
                     normalized);
             end
         end

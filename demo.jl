@@ -97,11 +97,11 @@ function main(args)
 
     # Read the image
     input::Image{Float64} = gray2mat(imread(opts["input"]))
-    input = prepare_transform(input, opts["angle"], orthonormal)
+    (input, basename) = prepare_transform(input, opts["input"], opts["angle"], orthonormal)
 
     if opts["mode"] == "calculate"
-        get_transform(input, tfunctionals, pfunctionals, opts["angle"],
-                      orthonormal, true)
+        get_transform(input, basename, tfunctionals, pfunctionals,
+                      opts["angle"], orthonormal, true)
 
     elseif opts["mode"] == "benchmark"
         if opts["iterations"] == nothing
@@ -109,12 +109,13 @@ function main(args)
         end
 
         # Warm-up
-        get_transform(input, tfunctionals, pfunctionals, opts["angle"],
-                      orthonormal, false)
+        get_transform(input, basename, tfunctionals, pfunctionals,
+                      opts["angle"], orthonormal, false)
 
         for i = 1:opts["iterations"]
-            time = @elapsed get_transform(input, tfunctionals, pfunctionals,
-                                          opts["angle"], orthonormal, false)
+            time = @elapsed get_transform(input, basename, tfunctionals,
+                                          pfunctionals, opts["angle"],
+                                          orthonormal, false)
             println("t_$(i)=$(time)")
         end
     else
