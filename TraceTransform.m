@@ -178,13 +178,9 @@ end
 
 % P2-functional
 function signatures = p_2(sinogram,nx,ny,nz)
-
-   % Getting the domain of R1
-      Accum = cumsum(sinogram);
-        loc = bsxfun(@ge,2*Accum,Accum(end,:,:));
      
-   % Masking and sorting the data for r > 0
-          F = sort(Accum .* loc);
+   % Sorting input datat
+          F = sort(sinogram);
      
    % Finding the location of the weighted median
       data_accum = cumsum(F);
