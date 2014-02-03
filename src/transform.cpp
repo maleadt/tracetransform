@@ -62,12 +62,15 @@ void
 Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
                           std::vector<PFunctionalWrapper> &pfunctionals,
                           bool write_data) const {
+    Eigen::MatrixXf signatures((int)std::floor(360 / _angle_stepsize),
+                               tfunctionals.size() * pfunctionals.size());
+
     // Process all T-functionals
     clog(debug) << "Calculating sinograms for given T-functionals" << std::endl;
     std::vector<CUDAHelper::GlobalMemory<float> *> sinograms =
         getSinograms(_memory, _angle_stepsize, tfunctionals);
     for (size_t t = 0; t < tfunctionals.size(); t++) {
-        if (write_data) {
+        if (write_data && clog(debug)) {
             // Download the image
             Eigen::MatrixXf sinogram_data(sinograms[t]->size(0),
                                           sinograms[t]->size(1));
@@ -78,13 +81,11 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
             fn_trace_data << _basename << "-" << tfunctionals[t].name << ".csv";
             writecsv(fn_trace_data.str(), sinogram_data);
 
-            if (clog(debug)) {
-                // Save the sinogram image
-                std::stringstream fn_trace_image;
-                fn_trace_image << _basename << "-" << tfunctionals[t].name
-                               << ".pgm";
-                writepgm(fn_trace_image.str(), mat2gray(sinogram_data));
-            }
+            // Save the sinogram image
+            std::stringstream fn_trace_image;
+            fn_trace_image << _basename << "-" << tfunctionals[t].name
+                           << ".pgm";
+            writepgm(fn_trace_image.str(), mat2gray(sinogram_data));
         }
 
 #ifdef WITH_CULA
@@ -120,11 +121,9 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
                 Eigen::VectorXf normalized_data(circusfunctions[p]->size(0));
                 normalized->download(normalized_data.data());
 
-                // Save the circus trace
-                std::stringstream fn_trace_data;
-                fn_trace_data << _basename << "-" << tfunctionals[t].name << "_"
-                              << pfunctionals[p].name << ".csv";
-                writecsv(fn_trace_data.str(), normalized_data);
+                // Aggregate the signatures
+                assert(signatures.rows() == normalized_data.size());
+                signatures.col(t *tfunctionals.size() + p) = normalized_data;
             }
 
             delete normalized;
@@ -138,4 +137,11 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
     // Clean-up
     for (size_t t = 0; t < tfunctionals.size(); t++)
         delete sinograms[t];
+
+    // Save the signatures
+    if (write_data) {
+        std::stringstream fn_trace_data;
+        fn_trace_data << _basename << ".csv";
+        writecsv(fn_trace_data.str(), signatures);
+    }
 }
