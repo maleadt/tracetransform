@@ -225,6 +225,7 @@ Eigen::MatrixXf pad(const Eigen::MatrixXf &image) {
         std::floor((image_padded.cols() + 1) / 2.0) - 1,
         std::floor((image_padded.rows() + 1) / 2.0) - 1);
     Point<float>::type df = origin_padded - origin;
+    // TODO: block operation
     for (int col = 0; col < image.cols(); col++) {
         for (int row = 0; row < image.rows(); row++) {
             image_padded(row + (int)df.y(), col + (int)df.x()) =

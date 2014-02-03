@@ -50,24 +50,25 @@ void
 Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
                           std::vector<PFunctionalWrapper> &pfunctionals,
                           bool write_data) const {
+    Eigen::MatrixXf signatures((int)std::floor(360 / _angle_stepsize),
+                               tfunctionals.size() * pfunctionals.size());
+
     // Process all T-functionals
     clog(debug) << "Calculating sinograms for given T-functionals" << std::endl;
     std::vector<Eigen::MatrixXf> sinograms =
         getSinograms(_image, _angle_stepsize, tfunctionals);
     for (size_t t = 0; t < tfunctionals.size(); t++) {
-        if (write_data) {
+        if (write_data && clog(debug)) {
             // Save the sinogram trace
             std::stringstream fn_trace_data;
             fn_trace_data << _basename << "-" << tfunctionals[t].name << ".csv";
             writecsv(fn_trace_data.str(), sinograms[t]);
 
-            if (clog(debug)) {
-                // Save the sinogram image
-                std::stringstream fn_trace_image;
-                fn_trace_image << _basename << "-" << tfunctionals[t].name
-                               << ".pgm";
-                writepgm(fn_trace_image.str(), mat2gray(sinograms[t]));
-            }
+            // Save the sinogram image
+            std::stringstream fn_trace_image;
+            fn_trace_image << _basename << "-" << tfunctionals[t].name
+                           << ".pgm";
+            writepgm(fn_trace_image.str(), mat2gray(sinograms[t]));
         }
 
         // Orthonormal functionals require the nearest orthonormal sinogram
@@ -93,12 +94,17 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
             Eigen::VectorXf normalized = zscore(circusfunctions[p]);
 
             if (write_data) {
-                // Save the circus trace
-                std::stringstream fn_trace_data;
-                fn_trace_data << _basename << "-" << tfunctionals[t].name << "_"
-                              << pfunctionals[p].name << ".csv";
-                writecsv(fn_trace_data.str(), normalized);
+                // Aggregate the signatures
+                assert(signatures.rows() == normalized.size());
+                signatures.col(t *tfunctionals.size() + p) = normalized;
             }
         }
+    }
+
+    // Save the signatures
+    if (write_data) {
+        std::stringstream fn_trace_data;
+        fn_trace_data << _basename << ".csv";
+        writecsv(fn_trace_data.str(), signatures);
     }
 }
