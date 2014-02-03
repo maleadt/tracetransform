@@ -122,8 +122,8 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
                 normalized->download(normalized_data.data());
 
                 // Aggregate the signatures
-                assert(signatures.rows() == normalized_data.size());
-                signatures.col(t *tfunctionals.size() + p) = normalized_data;
+                assert(signatures.rows() == normalized.size());
+                signatures.col(t * pfunctionals.size() + p) = normalized_data;
             }
 
             delete normalized;
@@ -140,8 +140,8 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
 
     // Save the signatures
     if (write_data) {
-        std::stringstream fn_trace_data;
-        fn_trace_data << _basename << ".csv";
-        writecsv(fn_trace_data.str(), signatures);
+        std::stringstream fn_signatures;
+        fn_signatures << _basename << ".csv";
+        writecsv(fn_signatures.str(), signatures);
     }
 }
