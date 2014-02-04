@@ -122,7 +122,7 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
                 normalized->download(normalized_data.data());
 
                 // Aggregate the signatures
-                assert(signatures.rows() == normalized.size());
+                assert(signatures.rows() == normalized_data.size());
                 signatures.col(t * pfunctionals.size() + p) = normalized_data;
             }
 
