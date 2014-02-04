@@ -139,7 +139,7 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
         delete sinograms[t];
 
     // Save the signatures
-    if (write_data) {
+    if (write_data && pfunctionals.size() > 0) {
         std::stringstream fn_signatures;
         fn_signatures << _basename << ".csv";
         writecsv(fn_signatures.str(), signatures);
