@@ -15,48 +15,76 @@
 #include <new>       // for operator new
 #include <stdexcept> // for runtime_error
 
+// Local
+#include "logger.hpp"
+
 
 //
 // Routines
 //
 
-Eigen::MatrixXi readpgm(std::string filename) {
+template <typename T> T readNetpbmValue(std::stringstream &stream) {
+    // Skip whitespace and comment lines
+    char next;
+    do {
+        next = stream.get();
+        while (next == '#') {
+            stream.ignore(INT_MAX, '\n');
+            next = stream.get();
+        }
+    } while (next == ' ' || next == '\t' || next == '\n' || next == '\r');
+    stream.unget();
+
+    // Extract the value
+    T value;
+    stream >> value;
+    if (stream.fail())
+        throw std::runtime_error("Error processing file");
+
+    return value;
+}
+
+std::vector<Eigen::MatrixXi> readnetpbm(std::string filename) {
     std::ifstream infile(filename);
     if (!infile.good())
         throw std::runtime_error("could not open input file");
-    std::string inputLine = "";
-
-    // First line: version
-    getline(infile, inputLine);
-    if (inputLine.compare("P2") != 0)
-        throw std::runtime_error("invalid PGM version");
-
-    // Second line: comment (optional)
-    if (infile.peek() == '#')
-        getline(infile, inputLine);
-
-    // Continue with a stringstream
     std::stringstream ss;
     ss << infile.rdbuf();
 
-    // Size
-    size_t numrows = 0, numcols = 0;
-    ss >> numcols >> numrows;
-    Eigen::MatrixXi data(numrows, numcols);
+    // Magic string
+    std::string magic;
+    magic = readNetpbmValue<std::string>(ss);
+    size_t channels;
+    if (magic == "P2")
+        channels = 2;
+    else if (magic == "P3")
+        channels = 3;
+    else
+        throw std::runtime_error("Invalid Netpbm magic");
+
+    // Image size
+    size_t numrows = readNetpbmValue<size_t>(ss);
+    size_t numcols = readNetpbmValue<size_t>(ss);
+    std::vector<Eigen::MatrixXi> data(channels);
+    for (size_t i = 0; i < channels; i++)
+        data[i] = Eigen::MatrixXi(numrows, numcols);
 
     // Maxval
-    size_t maxval;
-    ss >> maxval;
+    size_t maxval = readNetpbmValue<size_t>(ss);
     assert(maxval == 255);
 
     // Data
     float value;
     for (size_t row = 0; row < numrows; row++) {
         for (size_t col = 0; col < numcols; col++) {
-            ss >> value;
-            data(row, col) = value;
+            for (size_t i = 0; i < channels; i++) {
+                value = readNetpbmValue<float>(ss);
+                data[i](row, col) = value;
+            }
         }
     }
+    if (!ss.eof())
+        clog(warning) << "Trailing data at end of image file" << std::endl;
     infile.close();
 
     return data;

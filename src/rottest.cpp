@@ -4,6 +4,7 @@
 
 // Standard library
 #include <iostream>
+#include <vector>
 
 // Local
 #include "auxiliary.hpp"
@@ -36,7 +37,9 @@ int main(int argc, char **argv) {
     int angle = std::stoi(argv[2]);
 
     // Read image
-    Eigen::MatrixXi input_gray = readpgm(filename);
+    std::vector<Eigen::MatrixXi> image = readnetpbm(filename);
+    assert(image.size() == 1);
+    Eigen::MatrixXi input_gray = image[0];
     printmat(input_gray);
     Eigen::MatrixXf input = gray2mat(input_gray);
 
