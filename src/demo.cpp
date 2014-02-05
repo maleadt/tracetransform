@@ -342,5 +342,7 @@ int main(int argc, char **argv) {
             ++indicator;
     }
 
+    CUDAHelper::checkError(cudaDeviceReset());
+
     return 0;
 }
