@@ -33,7 +33,7 @@ class Progress {
     typedef std::chrono::duration<double, system_clock::period> partialDuration;
 
   public:
-    Progress(unsigned int _n = 0) : n(_n), pct(0), cur(0), width(80) {}
+    Progress(unsigned int _n = 0) : n(_n), cur(0), pct(0), width(80) {}
     void reset(uint64_t _n) {
         n = _n;
         pct = 0;
