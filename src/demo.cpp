@@ -23,6 +23,9 @@
 #include <cuda_runtime.h>
 #include <cuda_profiler_api.h>
 
+// OpenMP
+#include <omp.h>
+
 // Local
 #include "logger.hpp"
 #include "auxiliary.hpp"
@@ -188,14 +191,14 @@ int main(int argc, char **argv) {
     //
 
     // Check for CUDA devices
-    int count;
-    cudaGetDeviceCount(&count);
-    clog(debug) << "Found " << count << " CUDA device(s)." << std::endl;
-    if (count < 1) {
+    int num_gpus;
+    cudaGetDeviceCount(&num_gpus);
+    clog(debug) << "Found " << num_gpus << " CUDA device(s)." << std::endl;
+    if (num_gpus < 1) {
         std::cerr << "No CUDA-capable devices found." << std::endl;
         return 1;
     } else {
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < num_gpus; i++) {
             cudaDeviceProp prop;
             CUDAHelper::checkError(cudaGetDeviceProperties(&prop, i));
 
@@ -252,7 +255,20 @@ int main(int argc, char **argv) {
     Progress indicator(inputs.size());
     if (showProgress)
         indicator.start();
-    for (const std::string &input : inputs) {
+    omp_set_num_threads(num_gpus);
+    #pragma omp parallel for
+    for (auto it = inputs.begin(); it < inputs.end(); it++) {
+        const std::string &input = *it;
+
+        // Select a GPU
+        unsigned int cpu_thread_id = omp_get_thread_num();
+        unsigned int num_cpu_threads = omp_get_num_threads();
+        CUDAHelper::checkError(cudaSetDevice(cpu_thread_id % num_gpus));
+        int gpu_id = -1;
+        CUDAHelper::checkError(cudaGetDevice(&gpu_id));
+        #pragma omp critical
+        clog(debug) << "Processing '" << input << "' on GPU " << gpu_id << " in CPU thread " << cpu_thread_id << " (of " << num_cpu_threads << ")" << std::endl;
+
         // Get the image basename
         boost::filesystem::path path(input);
         if (!exists(path)) {
@@ -321,6 +337,7 @@ int main(int argc, char **argv) {
             }
         }
 
+        #pragma omp critical
         if (showProgress)
             ++indicator;
     }
