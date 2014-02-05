@@ -22,8 +22,8 @@
 // Routines
 //
 
-// Read an ASCII PGM file
-Eigen::MatrixXi readpgm(std::string filename);
+// Read an ASCII PPM file
+std::vector<Eigen::MatrixXi> readnetpbm(std::string filename);
 
 // Write an ASCII PGM file
 void writepgm(std::string filename, const Eigen::MatrixXi &data);

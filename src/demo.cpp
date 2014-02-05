@@ -13,6 +13,7 @@
 #include <chrono>
 
 // Boost
+#include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 
@@ -267,7 +268,9 @@ int main(int argc, char **argv) {
         int gpu_id = -1;
         CUDAHelper::checkError(cudaGetDevice(&gpu_id));
         #pragma omp critical
-        clog(debug) << "Processing '" << input << "' on GPU " << gpu_id << " in CPU thread " << cpu_thread_id << " (of " << num_cpu_threads << ")" << std::endl;
+                clog(debug) << "Processing '" << input << "' on GPU " << gpu_id
+                            << " in CPU thread " << cpu_thread_id << " (of "
+                            << num_cpu_threads << ")" << std::endl;
 
         // Get the image basename
         boost::filesystem::path path(input);
@@ -279,48 +282,61 @@ int main(int argc, char **argv) {
         }
         std::string basename = path.stem().string();
 
-        // Read the image
-        Eigen::MatrixXf image = gray2mat(readpgm(input));
+        // Load image components according to their type
+        std::vector<Eigen::MatrixXi> components;
+        if (boost::iequals(path.extension().string(), ".pgm") ||
+            boost::iequals(path.extension().string(), ".ppm")) {
+            components = readnetpbm(input);
+        } else {
+            clog(error) << "Unrecognized input file format" << std::endl;
+            throw boost::program_options::validation_error(
+                boost::program_options::validation_error::invalid_option_value,
+                "inputs", input);
+        }
+
+        int i = 0;
+        for (const auto &component : components) {
+            // Generate a local basename
+            i++;
+            std::string component_name;
+            if (components.size() == 1)
+                component_name = basename;
+            else
+                component_name = basename + "_c" + std::to_string(i);
+
+        // Preprocess the image
 #ifdef WITH_CULA
-        Transformer transformer(image, basename, vm["angle"].as<unsigned int>(),
-                                orthonormal);
+            Transformer transformer(gray2mat(component), component_name,
+                                    vm["angle"].as<unsigned int>(),
+                                    orthonormal);
 #else
-        Transformer transformer(image, basename,
-                                vm["angle"].as<unsigned int>());
+            Transformer transformer(gray2mat(component), component_name,
+                                    vm["angle"].as<unsigned int>());
 #endif
 
-        if (mode == CALCULATE) {
-            transformer.getTransform(tfunctionals, pfunctionals, true);
-        } else if (mode == PROFILE) {
-            cudaProfilerStart();
-            transformer.getTransform(tfunctionals, pfunctionals, false);
-            cudaProfilerStop();
-        } else if (mode == BENCHMARK) {
-            if (!vm.count("iterations"))
-                throw boost::program_options::required_option("iterations");
+            if (mode == CALCULATE) {
+                transformer.getTransform(tfunctionals, pfunctionals, true);
+            } else if (mode == PROFILE) {
+                cudaProfilerStart();
+                transformer.getTransform(tfunctionals, pfunctionals, false);
+                cudaProfilerStop();
+            } else if (mode == BENCHMARK) {
+                if (!vm.count("iterations"))
+                    throw boost::program_options::required_option("iterations");
 
-            // Allocate array for time measurements
-            unsigned int iterations = vm["iterations"].as<unsigned int>();
-            std::vector<std::chrono::time_point<
-                std::chrono::high_resolution_clock> > timings(iterations + 1);
+                // Allocate array for time measurements
+                unsigned int iterations = vm["iterations"].as<unsigned int>();
+                std::vector<std::chrono::time_point<
+                    std::chrono::high_resolution_clock> > timings(iterations +
+                                                                  1);
 
-            // Warm-up
-            transformer.getTransform(tfunctionals, pfunctionals, false);
-
-            // Transform the image
-            // NOTE: although the use of elapsed real time rather than CPU
-            //       time might seem inaccurate, it is necessary because
-            //       some of the ports execute code on non-CPU hardware
-            std::chrono::time_point<std::chrono::high_resolution_clock> last,
-                current;
-            for (unsigned int n = 0; n < iterations; n++) {
-                last = std::chrono::high_resolution_clock::now();
+                // Warm-up
                 transformer.getTransform(tfunctionals, pfunctionals, false);
 
                 // Transform the image
                 // NOTE: although the use of elapsed real time rather than CPU
-                //       time might seem inaccurate, it is necessary because
-                //       some of the ports execute code on non-CPU hardware
+                // time might seem inaccurate, it is necessary because
+                // some of the ports execute code on non-CPU hardware
                 std::chrono::time_point<std::chrono::high_resolution_clock>
                 last, current;
                 for (unsigned int n = 0; n < iterations; n++) {
