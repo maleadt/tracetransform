@@ -61,8 +61,8 @@ std::vector<Eigen::MatrixXi> readnetpbm(std::string filename) {
         throw std::runtime_error("Invalid Netpbm magic");
 
     // Image size
-    size_t numrows = readNetpbmValue<size_t>(ss);
     size_t numcols = readNetpbmValue<size_t>(ss);
+    size_t numrows = readNetpbmValue<size_t>(ss);
     std::vector<Eigen::MatrixXi> data(channels);
     for (size_t i = 0; i < channels; i++)
         data[i] = Eigen::MatrixXi(numrows, numcols);
