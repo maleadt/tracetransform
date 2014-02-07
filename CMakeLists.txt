@@ -13,7 +13,6 @@ SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
 # Extra warnings
-MESSAGE(${CMAKE_C_COMPILER_ID})
 IF (${CMAKE_C_COMPILER_ID} STREQUAL "GNU" OR ${CMAKE_C_COMPILER_ID} STREQUAL "Clang")
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
 ENDIF()
@@ -33,6 +32,10 @@ ENDIF()
 SET(CMAKE_CXX_FLAGS_PROFILE "-O2 -g -DNDEBUG -fno-omit-frame-pointer -fno-inline")
 SET(CMAKE_C_FLAGS_PROFILE "-O2 -g -DNDEBUG -fno-omit-frame-pointer -fno-inline")
 
+# Build program_options
+SET(USE_BACKWARD ON CACHE BOOL "Use libbackward to provide pretty stack traces")
+
+
 #
 # Dependencies
 #
@@ -49,7 +52,9 @@ FIND_PACKAGE(Eigen3 REQUIRED)
 INCLUDE_DIRECTORIES(SYSTEM ${EIGEN3_INCLUDE_DIR})
 
 # Elfutils
-FIND_PACKAGE(Elfutils)
+IF (USE_BACKWARD)
+    FIND_PACKAGE(Elfutils REQUIRED)
+ENDIF()
 
 # Intel MKL
 SET(MKL_LINKTOOL_OPTS --linking=dynamic)
@@ -70,12 +75,12 @@ ENDIF (MKL_FOUND)
 # Libraries
 #
 
-IF (ELFUTILS_FOUND)
+IF (USE_BACKWARD)
 	ADD_LIBRARY(backward lib/backward/backward.hpp lib/backward/backward.cpp)
     ADD_DEFINITIONS(-DBACKWARD_HAS_DW=1)
 	TARGET_LINK_LIBRARIES(backward ${ELFUTILS_LIBRARIES})
 	SET(BACKWARD -Wl,--whole-archive backward -Wl,--no-whole-archive)
-ENDIF (ELFUTILS_FOUND)
+ENDIF (USE_BACKWARD)
 
 ADD_LIBRARY(auxiliary src/auxiliary.hpp src/auxiliary.cpp)
 ADD_LIBRARY(logger src/logger.hpp src/logger.cpp)
@@ -99,9 +104,9 @@ TARGET_LINK_LIBRARIES(transform ${COMMON_LIBRARIES} sinogram circus)
 
 ADD_EXECUTABLE(demo src/demo.cpp)
 TARGET_LINK_LIBRARIES(demo ${COMMON_LIBRARIES} transform ${Boost_LIBRARIES})
-IF (ELFUTILS_FOUND)
+IF (USE_BACKWARD)
 	TARGET_LINK_LIBRARIES(demo debug ${BACKWARD})
-ENDIF (ELFUTILS_FOUND)
+ENDIF (USE_BACKWARD)
 
 ADD_EXECUTABLE(rottest src/rottest.cpp)
 TARGET_LINK_LIBRARIES(rottest ${COMMON_LIBRARIES})
