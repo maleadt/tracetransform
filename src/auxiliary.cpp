@@ -54,7 +54,7 @@ std::vector<Eigen::MatrixXi> readnetpbm(std::string filename) {
     magic = readNetpbmValue<std::string>(ss);
     size_t channels;
     if (magic == "P2")
-        channels = 2;
+        channels = 1;
     else if (magic == "P3")
         channels = 3;
     else
