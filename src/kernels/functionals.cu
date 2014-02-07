@@ -947,9 +947,9 @@ __global__ void PFunctional3_kernel(const float *real, const float *imag,
     float *trapz = &temp[2 * rows]; // 2*rows long for scan()
 
     // Fetch and transform
-    linspace[row] = pow(
+    modifier[row] = pow(
         hypot(real[row + col * rows] / rows, imag[row + col * rows] / rows), 4);
-    modifier[row] = -1 + row * 2.0 / (rows - 1);
+    linspace[row] = -1 + row * 2.0 / (rows - 1);
     __syncthreads();
 
     // Differentiate
