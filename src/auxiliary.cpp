@@ -81,6 +81,13 @@ std::vector<Eigen::MatrixXi> readnetpbm(std::string filename) {
             }
         }
     }
+
+    // Trailing data?
+    char next = ss.peek();
+    while (next == ' ' || next == '\t' || next == '\n' || next == '\r') {
+        ss.get();
+        next = ss.peek();
+    }
     if (!ss.eof())
         clog(warning) << "Trailing data at end of image file" << std::endl;
     infile.close();
