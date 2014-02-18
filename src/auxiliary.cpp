@@ -288,9 +288,9 @@ float standard_deviation(const Eigen::VectorXf &input) {
         return NAN;
 
     float mean = arithmetic_mean(input);
-    float sum = 0;
+    double sum = 0;
     for (int i = 0; i < input.size(); i++) {
-        float diff = input(i) - mean;
+        double diff = input(i) - mean;
         sum += diff * diff;
     }
 
@@ -303,8 +303,8 @@ Eigen::VectorXf zscore(const Eigen::VectorXf &input) {
     if (input.size() == 0)
         return Eigen::VectorXf();
 
-    float mean = arithmetic_mean(input);
-    float stdev = standard_deviation(input);
+    double mean = arithmetic_mean(input);
+    double stdev = standard_deviation(input);
 
     Eigen::VectorXf transformed(input.size());
     for (int i = 0; i < input.size(); i++) {
