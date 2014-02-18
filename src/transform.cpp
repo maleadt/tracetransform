@@ -92,6 +92,8 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
         for (size_t p = 0; p < pfunctionals.size(); p++) {
             // Normalize
             Eigen::VectorXf normalized = zscore(circusfunctions[p]);
+            std::cout << normalized[0] << std::endl;
+            exit(0);
 
             if (write_data) {
                 // Aggregate the signatures

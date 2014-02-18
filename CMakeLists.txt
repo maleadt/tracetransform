@@ -8,6 +8,18 @@ PROJECT(TraceTransform)
 # Local modules
 SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 
+# Build options
+OPTION(USE_BACKWARD "Use libbackward to provide pretty stack traces" OFF)
+OPTION(USE_ASAN "Use Clang's address sanitized to detect memory issues" OFF)
+IF (USE_ASAN AND USE_BACKWARD)
+    MESSAGE(FATAL_ERROR "Address Sanitizer and libbackward are incompatible")
+ENDIF()
+
+
+#
+# Compile flags
+#
+
 # Standard libraries
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
@@ -20,20 +32,22 @@ IF (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 ENDIF()
 
-# Add address sanitizer to debug build
-IF (${CMAKE_C_COMPILER_ID} STREQUAL "Clang" AND NOT ${CMAKE_C_COMPILER_VERSION} LESS "3.2")
-    SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O1 -fsanitize=address -fno-omit-frame-pointer") 
-ENDIF()
-IF (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND NOT ${CMAKE_CXX_COMPILER_VERSION} LESS "3.2")
-    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O1 -fsanitize=address -fno-omit-frame-pointer") 
+# Address Sanitizer
+IF (USE_ASAN)
+    INCLUDE(CheckCCompilerFlag)
+    SET(CMAKE_REQUIRED_FLAGS "-fsanitize=address") 
+    CHECK_C_COMPILER_FLAG("" HAVE_ASAN)
+    IF (${HAVE_ASAN})
+        SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O1 -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O1 -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+    ELSE()
+         MESSAGE(FATAL_ERROR "Address Sanitizer not supported by your compiler")
+    ENDIF()
 ENDIF()
 
 # Profile build
 SET(CMAKE_CXX_FLAGS_PROFILE "-O2 -g -DNDEBUG -fno-omit-frame-pointer -fno-inline")
 SET(CMAKE_C_FLAGS_PROFILE "-O2 -g -DNDEBUG -fno-omit-frame-pointer -fno-inline")
-
-# Build program_options
-SET(USE_BACKWARD ON CACHE BOOL "Use libbackward to provide pretty stack traces")
 
 
 #

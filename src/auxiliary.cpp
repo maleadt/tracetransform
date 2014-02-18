@@ -288,9 +288,9 @@ float standard_deviation(const Eigen::VectorXf &input) {
         return NAN;
 
     float mean = arithmetic_mean(input);
-    float sum = 0;
+    double sum = 0;
     for (int i = 0; i < input.size(); i++) {
-        float diff = input(i) - mean;
+        double diff = input(i) - mean;
         sum += diff * diff;
     }
 
