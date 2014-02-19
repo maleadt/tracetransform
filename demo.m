@@ -57,7 +57,9 @@ if strcmp(program_mode, 'calculate')
 
 elseif strcmp(program_mode, 'benchmark')
     % Warm-up
-    get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
+    for i=1:3
+        get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
+    end
 
     for i=1:iterations
        tstart = tic;
