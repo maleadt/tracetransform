@@ -37,5 +37,5 @@ function [padded basename] = prepare_transform(input, filename, angle_stepsize, 
     padded = im2double(uint8(padded));
 
     %% Find out the file basename
-    [~, basename, ~] = fileparts(filename)
+    [~, basename, ~] = fileparts(filename);
 end
