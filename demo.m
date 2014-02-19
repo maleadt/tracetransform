@@ -82,7 +82,7 @@ elseif strcmp(program_mode, 'benchmark')
 
     for i=1:iterations
        tstart = tic;
-       get_transform(padded, tfunctionals, pfunctionals, 1, orthonormal);
+       get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
        telapsed = toc(tstart);
        fprintf(1, 't_%g=%g\n', i, telapsed)
     end
