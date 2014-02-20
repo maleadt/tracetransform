@@ -893,45 +893,14 @@ void PFunctional2_destroy(PFunctional2_precalc_t *precalc) {
 PFunctional3_precalc_t *PFunctional3_prepare(size_t rows, size_t cols) {
     PFunctional3_precalc_t *precalc =
         (PFunctional3_precalc_t *)malloc(sizeof(PFunctional3_precalc_t));
-    precalc->real =
-        new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
-    precalc->imag =
-        new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
+    cufftPlan1d(&precalc->plan, rows, CUFFT_C2C, cols);
+    precalc->fourier = new CUDAHelper::GlobalMemory<cufftComplex>(
+        CUDAHelper::size_2d(rows, cols));
 
     return precalc;
 }
 
-__global__ void PFunctional3_dft_kernel(const float *input, float *real,
-                                        float *imag) {
-    // Shared memory
-    extern __shared__ float temp[];
-
-    // Compute the thread dimensions
-    const int col = blockIdx.x;
-    const int row = threadIdx.y;
-    const int rows = blockDim.y;
-
-    // Fetch
-    temp[row] = input[row + col * rows];
-    __syncthreads();
-
-    // Calculate the DFT
-    // TODO: precalculate arg/sinarg/cosarg?
-    float local_real = 0, local_imag = 0;
-    float arg = -2.0 * M_PI * (float)row / (float)rows;
-    for (size_t i = 0; i < rows; i++) {
-        float sinarg, cosarg;
-        sincosf(i * arg, &sinarg, &cosarg);
-        local_real += temp[i] * cosarg;
-        local_imag += temp[i] * sinarg;
-    }
-
-    // Write back
-    real[row + col * rows] = local_real;
-    imag[row + col * rows] = local_imag;
-}
-
-__global__ void PFunctional3_kernel(const float *real, const float *imag,
+__global__ void PFunctional3_kernel(const cufftComplex *fourier,
                                     float *output) {
     // Shared memory
     extern __shared__ float temp[];
@@ -947,8 +916,9 @@ __global__ void PFunctional3_kernel(const float *real, const float *imag,
     float *trapz = &temp[2 * rows]; // 2*rows long for scan()
 
     // Fetch and transform
-    modifier[row] = pow(
-        hypot(real[row + col * rows] / rows, imag[row + col * rows] / rows), 4);
+    modifier[row] = pow(hypot(fourier[row + col * rows].x / rows,
+                              fourier[row + col * rows].y / rows),
+                        4);
     linspace[row] = -1 + row * 2.0 / (rows - 1);
     __syncthreads();
 
@@ -975,9 +945,13 @@ void PFunctional3(const CUDAHelper::GlobalMemory<float> *input,
     {
         dim3 threads(1, input->rows());
         dim3 blocks(input->cols(), 1);
-        PFunctional3_dft_kernel
-                <<<blocks, threads, input->rows() * sizeof(float)>>>
-            (*input, *precalc->real, *precalc->imag);
+        cudaMemset(*precalc->fourier, 0,
+                   input->cols() * input->rows() * sizeof(cufftComplex));
+        cudaMemcpy2D(*precalc->fourier, sizeof(cufftComplex), *input,
+                     sizeof(float), sizeof(float),
+                     input->cols() * input->rows(), cudaMemcpyDeviceToDevice);
+        cufftExecC2C(precalc->plan, *precalc->fourier, *precalc->fourier,
+                     CUFFT_FORWARD);
         CUDAHelper::checkState();
     }
 
@@ -987,14 +961,14 @@ void PFunctional3(const CUDAHelper::GlobalMemory<float> *input,
         dim3 blocks(input->cols(), 1);
         PFunctional3_kernel
                 <<<blocks, threads, 4 * input->rows() * sizeof(float)>>>
-            (*precalc->real, *precalc->imag, *output);
+            (*precalc->fourier, *output);
         CUDAHelper::checkState();
     }
 }
 
 void PFunctional3_destroy(PFunctional3_precalc_t *precalc) {
-    delete precalc->real;
-    delete precalc->imag;
+    cufftDestroy(precalc->plan);
+    delete precalc->fourier;
     free(precalc);
 }
 

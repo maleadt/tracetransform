@@ -6,9 +6,14 @@
 #ifndef _TRACETRANSFORM_KERNELS_FUNCTIONALS_
 #define _TRACETRANSFORM_KERNELS_FUNCTIONALS_
 
+// CUDA
+#include <cufft.h>
+
 // Local
 #include "../cudahelper/memory.hpp"
 
+// TODO: why should everybody know of the contents of these structs?
+// TODO: precalc memsets are not kept across iterations?
 
 //
 // T functionals
@@ -100,7 +105,8 @@ void PFunctional2_destroy(PFunctional2_precalc_t *precalc);
 
 // P3
 typedef struct {
-    CUDAHelper::GlobalMemory<float> *real, *imag;
+    cufftHandle plan;
+    CUDAHelper::GlobalMemory<cufftComplex> *fourier;
 } PFunctional3_precalc_t;
 PFunctional3_precalc_t *PFunctional3_prepare(size_t rows, size_t cols);
 void PFunctional3(const CUDAHelper::GlobalMemory<float> *input,
