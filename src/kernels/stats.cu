@@ -15,7 +15,7 @@
 
 __global__ void zscore_kernel(const float *input, float *output) {
     // Shared memory
-    extern __shared__ double temp_hp[];
+    extern __shared__ float temp[];
 
     // Compute the thread dimensions
     const int col = blockIdx.x;
@@ -23,31 +23,31 @@ __global__ void zscore_kernel(const float *input, float *output) {
     const int rows = blockDim.y;
 
     // Offsets into shared memory
-    double *mean = &temp_hp[2 * rows];
-    double *stdev = &temp_hp[2 * rows + 1];
+    float *mean = &temp[2 * rows];
+    float *stdev = &temp[2 * rows + 1];
 
     // Fetch
-    temp_hp[row] = input[row + col * rows];
+    temp[row] = input[row + col * rows];
     __syncthreads();
 
     // Scan to integrate
-    scan_array(temp_hp, row, rows, SUM);
+    scan_array(temp, row, rows, SUM);
 
     // Calculate the arithmetic mean
     if (row == rows - 1)
-        *mean = temp_hp[rows + row] / rows;
+        *mean = temp[rows + row] / rows;
     __syncthreads();
 
     // Fetch and differentiate against mean
-    double diff = input[row + col * rows] - *mean;
-    temp_hp[row] = diff * diff;
+    float diff = input[row + col * rows] - *mean;
+    temp[row] = diff * diff;
 
     // Scan to integrate
-    scan_array(temp_hp, row, rows, SUM);
+    scan_array(temp, row, rows, SUM);
 
     // Calculate the standard deviation
     if (row == rows - 1)
-        *stdev = std::sqrt(temp_hp[rows + row] / (rows - 1));
+        *stdev = std::sqrt(temp[rows + row] / (rows - 1));
     __syncthreads();
 
     // Normalize the input
@@ -67,8 +67,8 @@ zscore(const CUDAHelper::GlobalMemory<float> *input) {
     {
         dim3 threads(1, input->rows());
         dim3 blocks(1, 1);
-        zscore_kernel <<<blocks, threads, 2 * input->rows() * sizeof(double) +
-                                              2 * sizeof(double)>>>
+        zscore_kernel <<<blocks, threads, 2 * input->rows() * sizeof(float) +
+                                              2 * sizeof(float)>>>
             (*input, *output);
         CUDAHelper::checkState();
     }

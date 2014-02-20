@@ -20,8 +20,7 @@ enum prescan_function_t {
 
 // TODO: replace with faster tree-based algorithm
 //       http://stackoverflow.com/questions/11385475/scan-array-cuda
-template <typename T>
-static __device__ void scan_array(T *temp, int index, int length,
+static __device__ void scan_array(float *temp, int index, int length,
                                   scan_operation_t operation) {
     int pout = 0, pin = 1;
     for (int offset = 1; offset < length; offset *= 2) {
