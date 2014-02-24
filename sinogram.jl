@@ -43,13 +43,13 @@ function parse_tfunctionals(args::Vector{String})
     return tfunctionals
 end
 
-function getSinograms(input::Image{Float64}, angle_stepsize::Uint,
+function getSinograms(input::AbstractImage{Float64,2}, angle_stepsize::Uint,
                       tfunctionals::Vector{TFunctionalWrapper})
-    @assert length(size(input)) == 2
-    @assert size(input, 1) == size(input, 2)        # Padded image!
+    # Image should be padded
+    @assert size(input, 1) == size(input, 2)
 
     # Get the image origin to rotate around
-    origin::Vector{Float64} = floor(([size(input)...] .+ 1) ./ 2)
+    origin::Point{Float64} = Point(floor(([size(input)...] .+ 1) ./ 2)...)
 
     # Allocate the output matrix
     outputs = Array(Image, length(tfunctionals))
@@ -81,7 +81,7 @@ function getSinograms(input::Image{Float64}, angle_stepsize::Uint,
         # Process all projection bands
         a_index::Uint = a / angle_stepsize + 1
         for p in 1:size(input, "x")-1
-            data = slice(input_rotated, "x", p)
+            data = view(input_rotated, "x", p)
 
             # Process all T-functionals
             for t in 1:length(tfunctionals)

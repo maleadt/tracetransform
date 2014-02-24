@@ -6,6 +6,7 @@ require("auxiliary")
 require("enum")
 require("log")
 
+using ProfileView
 using ArgParse
 using Images
 
@@ -97,26 +98,44 @@ function main(args)
 
     # Read the image
     input::Image{Float64} = gray2mat(imread(opts["input"]))
+    if isxfirst(input)
+        # Since we only  scan columns, make sure the image is laid out column major
+        input = ctranspose(input)
+    end
     (input, basename) = prepare_transform(input, opts["input"], opts["angle"], orthonormal)
 
     if opts["mode"] == "calculate"
         get_transform(input, basename, tfunctionals, pfunctionals,
                       opts["angle"], orthonormal, true)
-
     elseif opts["mode"] == "benchmark"
         if opts["iterations"] == nothing
             error("required argument iterations was not provided")
         end
 
-        # Warm-up
-        get_transform(input, basename, tfunctionals, pfunctionals,
-                      opts["angle"], orthonormal, false)
+        # Warm-up heavily
+        for i = 1:3
+            get_transform(input, basename, tfunctionals, pfunctionals,
+                          opts["angle"], orthonormal, false)
+        end
 
         for i = 1:opts["iterations"]
             time = @elapsed get_transform(input, basename, tfunctionals,
                                           pfunctionals, opts["angle"],
                                           orthonormal, false)
             println("t_$(i)=$(time)")
+        end
+    elseif opts["mode"] == "profile"
+        # Warm-up
+        get_transform(input, basename, tfunctionals, pfunctionals,
+                      opts["angle"], orthonormal, false)
+
+        @profile get_transform(input, basename, tfunctionals,
+                              pfunctionals, opts["angle"],
+                              orthonormal, false)
+        Profile.print()
+        ProfileView.view()
+        while true
+            sleep(10)
         end
     else
         error("invalid execution mode")
