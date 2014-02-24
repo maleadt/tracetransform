@@ -84,6 +84,10 @@ IF (MKL_FOUND)
     ENDIF()
 ENDIF (MKL_FOUND)
 
+# FFTW
+FIND_PACKAGE(FFTW REQUIRED)
+INCLUDE_DIRECTORIES(SYSTEM ${FFTW_INCLUDE_DIR})
+
 
 #
 # Libraries
@@ -101,6 +105,7 @@ ADD_LIBRARY(logger src/logger.hpp src/logger.cpp)
 SET(COMMON_LIBRARIES auxiliary logger)
 
 ADD_LIBRARY(functionals src/functionals.h src/functionals.c)
+TARGET_LINK_LIBRARIES(functionals ${FFTW_LIBRARIES})
 
 ADD_LIBRARY(sinogram src/sinogram.hpp src/sinogram.cpp)
 TARGET_LINK_LIBRARIES(sinogram functionals ${COMMON_LIBRARIES})

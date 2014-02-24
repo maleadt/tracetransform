@@ -61,7 +61,10 @@ float PFunctional1(const float *data, const size_t length);
 float PFunctional2(const float *data, const size_t length);
 
 // P3
+typedef void PFunctional3_precalc_t;
+PFunctional3_precalc_t *PFunctional3_prepare(size_t rows);
 float PFunctional3(const float *data, const size_t length);
+void PFunctional3_destroy(PFunctional3_precalc_t *precalc);
 
 // Hermite P-functionals
 float PFunctionalHermite(const float *data, const size_t length,

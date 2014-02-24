@@ -10,6 +10,10 @@
 #include <math.h>   // for log, sqrt, cos, sin, hypot, etc
 #include <stdlib.h> // for malloc, free, calloc, qsort, qsort_r
 #include <string.h> // for memcpy
+#include <assert.h>
+
+// FFTW
+#include <fftw3.h>
 
 // M_PI is dropped in GCC's C99
 #ifndef M_PI
@@ -338,41 +342,48 @@ float PFunctional2(const float *data, const size_t length) {
 // P3
 //
 
+PFunctional3_precalc_t *PFunctional3_prepare(size_t rows) {
+    // Plan the DFT we'll need
+    float *data = (float*) malloc(sizeof(float)*rows);
+    fftwf_complex *fourier = (fftwf_complex*) fftwf_malloc(sizeof(fftw_complex) * rows);
+    fftwf_plan p = fftwf_plan_dft_r2c_1d(rows, data, fourier, FFTW_MEASURE);
+    assert(p != NULL);
+    fftwf_execute(p);
+    fftwf_destroy_plan(p);
+    fftwf_free(fourier);
+    free(data);
+}
+
 float PFunctional3(const float *data, const size_t length) {
     // Calculate the discrete Fourier transform
-    // TODO: calloc already sets to 0?
-    float *fourier_real = (float *)calloc(length, sizeof(float));
-    float *fourier_imag = (float *)calloc(length, sizeof(float));
-    for (size_t i = 0; i < length; i++) {
-        fourier_real[i] = 0;
-        fourier_imag[i] = 0;
-        float arg = -2.0 * M_PI * (float)i / (float)length;
-        for (size_t j = 0; j < length; j++) {
-#if defined(__clang__)
-            float sinarg, cosarg;
-            sincosf(j * arg, &sinarg, &cosarg);
-#else
-            float cosarg = cos(j * arg);
-            float sinarg = sin(j * arg);
-#endif
-            fourier_real[i] += data[j] * cosarg;
-            fourier_imag[i] += data[j] * sinarg;
-        }
-    }
+    fftwf_complex *fourier = (fftwf_complex*) fftwf_malloc(sizeof(fftw_complex) * length);
+    fftwf_plan p = fftwf_plan_dft_r2c_1d(length, data, fourier, FFTW_ESTIMATE);
+    assert(p != NULL);
+    fftwf_execute(p);
 
     // Integrate
-    // NOTE: we abuse previously allocated vectors fourier_real and
-    //       fourier_imag to respectively save the linear space (x) and
-    //       modifier Fourier values (y)
-    for (size_t p = 0; p < length; p++) {
-        fourier_imag[p] =
-            pow(hypot(fourier_real[p] / length, fourier_imag[p] / length), 4);
-        fourier_real[p] = -1 + p * 2.0 / (length - 1);
+    float *linspace = (float*) malloc(sizeof(float) * length);
+    float *modifier = (float*) malloc(sizeof(float) * length);
+    for (size_t p = 0; p < length/2+1; p++) {
+        modifier[p] =
+            pow(hypot(fourier[p][0] / length, fourier[p][1] / length), 4);
+        linspace[p] = -1 + p * 2.0 / (length - 1);
     }
-    float sum = trapz(fourier_real, fourier_imag, length);
-    free(fourier_real);
-    free(fourier_imag);
+    for (size_t p = length/2+1; p < length; p++) {
+        modifier[p] =
+            pow(hypot(fourier[length-p][0] / length, fourier[length-p][1] / length), 4);
+        linspace[p] = -1 + p * 2.0 / (length - 1);
+    }
+    float sum = trapz(linspace, modifier, length);
+    fftwf_destroy_plan(p);
+    fftwf_free(fourier);
+    free(linspace);
+    free(modifier);
     return sum;
+}
+
+void PFunctional3_destroy(PFunctional3_precalc_t *precalc) {
+    return;
 }
 
 
