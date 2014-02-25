@@ -68,6 +68,15 @@ elseif strcmp(program_mode, 'benchmark')
        fprintf(1, 't_%g=%g\n', i, telapsed)
     end
 
+elseif strcmp(program_mode, 'profile')
+    % Warm-up
+    get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
+
+    profile on
+    get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
+    profile report
+    uiwait
+
 else
     error('invalid execution mode')
 end

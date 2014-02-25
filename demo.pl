@@ -34,7 +34,7 @@ warn("WARNING: unsupported arguments used\n") if ($unsupported);
 die("ERROR: unknown argument(s) ", join(", ", @ARGV), "\n") if (@ARGV);
 $directory = getcwd unless defined $directory;
 $angle = 1 unless defined $angle;
-die("ERROR: invalid program mode") unless $mode =~ m"^(benchmark|calculate)$";
+die("ERROR: invalid program mode") unless $mode =~ m"^(benchmark|calculate|profile)$";
 die("ERROR: required argument iterations was not provided\n")
     if ($mode eq "benchmark" && not defined $iterations);
 die("ERROR: required argument t-functional was not provided\n")
@@ -57,7 +57,7 @@ if ($angle) {
 }
 my $matlab_code = "try, run('$directory/demo.m'), catch err, fprintf(2, '%s\\n'," .
               " getReport(err, 'extended')); exit(1), end, exit(0)";
-my $cmd = "matlab -nodisplay -r \"$matlab_setup; $matlab_code\"";
+my $cmd = "matlab -nodesktop -nosplash -r \"$matlab_setup; $matlab_code\"";
 
 # Execute command and print output (but strip the MATLAB header)
 open(my $output, "$cmd |");
