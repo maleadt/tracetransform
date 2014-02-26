@@ -24,8 +24,7 @@
 // Functionals
 //
 
-// TODO: make this an enum class when ICC 14 is released
-enum PFunctional {
+enum class PFunctional {
     Hermite,
     P1,
     P2,

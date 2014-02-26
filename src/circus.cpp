@@ -112,13 +112,12 @@ getCircusFunctions(const Eigen::MatrixXf &input,
         outputs[p] = Eigen::VectorXf(input.cols());
 
     // Pre-calculate
-    std::map<PFunctional, void *> precalculations;
+    std::map<size_t, void *> precalculations;
     for (size_t p = 0; p < pfunctionals.size(); p++) {
         PFunctional pfunctional = pfunctionals[p].functional;
         switch (pfunctional) {
         case PFunctional::P3:
-            precalculations[pfunctional] =
-                PFunctional3_prepare(input.rows());
+            precalculations[p] = PFunctional3_prepare(input.rows());
             break;
         case PFunctional::Hermite:
         case PFunctional::P1:
@@ -157,9 +156,10 @@ getCircusFunctions(const Eigen::MatrixXf &input,
     }
 
     // Destroy pre-calculations
-    std::map<PFunctional, void *>::iterator it = precalculations.begin();
+    std::map<size_t, void *>::iterator it = precalculations.begin();
     while (it != precalculations.end()) {
-        switch (it->first) {
+        PFunctional pfunctional = pfunctionals[it->first].functional;
+        switch (pfunctional) {
         case PFunctional::P3: {
             PFunctional3_precalc_t *precalc =
                 (PFunctional3_precalc_t *)it->second;

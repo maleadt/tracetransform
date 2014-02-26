@@ -352,12 +352,18 @@ PFunctional3_precalc_t *PFunctional3_prepare(size_t rows) {
     fftwf_destroy_plan(p);
     fftwf_free(fourier);
     free(data);
+
+    return NULL;
 }
 
 float PFunctional3(const float *data, const size_t length) {
     // Calculate the discrete Fourier transform
+    // TODO: we should only plan this once, given that we use the same array
     fftwf_complex *fourier = (fftwf_complex*) fftwf_malloc(sizeof(fftw_complex) * length);
-    fftwf_plan p = fftwf_plan_dft_r2c_1d(length, data, fourier, FFTW_ESTIMATE);
+    // NOTE: we can safely cast the const away, because in FFTW_ESTIMATE regime
+    //       the input data will be preserved
+    fftwf_plan p =
+        fftwf_plan_dft_r2c_1d(length, (float *)data, fourier, FFTW_ESTIMATE);
     assert(p != NULL);
     fftwf_execute(p);
 

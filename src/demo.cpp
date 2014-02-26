@@ -26,8 +26,7 @@
 // Main application
 //
 
-// TODO: make this an enum class when ICC 14 is released
-enum ProgramMode {
+enum class ProgramMode {
     CALCULATE,
     PROFILE,
     BENCHMARK
@@ -37,11 +36,11 @@ std::istream &operator>>(std::istream &in, ProgramMode &mode) {
     std::string name;
     in >> name;
     if (name == "calculate") {
-        mode = CALCULATE;
+        mode = ProgramMode::CALCULATE;
     } else if (name == "profile") {
-        mode = PROFILE;
+        mode = ProgramMode::PROFILE;
     } else if (name == "benchmark") {
-        mode = BENCHMARK;
+        mode = ProgramMode::BENCHMARK;
     } else {
         throw boost::program_options::validation_error(
             boost::program_options::validation_error::invalid_option_value);
@@ -150,7 +149,7 @@ int main(int argc, char **argv) {
         logger.settings.threshold = warning;
     else
         showProgress = true;
-    if (mode == BENCHMARK)
+    if (mode == ProgramMode::BENCHMARK)
         showProgress = false;
 
     // Check for orthonormal P-functionals
@@ -217,11 +216,11 @@ int main(int argc, char **argv) {
                                     vm["angle"].as<unsigned int>(),
                                     orthonormal);
 
-            if (mode == CALCULATE) {
+            if (mode == ProgramMode::CALCULATE) {
                 transformer.getTransform(tfunctionals, pfunctionals, true);
-            } else if (mode == PROFILE) {
+            } else if (mode == ProgramMode::PROFILE) {
                 transformer.getTransform(tfunctionals, pfunctionals, false);
-            } else if (mode == BENCHMARK) {
+            } else if (mode == ProgramMode::BENCHMARK) {
                 if (!vm.count("iterations"))
                     throw boost::program_options::required_option("iterations");
 
