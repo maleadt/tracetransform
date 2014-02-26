@@ -14,6 +14,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/foreach.hpp>
 
 // Local
 #include "logger.hpp"
@@ -178,7 +179,7 @@ int main(int argc, char **argv) {
     Progress indicator(inputs.size());
     if (showProgress)
         indicator.start();
-    for (const std::string &input : inputs) {
+    BOOST_FOREACH(const std::string & input, inputs) {
         // Get the image basename
         boost::filesystem::path path(input);
         if (!exists(path)) {
@@ -202,14 +203,15 @@ int main(int argc, char **argv) {
         }
 
         int i = 0;
-        for (const auto &component : components) {
+        BOOST_FOREACH(const auto & component, components) {
             // Generate a local basename
             i++;
             std::string component_name;
             if (components.size() == 1)
                 component_name = basename;
             else
-                component_name = basename + "_c" + std::to_string(i);
+                component_name =
+                    basename + "_c" + boost::lexical_cast<std::string>(i);
 
             // Preprocess the image
             Transformer transformer(gray2mat(component), component_name,
