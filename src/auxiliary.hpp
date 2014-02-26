@@ -9,6 +9,7 @@
 // Standard library
 #include <stddef.h> // for size_t
 #include <string>   // for string
+#include <vector>
 
 // Eigen
 #include <Eigen/Dense> // for MatrixXf, MatrixXi, etc

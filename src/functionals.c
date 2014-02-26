@@ -23,6 +23,12 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+#ifdef __GNUC__
+#define UNUSED(x) UNUSED_##x __attribute__((__unused__))
+#else
+#define UNUSED(x) UNUSED_##x
+#endif
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Auxiliary
@@ -162,7 +168,8 @@ float TFunctional2(const float *data, const size_t length) {
 // T3, T4 and T5
 //
 
-TFunctional345_precalc_t *TFunctional3_prepare(size_t rows, size_t cols) {
+TFunctional345_precalc_t *TFunctional3_prepare(size_t rows,
+                                               size_t UNUSED(cols)) {
     TFunctional345_precalc_t *precalc =
         (TFunctional345_precalc_t *)malloc(sizeof(TFunctional345_precalc_t));
 
@@ -183,7 +190,8 @@ TFunctional345_precalc_t *TFunctional3_prepare(size_t rows, size_t cols) {
     return precalc;
 }
 
-TFunctional345_precalc_t *TFunctional4_prepare(size_t rows, size_t cols) {
+TFunctional345_precalc_t *TFunctional4_prepare(size_t rows,
+                                               size_t UNUSED(cols)) {
     TFunctional345_precalc_t *precalc =
         (TFunctional345_precalc_t *)malloc(sizeof(TFunctional345_precalc_t));
 
@@ -204,7 +212,8 @@ TFunctional345_precalc_t *TFunctional4_prepare(size_t rows, size_t cols) {
     return precalc;
 }
 
-TFunctional345_precalc_t *TFunctional5_prepare(size_t rows, size_t cols) {
+TFunctional345_precalc_t *TFunctional5_prepare(size_t rows,
+                                               size_t UNUSED(cols)) {
     TFunctional345_precalc_t *precalc =
         (TFunctional345_precalc_t *)malloc(sizeof(TFunctional345_precalc_t));
 
@@ -362,14 +371,19 @@ PFunctional3_precalc_t *PFunctional3_prepare(size_t rows) {
 
     // Clean-up FFTW multithreading remnants
     fftw_cleanup_threads();
+
+    return NULL;
 }
 
 float PFunctional3(const float *data, const size_t length) {
     // Calculate the discrete Fourier transform
+    // TODO: we should only plan this once, given that we use the same array
     fftwf_complex *fourier = (fftwf_complex*) fftwf_malloc(sizeof(fftw_complex) * length);
-    fftw_plan p;
+    // NOTE: we can safely cast the const away, because in FFTW_ESTIMATE regime
+    //       the input data will be preserved
+    fftwf_plan p;
 #pragma omp critical (make_plan)
-    p = fftwf_plan_dft_r2c_1d(length, data, fourier, FFTW_ESTIMATE);
+    p = fftwf_plan_dft_r2c_1d(length, (float*)data, fourier, FFTW_ESTIMATE);
     assert(p != NULL);
     fftwf_execute(p);
 
@@ -394,9 +408,7 @@ float PFunctional3(const float *data, const size_t length) {
     return sum;
 }
 
-void PFunctional3_destroy(PFunctional3_precalc_t *precalc) {
-    return;
-}
+void PFunctional3_destroy(PFunctional3_precalc_t *UNUSED(precalc)) { return; }
 
 
 //

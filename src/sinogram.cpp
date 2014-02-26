@@ -77,26 +77,25 @@ getSinograms(const Eigen::MatrixXf &input, unsigned int angle_stepsize,
 
     // Calculate and allocate the output matrices
     int a_steps = (int)std::floor(360 / angle_stepsize);
-    int p_steps = input.cols();
     std::vector<Eigen::MatrixXf> outputs(tfunctionals.size());
     for (size_t t = 0; t < tfunctionals.size(); t++)
-        outputs[t] = Eigen::MatrixXf(p_steps, a_steps);
+        outputs[t] = Eigen::MatrixXf(input.cols(), a_steps);
 
     // Pre-calculate
-    std::map<TFunctional, void *> precalculations;
+    std::map<size_t, void *> precalculations;
     for (size_t t = 0; t < tfunctionals.size(); t++) {
         TFunctional tfunctional = tfunctionals[t].functional;
         switch (tfunctional) {
         case TFunctional::T3:
-            precalculations[tfunctional] =
+            precalculations[t] =
                 TFunctional3_prepare(input.rows(), input.cols());
             break;
         case TFunctional::T4:
-            precalculations[tfunctional] =
+            precalculations[t] =
                 TFunctional4_prepare(input.rows(), input.cols());
             break;
         case TFunctional::T5:
-            precalculations[tfunctional] =
+            precalculations[t] =
                 TFunctional5_prepare(input.rows(), input.cols());
             break;
         case TFunctional::Radon:
@@ -117,9 +116,8 @@ getSinograms(const Eigen::MatrixXf &input, unsigned int angle_stepsize,
         Eigen::MatrixXf input_rotated = rotate(input, origin, deg2rad(a));
 
         // Process all projection bands
-        // TODO: rename p
-        for (int p = 0; p < p_steps; p++) {
-            float *data = input_rotated.data() + p * input.rows();
+        for (int column = 0; column < input.cols(); column++) {
+            float *data = input_rotated.data() + column * input.rows();
 
             // Process all T-functionals
             for (size_t t = 0; t < tfunctionals.size(); t++) {
@@ -138,28 +136,29 @@ getSinograms(const Eigen::MatrixXf &input, unsigned int angle_stepsize,
                 case TFunctional::T3:
                 case TFunctional::T4:
                 case TFunctional::T5:
-                    result = TFunctional345(data, input.rows(),
-                                            (TFunctional345_precalc_t *)
-                                            precalculations[tfunctional]);
+                    result = TFunctional345(
+                        data, input.rows(),
+                        (TFunctional345_precalc_t *)precalculations[t]);
                     break;
-		case TFunctional::T6:
+                case TFunctional::T6:
                     result = TFunctional6(data, input.rows());
                     break;
-		case TFunctional::T7:
+                case TFunctional::T7:
                     result = TFunctional7(data, input.rows());
                     break;
                 }
-                outputs[t](p,     // row
-                           a_step // column
+                outputs[t](column, // row (in the sinogram)
+                           a_step  // column
                            ) = result;
             }
         }
     }
 
     // Destroy pre-calculations
-    std::map<TFunctional, void *>::iterator it = precalculations.begin();
+    std::map<size_t, void *>::iterator it = precalculations.begin();
     while (it != precalculations.end()) {
-        switch (it->first) {
+        TFunctional tfunctional = tfunctionals[it->first].functional;
+        switch (tfunctional) {
         case TFunctional::T3:
         case TFunctional::T4:
         case TFunctional::T5: {
