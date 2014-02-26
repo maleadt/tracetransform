@@ -20,6 +20,12 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+#ifdef __GNUC__
+#define UNUSED(x) UNUSED_##x __attribute__((__unused__))
+#else
+#define UNUSED(x) UNUSED_##x
+#endif
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Auxiliary
@@ -159,7 +165,8 @@ float TFunctional2(const float *data, const size_t length) {
 // T3, T4 and T5
 //
 
-TFunctional345_precalc_t *TFunctional3_prepare(size_t rows, size_t cols) {
+TFunctional345_precalc_t *TFunctional3_prepare(size_t rows,
+                                               size_t UNUSED(cols)) {
     TFunctional345_precalc_t *precalc =
         (TFunctional345_precalc_t *)malloc(sizeof(TFunctional345_precalc_t));
 
@@ -180,7 +187,8 @@ TFunctional345_precalc_t *TFunctional3_prepare(size_t rows, size_t cols) {
     return precalc;
 }
 
-TFunctional345_precalc_t *TFunctional4_prepare(size_t rows, size_t cols) {
+TFunctional345_precalc_t *TFunctional4_prepare(size_t rows,
+                                               size_t UNUSED(cols)) {
     TFunctional345_precalc_t *precalc =
         (TFunctional345_precalc_t *)malloc(sizeof(TFunctional345_precalc_t));
 
@@ -201,7 +209,8 @@ TFunctional345_precalc_t *TFunctional4_prepare(size_t rows, size_t cols) {
     return precalc;
 }
 
-TFunctional345_precalc_t *TFunctional5_prepare(size_t rows, size_t cols) {
+TFunctional345_precalc_t *TFunctional5_prepare(size_t rows,
+                                               size_t UNUSED(cols)) {
     TFunctional345_precalc_t *precalc =
         (TFunctional345_precalc_t *)malloc(sizeof(TFunctional345_precalc_t));
 
@@ -388,9 +397,7 @@ float PFunctional3(const float *data, const size_t length) {
     return sum;
 }
 
-void PFunctional3_destroy(PFunctional3_precalc_t *precalc) {
-    return;
-}
+void PFunctional3_destroy(PFunctional3_precalc_t *UNUSED(precalc)) { return; }
 
 
 //
