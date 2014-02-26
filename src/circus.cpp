@@ -73,16 +73,16 @@ getCircusFunctions(const CUDAHelper::GlobalMemory<float> *input,
 
     // Pre-calculate
     // NOTE: some of these pre-calculations are just memory allocations
-    std::map<PFunctional, void *> precalculations;
+    std::map<size_t, void *> precalculations;
     for (size_t p = 0; p < pfunctionals.size(); p++) {
         PFunctional pfunctional = pfunctionals[p].functional;
         switch (pfunctional) {
         case PFunctional::P2:
-            precalculations[pfunctional] =
+            precalculations[p] =
                 PFunctional2_prepare(input->rows(), input->cols());
             break;
         case PFunctional::P3:
-            precalculations[pfunctional] =
+            precalculations[p] =
                 PFunctional3_prepare(input->rows(), input->cols());
             break;
         case PFunctional::P1:
@@ -94,18 +94,18 @@ getCircusFunctions(const CUDAHelper::GlobalMemory<float> *input,
     // Process all P-functionals
     for (size_t p = 0; p < pfunctionals.size(); p++) {
         PFunctional pfunctional = pfunctionals[p].functional;
-        switch (pfunctionals[p].functional) {
+        switch (pfunctional) {
         case PFunctional::P1:
             PFunctional1(input, outputs[p]);
             break;
         case PFunctional::P2:
             PFunctional2(input,
-                         (PFunctional2_precalc_t *)precalculations[pfunctional],
+                         (PFunctional2_precalc_t *)precalculations[p],
                          outputs[p]);
             break;
         case PFunctional::P3:
             PFunctional3(input,
-                         (PFunctional3_precalc_t *)precalculations[pfunctional],
+                         (PFunctional3_precalc_t *)precalculations[p],
                          outputs[p]);
             break;
 #ifdef WITH_CULA
@@ -118,9 +118,10 @@ getCircusFunctions(const CUDAHelper::GlobalMemory<float> *input,
     }
 
     // Destroy pre-calculations
-    std::map<PFunctional, void *>::iterator it = precalculations.begin();
+    std::map<size_t, void *>::iterator it = precalculations.begin();
     while (it != precalculations.end()) {
-        switch (it->first) {
+        PFunctional pfunctional = pfunctionals[it->first].functional;
+        switch (pfunctional) {
         case PFunctional::P2: {
             PFunctional2_precalc_t *precalc =
                 (PFunctional2_precalc_t *)it->second;

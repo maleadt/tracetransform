@@ -195,7 +195,6 @@ float interpolate(const Eigen::MatrixXf &source, const Point<float>::type &p) {
 Eigen::MatrixXf resize(const Eigen::MatrixXf &input, const size_t rows,
                        const size_t cols) {
     // Calculate transform matrix
-    // TODO: use Eigen::Geometry
     Eigen::Matrix2f transform;
     transform << ((float)input.rows()) / rows, 0, 0,
         (((float)input.cols()) / cols);
@@ -232,13 +231,8 @@ Eigen::MatrixXf pad(const Eigen::MatrixXf &image) {
         std::floor((image_padded.cols() + 1) / 2.0) - 1,
         std::floor((image_padded.rows() + 1) / 2.0) - 1);
     Point<float>::type df = origin_padded - origin;
-    // TODO: block operation
-    for (int col = 0; col < image.cols(); col++) {
-        for (int row = 0; row < image.rows(); row++) {
-            image_padded(row + (int)df.y(), col + (int)df.x()) =
-                image(row, col);
-        }
-    }
+    image_padded.block((int)df.y(), (int)df.x(), image.rows(), image.cols()) =
+        image;
 
     return image_padded;
 }

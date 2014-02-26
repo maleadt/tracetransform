@@ -67,41 +67,40 @@ getSinograms(const CUDAHelper::GlobalMemory<float> *input,
 
     // Calculate and allocate the output matrices
     int a_steps = (int)std::floor(360 / angle_stepsize);
-    int p_steps = cols;
     std::vector<CUDAHelper::GlobalMemory<float> *> outputs(tfunctionals.size());
     for (size_t t = 0; t < tfunctionals.size(); t++)
         outputs[t] = new CUDAHelper::GlobalMemory<float>(
-            CUDAHelper::size_2d(p_steps, a_steps), 0);
+            CUDAHelper::size_2d(cols, a_steps), 0);
 
     // Pre-calculate
     // NOTE: some of these pre-calculations are just memory allocations
-    std::map<TFunctional, void *> precalculations;
+    std::map<size_t, void *> precalculations;
     for (size_t t = 0; t < tfunctionals.size(); t++) {
         TFunctional tfunctional = tfunctionals[t].functional;
         switch (tfunctional) {
         case TFunctional::T1:
         case TFunctional::T2:
-            precalculations[tfunctional] =
+            precalculations[t] =
                 TFunctional12_prepare(input->rows(), input->cols());
             break;
         case TFunctional::T3:
-            precalculations[tfunctional] =
+            precalculations[t] =
                 TFunctional3_prepare(input->rows(), input->cols());
             break;
         case TFunctional::T4:
-            precalculations[tfunctional] =
+            precalculations[t] =
                 TFunctional4_prepare(input->rows(), input->cols());
             break;
         case TFunctional::T5:
-            precalculations[tfunctional] =
+            precalculations[t] =
                 TFunctional5_prepare(input->rows(), input->cols());
             break;
         case TFunctional::T6:
-            precalculations[tfunctional] =
+            precalculations[t] =
                 TFunctional6_prepare(input->rows(), input->cols());
             break;
         case TFunctional::T7:
-            precalculations[tfunctional] =
+            precalculations[t] =
                 TFunctional7_prepare(input->rows(), input->cols());
             break;
         case TFunctional::Radon:
@@ -123,20 +122,20 @@ getSinograms(const CUDAHelper::GlobalMemory<float> *input,
         // Process all T-functionals
         for (size_t t = 0; t < tfunctionals.size(); t++) {
             TFunctional tfunctional = tfunctionals[t].functional;
-            switch (tfunctionals[t].functional) {
+            switch (tfunctional) {
             case TFunctional::Radon:
                 TFunctionalRadon(input_rotated, outputs[t], a_step);
                 break;
             case TFunctional::T1:
                 TFunctional1(
                     input_rotated,
-                    (TFunctional12_precalc_t *)precalculations[tfunctional],
+                    (TFunctional12_precalc_t *)precalculations[t],
                     outputs[t], a_step);
                 break;
             case TFunctional::T2:
                 TFunctional2(
                     input_rotated,
-                    (TFunctional12_precalc_t *)precalculations[tfunctional],
+                    (TFunctional12_precalc_t *)precalculations[t],
                     outputs[t], a_step);
                 break;
             case TFunctional::T3:
@@ -144,19 +143,19 @@ getSinograms(const CUDAHelper::GlobalMemory<float> *input,
             case TFunctional::T5:
                 TFunctional345(
                     input_rotated,
-                    (TFunctional345_precalc_t *)precalculations[tfunctional],
+                    (TFunctional345_precalc_t *)precalculations[t],
                     outputs[t], a_step);
                 break;
             case TFunctional::T6:
                 TFunctional6(
                     input_rotated,
-                    (TFunctional6_precalc_t *)precalculations[tfunctional],
+                    (TFunctional6_precalc_t *)precalculations[t],
                     outputs[t], a_step);
             	break;
             case TFunctional::T7:
                 TFunctional7(
                     input_rotated,
-                    (TFunctional7_precalc_t *)precalculations[tfunctional],
+                    (TFunctional7_precalc_t *)precalculations[t],
                     outputs[t], a_step);
                 break;
             }
@@ -166,9 +165,10 @@ getSinograms(const CUDAHelper::GlobalMemory<float> *input,
     delete input_rotated;
 
     // Destroy pre-calculations
-    std::map<TFunctional, void *>::iterator it = precalculations.begin();
+    std::map<size_t, void *>::iterator it = precalculations.begin();
     while (it != precalculations.end()) {
-        switch (it->first) {
+        TFunctional tfunctional = tfunctionals[it->first].functional; 
+        switch (tfunctional) {
         case TFunctional::T1:
         case TFunctional::T2: {
             TFunctional12_precalc_t *precalc =
