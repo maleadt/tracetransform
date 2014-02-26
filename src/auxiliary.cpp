@@ -69,14 +69,15 @@ std::vector<Eigen::MatrixXi> readnetpbm(std::string filename) {
 
     // Maxval
     size_t maxval = readNetpbmValue<size_t>(ss);
-    assert(maxval == 255);
+    if (maxval != 255)
+        clog(warning) << "Pixels not properly clipped to [0,255]" << std::endl;
 
     // Data
-    float value;
+    unsigned int value;
     for (size_t row = 0; row < numrows; row++) {
         for (size_t col = 0; col < numcols; col++) {
             for (size_t i = 0; i < channels; i++) {
-                value = readNetpbmValue<float>(ss);
+                value = readNetpbmValue<unsigned int>(ss);
                 data[i](row, col) = value;
             }
         }
