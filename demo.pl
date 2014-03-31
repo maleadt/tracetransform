@@ -22,7 +22,7 @@ GetOptions(
     "t-functional|T=i"  => \@tfunctionals,
     "p-functional|P=i"  => \@pfunctionals,
     "mode|m=s"          => \$mode,
-    "iterations|i=i"    => \$iterations,
+    "iterations|n=i"    => \$iterations,
     "angle|a=i"         => \$angle,
 
     "directory=s"       => \$directory,
