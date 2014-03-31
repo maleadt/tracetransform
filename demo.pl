@@ -6,14 +6,14 @@ use warnings;
 
 # Required packages
 use Getopt::Long;
-use Cwd;
+use Cwd 'abs_path';
+use File::Basename;
 
 # Parse arguments
 my $mode;
 my (@tfunctionals, @pfunctionals);
 my $iterations;
 my $angle;
-my $directory;
 my $unsupported;
 GetOptions(
     "quiet|q"           => \$unsupported,
@@ -24,15 +24,13 @@ GetOptions(
     "mode|m=s"          => \$mode,
     "iterations|n=i"    => \$iterations,
     "angle|a=i"         => \$angle,
-
-    "directory=s"       => \$directory,
 ) or exit(1);
 
 # Check argument validity
 my $input = shift || die("No input specified");
 warn("WARNING: unsupported arguments used\n") if ($unsupported);
 die("ERROR: unknown argument(s) ", join(", ", @ARGV), "\n") if (@ARGV);
-$directory = getcwd unless defined $directory;
+my $directory = dirname(abs_path($0));
 $angle = 1 unless defined $angle;
 die("ERROR: invalid program mode") unless $mode =~ m"^(benchmark|calculate|profile)$";
 die("ERROR: required argument iterations was not provided\n")
