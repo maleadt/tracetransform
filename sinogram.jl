@@ -52,7 +52,7 @@ function getSinograms(input::AbstractImage{Float64,2}, angle_stepsize::Uint,
     origin::Point{Float64} = Point(floor(([size(input)...] .+ 1) ./ 2)...)
 
     # Allocate the output matrix
-    outputs = Array(Image, length(tfunctionals))
+    outputs = Array(Image{Float64}, length(tfunctionals))
     for t in 1:length(tfunctionals)
         outputs[t] = similar(input, (size(input, "y"), ifloor(360/angle_stepsize)))
         outputs[t].properties["spatialorder"] = ["y", "x"]
@@ -76,10 +76,10 @@ function getSinograms(input::AbstractImage{Float64,2}, angle_stepsize::Uint,
     # Process all angles
     for a in 0:angle_stepsize:359
         # Rotate the image
-        input_rotated::Image{Float64} = rotate(input, origin, a)
+        input_rotated::Image{Float64} = rotate(input, origin, float64(a))
 
         # Process all projection bands
-        a_index::Uint = a / angle_stepsize + 1
+        a_index::Int = a / angle_stepsize + 1
         for p in 1:size(input, "x")-1
             data = view(input_rotated, "x", p)
 
