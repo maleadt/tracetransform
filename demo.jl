@@ -6,7 +6,6 @@ require("auxiliary")
 require("enum")
 require("log")
 
-using ProfileView
 using ArgParse
 using Images
 
@@ -125,6 +124,8 @@ function main(args)
             println("t_$(i)=$(time)")
         end
     elseif opts["mode"] == "profile"
+        require("ProfileView.jl")
+
         # Warm-up
         get_transform(input, basename, tfunctionals, pfunctionals,
                       opts["angle"], orthonormal, false)
