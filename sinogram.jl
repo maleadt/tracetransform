@@ -86,7 +86,7 @@ function getSinograms(input::AbstractImage{Float32,2}, angle_stepsize::Uint,
 
         # Process all projection bands
         a_index::Int = a / angle_stepsize + 1
-        for p in 1:size(input, "x")-1   # TODO: -1?
+        for p in 1:size(input, "x")
             data = view(input_rotated, "x", p)
 
             # Process all T-functionals
