@@ -5,26 +5,25 @@ require("auxiliary")
 
 using Images
 
-function main(args::Vector{Any})
+function main(args)
     # Manage parameters
     if length(args) != 2
         error("Please provide input filename and rotation angle")
     end
     filename = args[1]
-    angle = uint(args[2])
+    angle = float(args[2])
 
     # Read image
     input::Image{Float64} = gray2mat(imread(filename))
-    printmat(int(255*input))
+    printmat(mat2gray(input))
 
     # Rotate image
-    origin::Vector{Float64} = floor(([size(input)...] .+ 1) ./ 2)
-    input_rotated::Image{Float64} = rotate(input, origin, angle)
+    origin::Point{Float64} = Point(floor(([size(input)...] .+ 1) ./ 2)...)
+    output = rotate(input, origin, angle)
 
     # Output image
     print("\n")
-    output = mat2gray(input_rotated)
-    printmat(output)
+    printmat(mat2gray(output))
 end
 
 function printmat(input)
