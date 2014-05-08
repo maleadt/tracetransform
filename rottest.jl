@@ -14,11 +14,11 @@ function main(args)
     angle = float(args[2])
 
     # Read image
-    input::Image{Float64} = gray2mat(imread(filename))
+    input::Image{Float32} = gray2mat(imread(filename))
     printmat(mat2gray(input))
 
     # Rotate image
-    origin::Point{Float64} = Point(floor(([size(input)...] .+ 1) ./ 2)...)
+    origin::Point{Float32} = Point(floor(([size(input)...] .+ 1) ./ 2)...)
     output = rotate(input, origin, angle)
 
     # Output image

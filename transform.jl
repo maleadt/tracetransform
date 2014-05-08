@@ -5,7 +5,7 @@ require("circus")
 
 using Images
 
-function prepare_transform(input::Image{Float64}, filename::String,
+function prepare_transform(input::Image{Float32}, filename::String,
                            angle_stepsize::Uint, orthonormal::Bool)
     # Orthonormal P-functionals need a stretched image in order to ensure a
     # square sinogram
@@ -28,13 +28,13 @@ function prepare_transform(input::Image{Float64}, filename::String,
     return (input, basename)
 end
 
-function get_transform(input::Image{Float64}, basename::String,
+function get_transform(input::Image{Float32}, basename::String,
     tfunctionals::Vector{TFunctionalWrapper},
     pfunctionals::Vector{PFunctionalWrapper},
     angle_stepsize::Uint, orthonormal::Bool, write_data::Bool)
     # Process all T-functionals
     print_debug("Calculating sinograms for given T-functionals\n")
-    sinograms::Vector{Image{Float64}} = getSinograms(input, angle_stepsize,
+    sinograms::Vector{Image{Float32}} = getSinograms(input, angle_stepsize,
                                            tfunctionals)
     for t in 1:length(tfunctionals)
         tfunctional = tfunctionals[t]

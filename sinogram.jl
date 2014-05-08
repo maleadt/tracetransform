@@ -48,16 +48,16 @@ function parse_tfunctionals(args::Vector{String})
     return tfunctionals
 end
 
-function getSinograms(input::AbstractImage{Float64,2}, angle_stepsize::Uint,
+function getSinograms(input::AbstractImage{Float32,2}, angle_stepsize::Uint,
                       tfunctionals::Vector{TFunctionalWrapper})
     # Image should be padded
     @assert size(input, 1) == size(input, 2)
 
     # Get the image origin to rotate around
-    origin::Point{Float64} = Point(floor(([size(input)...] .+ 1) ./ 2)...)
+    origin::Point{Float32} = Point(float32(floor(([size(input)...] .+ 1) ./ 2))...)
 
     # Allocate the output matrix
-    outputs = Array(Image{Float64}, length(tfunctionals))
+    outputs = Array(Image{Float32}, length(tfunctionals))
     for t in 1:length(tfunctionals)
         outputs[t] = similar(input, (size(input, "y"), ifloor(360/angle_stepsize)))
         outputs[t].properties["spatialorder"] = ["y", "x"]
@@ -68,24 +68,25 @@ function getSinograms(input::AbstractImage{Float64,2}, angle_stepsize::Uint,
     precalculation_input = (size(input, "y"), size(input, "x"))
     for tfunctional in tfunctionals
         if tfunctional.functional == T3
-            precalculations[T3] = t_3_prepare(Float64, precalculation_input...)
+            precalculations[T3] = t_3_prepare(Float32, precalculation_input...)
         end
         if tfunctional.functional == T4
-            precalculations[T4] = t_4_prepare(Float64, precalculation_input...)
+            precalculations[T4] = t_4_prepare(Float32, precalculation_input...)
         end
         if tfunctional.functional == T5
-            precalculations[T5] = t_5_prepare(Float64, precalculation_input...)
+            precalculations[T5] = t_5_prepare(Float32, precalculation_input...)
         end
     end
 
     # Process all angles
+    t_total = 0
     for a in 0:angle_stepsize:359
         # Rotate the image
-        input_rotated::Image{Float64} = rotate(input, origin, float64(a))
+        input_rotated::Image{Float32} = rotate(input, origin, float32(a))
 
         # Process all projection bands
         a_index::Int = a / angle_stepsize + 1
-        for p in 1:size(input, "x")-1
+        for p in 1:size(input, "x")-1   # TODO: -1?
             data = view(input_rotated, "x", p)
 
             # Process all T-functionals
