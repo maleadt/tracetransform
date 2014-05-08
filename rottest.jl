@@ -1,4 +1,4 @@
-#!/usr/bin/julia
+#!/usr/local/bin/julia-0.3
 
 require("geometry")
 require("auxiliary")

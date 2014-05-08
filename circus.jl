@@ -1,6 +1,12 @@
 require("functionals")
 require("enum")
 
+using Images
+using ArrayViews
+import ArrayViews.view
+view(img::AbstractImage, dimname::ASCIIString, ind::RangeIndex, nameind::RangeIndex...) = view(img.data, coords(img, dimname, ind, nameind...)...)
+
+
 @enum PFunctional Hermite P1 P2 P3
 
 type PFunctionalArguments

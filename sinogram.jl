@@ -2,6 +2,11 @@ require("functionals")
 require("geometry")
 require("enum")
 
+using Images
+using ArrayViews
+import ArrayViews.view
+view(img::AbstractImage, dimname::ASCIIString, ind::RangeIndex, nameind::RangeIndex...) = view(img.data, coords(img, dimname, ind, nameind...)...)
+
 @enum TFunctional Radon T1 T2 T3 T4 T5 T6 T7
 
 type TFunctionalArguments
@@ -63,13 +68,13 @@ function getSinograms(input::AbstractImage{Float64,2}, angle_stepsize::Uint,
     precalculation_input = (size(input, "y"), size(input, "x"))
     for tfunctional in tfunctionals
         if tfunctional.functional == T3
-            precalculations[T3] = t_3_prepare(precalculation_input...)
+            precalculations[T3] = t_3_prepare(Float64, precalculation_input...)
         end
         if tfunctional.functional == T4
-            precalculations[T4] = t_4_prepare(precalculation_input...)
+            precalculations[T4] = t_4_prepare(Float64, precalculation_input...)
         end
         if tfunctional.functional == T5
-            precalculations[T5] = t_5_prepare(precalculation_input...)
+            precalculations[T5] = t_5_prepare(Float64, precalculation_input...)
         end
     end
 
