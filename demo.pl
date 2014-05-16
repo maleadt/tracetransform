@@ -15,6 +15,7 @@ my (@tfunctionals, @pfunctionals);
 my $iterations;
 my $angle;
 my $unsupported;
+my $singleCompThread;
 GetOptions(
     "quiet|q"           => \$unsupported,
     "verbose|v"         => \$unsupported,
@@ -24,6 +25,7 @@ GetOptions(
     "mode|m=s"          => \$mode,
     "iterations|n=i"    => \$iterations,
     "angle|a=i"         => \$angle,
+    "singleCompThread"  => \$singleCompThread
 ) or exit(1);
 
 # Check argument validity
@@ -40,6 +42,10 @@ die("ERROR: required argument t-functional was not provided\n")
 die("ERROR: input does not exist\n") unless (-f $input);
 
 # Construct the MATLAB command
+my $matlab_options = "-nodesktop -nosplash";
+if ($singleCompThread) {
+    $matlab_options .= " -singleCompThread";
+}
 my $matlab_tfunctionals = "[" . join(" ", @tfunctionals) . "]";
 my $matlab_pfunctionals = "[" . join(" ", @pfunctionals) . "]";
 my $matlab_setup = "imageFile='$input';" .
@@ -55,7 +61,7 @@ if ($angle) {
 }
 my $matlab_code = "try, run('$directory/demo.m'), catch err, fprintf(2, '%s\\n'," .
               " getReport(err, 'extended')); exit(1), end, exit(0)";
-my $cmd = "matlab -nodesktop -nosplash -r \"$matlab_setup; $matlab_code\"";
+my $cmd = "matlab $matlab_options -r \"$matlab_setup; $matlab_code\"";
 
 # Execute command and print output (but strip the MATLAB header)
 open(my $output, "$cmd |");
