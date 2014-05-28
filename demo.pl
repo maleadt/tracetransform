@@ -16,6 +16,7 @@ my $iterations;
 my $angle;
 my $unsupported;
 my $singleCompThread;
+my $nojit;
 GetOptions(
     "quiet|q"           => \$unsupported,
     "verbose|v"         => \$unsupported,
@@ -25,7 +26,8 @@ GetOptions(
     "mode|m=s"          => \$mode,
     "iterations|n=i"    => \$iterations,
     "angle|a=i"         => \$angle,
-    "singleCompThread"  => \$singleCompThread
+    "singleCompThread"  => \$singleCompThread,
+    "nojit"             => \$nojit
 ) or exit(1);
 
 # Check argument validity
@@ -58,6 +60,9 @@ if ($iterations) {
 }
 if ($angle) {
     $matlab_setup .= "; angle_interval=$angle";
+}
+if ($nojit) {
+    $matlab_setup .= "; feature accel off";
 }
 my $matlab_code = "try, run('$directory/demo.m'), catch err, fprintf(2, '%s\\n'," .
               " getReport(err, 'extended')); exit(1), end, exit(0)";
