@@ -38,6 +38,38 @@ void finding(double *ptrAsrt, double *ptrWMed, int M, int k)
     
 }
 
+int compareIndexed(const void *a, const void *b, void *arg) {
+    size_t *x = (size_t *)a;
+    size_t *y = (size_t *)b;
+    double *data = (double *)arg;
+
+    double *u = data + *x;
+    double *v = data + *y;
+
+    if (*u < *v) {
+        return -1;
+    } else if (*u > *v) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+void sortrows(double *ptrZ0,size_t M, double *ptrAsrt)
+{   
+    size_t data_index[M],i,j;
+    double data[M];
+    for(i = 0; i < M; i++){
+        data_index[i] = i;
+        data[i] = *(ptrZ0 + i); 
+    }
+    qsort_r(data_index, M, sizeof(size_t), compareIndexed, &data);
+    for(j = 0; j < M; j++){
+        *(ptrAsrt + j) = *(ptrZ0+data_index[j]);
+        *(ptrAsrt + M + j) = *(ptrZ0 + M + data_index[j]);
+    }
+}
+
 void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
                  int nrhs, const mxArray *prhs[]) /* Input variables */
 {
@@ -62,9 +94,10 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
     
     for(i = 0; i < N; i++){
         ptrZ0 = mxGetPr(Z[0]);
-        normalization((ptrD+i*M), (ptrW+i*M), ptrZ0, M);
-        mexCallMATLAB(1, Asrt, 1, Z, "sortrows");
         ptrAsrt = mxGetPr(Asrt[0]);
+        normalization((ptrD+i*M), (ptrW+i*M), ptrZ0, M);
+        /*mexCallMATLAB(1, Asrt, 1, Z, "sortrows");*/
+        sortrows(ptrZ0,M,ptrAsrt); 
         ptrWMed = mxGetPr(plhs[0]);
         finding(ptrAsrt, ptrWMed, M, i);
     }
