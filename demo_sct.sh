@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./demo.pl -singleCompThread "$@"
+$(dirname $(readlink -f $0))/demo.pl -singleCompThread "$@"
