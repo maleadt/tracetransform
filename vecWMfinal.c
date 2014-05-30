@@ -70,7 +70,13 @@ void sortrows(double *ptrZ0,size_t M, double *ptrAsrt)
     }
 }
 
-void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
+void
+#if __INCLUDE_LEVEL__ == 0
+mexFunction
+#else
+vecWMfinal
+#endif
+(int nlhs, mxArray *plhs[], /* Output variables */
                  int nrhs, const mxArray *prhs[]) /* Input variables */
 {
     mwSize M, N;
@@ -96,7 +102,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
         ptrZ0 = mxGetPr(Z[0]);
         ptrAsrt = mxGetPr(Asrt[0]);
         normalization((ptrD+i*M), (ptrW+i*M), ptrZ0, M);
-        /*mexCallMATLAB(1, Asrt, 1, Z, "sortrows");*/
         sortrows(ptrZ0,M,ptrAsrt); 
         ptrWMed = mxGetPr(plhs[0]);
         finding(ptrAsrt, ptrWMed, M, i);
