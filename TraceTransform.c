@@ -79,9 +79,9 @@ void mexFunction(int nlhs, mxArray *plhs[],       /* Output variables */
           1, &Input_Tfunct[1], 1, &Rotated_image[n],
           "vecWM"); /*Finding the the vector shift with weighted median*/
       memcpy(mxGetPr(Input_Tfunct[0]), mxGetPr(Rotated_image[n]),
-             sizeof(double) *
-                 N * M); /*Storing the rotated image and the shift vector to
-                            apply T functional*/
+             sizeof(double) * N *
+                 M); /*Storing the rotated image and the shift vector to
+                        apply T functional*/
 
       for (c = 0; c < Numb_Tfunct; c++) { /*Loop to apply the T-functional*/
 

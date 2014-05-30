@@ -28,8 +28,8 @@ void functional(double *pin, double c, int M, double *pout) {
     *(dkernel2 + k) = *(pin + cint - k - 1);
     *(wkernel2 + k) = sqrt(*(pin + cint - k - 1));
   }
-  vecWMfinal(1, &WM[0], 2, (const mxArray **) proj1);
-  vecWMfinal(1, &WM[1], 2, (const mxArray **) proj2);
+  vecWMfinal(1, &WM[0], 2, (const mxArray **)proj1);
+  vecWMfinal(1, &WM[1], 2, (const mxArray **)proj2);
   pWM = mxGetPr(WM[0]);
   pout[0] = *pWM;
   pWM = mxGetPr(WM[1]);
