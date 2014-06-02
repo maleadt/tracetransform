@@ -139,7 +139,6 @@ int main(int argc, char **argv) {
     }
 
     // Configure logging
-    bool showProgress = false;
     if (vm.count("debug")) {
         logger.settings.threshold = trace;
         logger.settings.prefix_timestamp = true;
@@ -148,10 +147,8 @@ int main(int argc, char **argv) {
         logger.settings.threshold = debug;
     else if (vm.count("quiet"))
         logger.settings.threshold = warning;
-    else
-        showProgress = true;
-    if (mode == ProgramMode::BENCHMARK)
-        showProgress = false;
+    bool showProgress =
+        (mode == ProgramMode::CALCULATE && logger.settings.threshold == info);
 
     // Check for orthonormal P-functionals
     unsigned int orthonormal_count = 0;
