@@ -188,10 +188,11 @@ float interpolate(const Eigen::MatrixXf &source, const Point<float>::type &p) {
     float x_fract = std::modf(p.x(), &x_int);
     float y_fract = std::modf(p.y(), &y_int);
 
-    return source(y_int, x_int) * (1 - x_fract) * (1 - y_fract) +
-           source(y_int, x_int + 1) * x_fract * (1 - y_fract) +
-           source(y_int + 1, x_int) * (1 - x_fract) * y_fract +
-           source(y_int + 1, x_int + 1) * x_fract * y_fract;
+    // Bilinear interpolation
+    return source(y_int,     x_int)     * (1 - x_fract) * (1 - y_fract) +
+           source(y_int,     x_int + 1) * x_fract       * (1 - y_fract) +
+           source(y_int + 1, x_int)     * (1 - x_fract) * y_fract +
+           source(y_int + 1, x_int + 1) * x_fract       * y_fract;
 }
 
 Eigen::MatrixXf resize(const Eigen::MatrixXf &input, const size_t rows,
