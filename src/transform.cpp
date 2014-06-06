@@ -106,32 +106,35 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
 #endif
 
         // Process all P-functionals
+        if (pfunctionals.size() > 0) {
             clog(debug)
                 << "Calculating circus functions for given P-functionals"
                 << std::endl;
             std::vector<CUDAHelper::GlobalMemory<float> *> circusfunctions =
                 getCircusFunctions(sinograms[t], pfunctionals);
-        for (size_t p = 0; p < pfunctionals.size(); p++) {
-            // Normalize
-            CUDAHelper::GlobalMemory<float> *normalized =
-                zscore(circusfunctions[p]);
 
-            if (write_data) {
-                // Download the trace
-                Eigen::VectorXf normalized_data(circusfunctions[p]->size(0));
-                normalized->download(normalized_data.data());
+            for (size_t p = 0; p < pfunctionals.size(); p++) {
+                // Normalize
+                CUDAHelper::GlobalMemory<float> *normalized =
+                    zscore(circusfunctions[p]);
 
-                // Aggregate the signatures
-                assert(signatures.rows() == normalized_data.size());
-                signatures.col(t * pfunctionals.size() + p) = normalized_data;
+                if (write_data) {
+                    // Download the trace
+                    Eigen::VectorXf normalized_data(circusfunctions[p]->size(0));
+                    normalized->download(normalized_data.data());
+
+                    // Aggregate the signatures
+                    assert(signatures.rows() == normalized_data.size());
+                    signatures.col(t * pfunctionals.size() + p) = normalized_data;
+                }
+
+                delete normalized;
             }
 
-            delete normalized;
+            // Clean-up
+            for (size_t p = 0; p < pfunctionals.size(); p++)
+                delete circusfunctions[p];
         }
-
-        // Clean-up
-        for (size_t p = 0; p < pfunctionals.size(); p++)
-            delete circusfunctions[p];
     }
 
     // Clean-up
