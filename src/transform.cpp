@@ -85,18 +85,20 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
         }
 
         // Process all P-functionals
-        clog(debug) << "Calculating circusfunctions for given P-functionals"
-                    << std::endl;
-        std::vector<Eigen::VectorXf> circusfunctions =
-            getCircusFunctions(sinograms[t], pfunctionals);
-        for (size_t p = 0; p < pfunctionals.size(); p++) {
-            // Normalize
-            Eigen::VectorXf normalized = zscore(circusfunctions[p]);
+        if (pfunctionals.size() > 0) {
+            clog(debug) << "Calculating circusfunctions for given P-functionals"
+                        << std::endl;
+            std::vector<Eigen::VectorXf> circusfunctions =
+                getCircusFunctions(sinograms[t], pfunctionals);
+            for (size_t p = 0; p < pfunctionals.size(); p++) {
+                // Normalize
+                Eigen::VectorXf normalized = zscore(circusfunctions[p]);
 
-            if (write_data) {
-                // Aggregate the signatures
-                assert(signatures.rows() == normalized.size());
-                signatures.col(t * pfunctionals.size() + p) = normalized;
+                if (write_data) {
+                    // Aggregate the signatures
+                    assert(signatures.rows() == normalized.size());
+                    signatures.col(t * pfunctionals.size() + p) = normalized;
+                }
             }
         }
     }
