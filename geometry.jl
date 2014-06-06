@@ -5,16 +5,21 @@ immutable Point{T}
     j::T
 end
 
-function interpolate(input::AbstractImage{Float32,2}, p::Point{Float32})
+function imodf(x)
+    (f, i) = modf(x)
+    return f, itrunc(i)
+end
+
+function interpolate(source::AbstractImage{Float32,2}, p::Point{Float32})
     # Get fractional and integral part of the coordinates
-    p_int::Point{Int} = Point(ifloor(p.i), ifloor(p.j))
-    p_fract::Point{Float32} = Point(p.i-p_int.i, p.j-p_int.j)
+    (i_fract, i_int) = imodf(p.i)
+    (j_fract, j_int) = imodf(p.j)
 
     # Bilinear interpolation
-    @inbounds return (input[p_int.i,   p_int.j]   * (1-p_fract.j) * (1-p_fract.i) +
-                      input[p_int.i,   p_int.j+1] * p_fract.j     * (1-p_fract.i) +
-                      input[p_int.i+1, p_int.j]   * (1-p_fract.j) * p_fract.i +
-                      input[p_int.i+1, p_int.j+1] * p_fract.j     * p_fract.i)
+    @inbounds return (source[i_int,   j_int]   * (1-j_fract) * (1-i_fract) +
+                      source[i_int,   j_int+1] * j_fract     * (1-i_fract) +
+                      source[i_int+1, j_int]   * (1-j_fract) * i_fract +
+                      source[i_int+1, j_int+1] * j_fract     * i_fract)
 end
 
 function resize(input::AbstractImage{Float32,2}, new_size::(Uint, Uint))
