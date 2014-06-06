@@ -99,7 +99,6 @@ function main(args)
     input::Image{Float32} = gray2mat(imread(opts["input"]))
     if isxfirst(input)
         # Since we only scan columns, make sure the image is laid out column major
-        println("Transposing")
         input = ctranspose(input)
     end
     (input, basename) = prepare_transform(input, opts["input"], opts["angle"], orthonormal)
