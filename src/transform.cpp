@@ -138,6 +138,7 @@ Transformer::getTransform(const std::vector<TFunctionalWrapper> &tfunctionals,
     }
 
     // Clean-up
+    cudaDeviceSynchronize();
     for (size_t t = 0; t < tfunctionals.size(); t++)
         delete sinograms[t];
 
