@@ -46,8 +46,9 @@ IF (USE_ASAN)
 ENDIF()
 
 # Profile build
-SET(CMAKE_CXX_FLAGS_PROFILE "-O2 -g -DNDEBUG -fno-omit-frame-pointer -fno-inline")
-SET(CMAKE_C_FLAGS_PROFILE "-O2 -g -DNDEBUG -fno-omit-frame-pointer -fno-inline")
+# NOTE: normally we'd go -fno-inline here, but that _really_ kills Eigen
+SET(CMAKE_CXX_FLAGS_PROFILE "-O2 -g -DNDEBUG -fno-omit-frame-pointer")
+SET(CMAKE_C_FLAGS_PROFILE "-O2 -g -DNDEBUG -fno-omit-frame-pointer")
 
 
 #
