@@ -325,9 +325,6 @@ int main(int argc, char **argv) {
 
                 // Allocate array for time measurements
                 unsigned int iterations = vm["iterations"].as<unsigned int>();
-                std::vector<std::chrono::time_point<
-                    std::chrono::high_resolution_clock> > timings(iterations +
-                                                                  1);
 
                 // Warm-up
                 transformer.getTransform(tfunctionals, pfunctionals, false);
