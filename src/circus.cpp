@@ -23,9 +23,7 @@
 
 // Local
 #include "auxiliary.hpp"
-extern "C" {
-#include "functionals.h"
-}
+#include "functionals.hpp"
 
 
 //
@@ -75,7 +73,7 @@ Eigen::MatrixXf nearest_orthonormal_sinogram(const Eigen::MatrixXf &input,
     std::vector<int> offset(input.cols()); // TODO: Eigen vector
     for (int p = 0; p < input.cols(); p++) {
         size_t median =
-            findWeightedMedian(input.data() + p * input.rows(), input.rows());
+            findWeightedMedian(input.col(p));
         offset[p] = median - sinogram_center;
     }
 
@@ -130,7 +128,7 @@ getCircusFunctions(const Eigen::MatrixXf &input,
     // Trace all columns
     #pragma omp parallel for
     for (int column = 0; column < input.cols(); column++) {
-        float *data = (float *)(input.data() + column * input.rows());
+        Eigen::VectorXf data = input.col(column);
 
         // Process all P-functionals
         for (size_t p = 0; p < pfunctionals.size(); p++) {
@@ -138,16 +136,16 @@ getCircusFunctions(const Eigen::MatrixXf &input,
             float result;
             switch (pfunctional) {
             case PFunctional::P1:
-                result = PFunctional1(data, input.rows());
+                result = PFunctional1(data);
                 break;
             case PFunctional::P2:
-                result = PFunctional2(data, input.rows());
+                result = PFunctional2(data);
                 break;
             case PFunctional::P3:
-                result = PFunctional3(data, input.rows());
+                result = PFunctional3(data);
                 break;
             case PFunctional::Hermite:
-                result = PFunctionalHermite(data, input.rows(),
+                result = PFunctionalHermite(data,
                                             *pfunctionals[p].arguments.order,
                                             *pfunctionals[p].arguments.center);
                 break;

@@ -114,7 +114,7 @@ ADD_LIBRARY(auxiliary src/auxiliary.hpp src/auxiliary.cpp)
 ADD_LIBRARY(logger src/logger.hpp src/logger.cpp)
 SET(COMMON_LIBRARIES auxiliary logger)
 
-ADD_LIBRARY(functionals src/functionals.h src/functionals.c)
+ADD_LIBRARY(functionals src/functionals.hpp src/functionals.cpp)
 TARGET_LINK_LIBRARIES(functionals ${FFTW_LIBRARIES})
 
 ADD_LIBRARY(sinogram src/sinogram.hpp src/sinogram.cpp)

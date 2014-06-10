@@ -3,14 +3,12 @@
 //
 
 // Header include
-#include "functionals.h"
+#include "functionals.hpp"
 
 // Standard library
-#define _GNU_SOURCE // for sincosf
-#include <math.h>   // for log, sqrt, cos, sin, hypot, etc
-#include <stdlib.h> // for malloc, free, calloc, qsort, qsort_r
-#include <string.h> // for memcpy
-#include <assert.h>
+#include <cmath>   // for log, sqrt, cos, sin, hypot, etc
+#include <cstdlib> // for calloc, qsort, qsort_r
+#include <cassert>
 
 // FFTW
 #include <fftw3.h>
@@ -18,48 +16,20 @@
 // OpenMP
 #include <omp.h>
 
-// M_PI is dropped in GCC's C99
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
-#ifdef __GNUC__
-#define UNUSED(x) UNUSED_##x __attribute__((__unused__))
-#else
-#define UNUSED(x) UNUSED_##x
-#endif
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Auxiliary
 //
 
-size_t findWeightedMedian(const float *data, const size_t length) {
-    float sum = 0;
-    for (size_t i = 0; i < length; i++)
-        sum += data[i];
+int findWeightedMedian(const Eigen::VectorXf& data) {
+    float sum = data.sum();
     float integral = 0;
-    for (size_t i = 0; i < length; i++) {
+    for (int i = 0; i < data.size(); i++) {
         integral += data[i];
         if (2 * integral >= sum)
             return i;
     }
-    return length - 1;
-}
-
-size_t findWeightedMedianSqrt(const float *data, const size_t length) {
-    float sum = 0;
-    for (size_t i = 0; i < length; i++)
-        sum += sqrt(data[i]);
-
-    float integral = 0;
-    for (size_t i = 0; i < length; i++) {
-        integral += sqrt(data[i]);
-        if (2 * integral >= sum)
-            return i;
-    }
-
-    return length - 1;
+    return data.size() - 1;
 }
 
 int compareFloat(const void *a, const void *b) {
@@ -76,16 +46,17 @@ int compareFloat(const void *a, const void *b) {
 }
 
 int compareIndexedFloat(const void *a, const void *b, void *arg) {
-    size_t *x = (size_t *)a;
-    size_t *y = (size_t *)b;
+    int *x = (int *)a;
+    int *y = (int *)b;
     float *data_weighted = (float *)arg;
 
     return compareFloat(data_weighted + *x, data_weighted + *y);
 }
 
-float trapz(const float *x, const float *y, const size_t length) {
+float trapz(const Eigen::VectorXf &x, const Eigen::VectorXf y) {
+    assert(x.size() == y.size());
     float sum = 0;
-    for (size_t i = 0; i < length - 1; i++) {
+    for (int i = 0; i < x.size() - 1; i++) {
         sum += (x[i + 1] - x[i]) * (y[i + 1] + y[i]);
     }
     return sum * 0.5;
@@ -124,11 +95,8 @@ float hermite_function(unsigned int order, float x) {
 // Radon
 //
 
-float TFunctionalRadon(const float *data, const size_t length) {
-    float integral = 0;
-    for (size_t t = 0; t < length; t++)
-        integral += data[t];
-    return integral;
+float TFunctionalRadon(const Eigen::VectorXf& data) {
+    return data.sum();
 }
 
 
@@ -136,13 +104,13 @@ float TFunctionalRadon(const float *data, const size_t length) {
 // T1
 //
 
-float TFunctional1(const float *data, const size_t length) {
+float TFunctional1(const Eigen::VectorXf& data) {
     // Transform the domain from t to r
-    size_t median = findWeightedMedian(data, length);
+    int median = findWeightedMedian(data);
 
     // Integrate
     float integral = 0;
-    for (size_t r = 0; r < length - median; r++)
+    for (int r = 0; r < data.size() - median; r++)
         integral += data[r + median] * r;
     return integral;
 }
@@ -152,13 +120,13 @@ float TFunctional1(const float *data, const size_t length) {
 // T2
 //
 
-float TFunctional2(const float *data, const size_t length) {
+float TFunctional2(const Eigen::VectorXf& data) {
     // Transform the domain from t to r
-    size_t median = findWeightedMedian(data, length);
+    int median = findWeightedMedian(data);
 
     // Integrate
     float integral = 0;
-    for (size_t r = 0; r < length - median; r++)
+    for (int r = 0; r < data.size() - median; r++)
         integral += data[r + median] * r * r;
     return integral;
 }
@@ -168,15 +136,15 @@ float TFunctional2(const float *data, const size_t length) {
 // T3, T4 and T5
 //
 
-TFunctional345_precalc_t *TFunctional3_prepare(size_t rows,
-                                               size_t UNUSED(cols)) {
+TFunctional345_precalc_t *TFunctional3_prepare(int rows,
+                                               int) {
     TFunctional345_precalc_t *precalc =
         (TFunctional345_precalc_t *)malloc(sizeof(TFunctional345_precalc_t));
 
     precalc->real = (float *)malloc(rows * sizeof(float));
     precalc->imag = (float *)malloc(rows * sizeof(float));
 
-    for (unsigned int r = 1; r < rows; r++) {
+    for (int r = 1; r < rows; r++) {
 #if defined(__clang__)
         sincosf(5.0 * log(r), &precalc->imag[r], &precalc->real[r]);
         precalc->real[r] *= r;
@@ -190,19 +158,17 @@ TFunctional345_precalc_t *TFunctional3_prepare(size_t rows,
     return precalc;
 }
 
-TFunctional345_precalc_t *TFunctional4_prepare(size_t rows,
-                                               size_t UNUSED(cols)) {
+TFunctional345_precalc_t *TFunctional4_prepare(int rows,
+                                               int) {
     TFunctional345_precalc_t *precalc =
         (TFunctional345_precalc_t *)malloc(sizeof(TFunctional345_precalc_t));
 
     precalc->real = (float *)malloc(rows * sizeof(float));
     precalc->imag = (float *)malloc(rows * sizeof(float));
 
-    for (unsigned int r = 1; r < rows; r++) {
+    for (int r = 1; r < rows; r++) {
 #if defined(__clang__)
         sincosf(3.0 * log(r), &precalc->imag[r], &precalc->real[r]);
-        precalc->real[r] *= r;
-        precalc->imag[r] *= r;
 #else
         precalc->real[r] = cos(3.0 * log(r));
         precalc->imag[r] = sin(3.0 * log(r));
@@ -212,15 +178,15 @@ TFunctional345_precalc_t *TFunctional4_prepare(size_t rows,
     return precalc;
 }
 
-TFunctional345_precalc_t *TFunctional5_prepare(size_t rows,
-                                               size_t UNUSED(cols)) {
+TFunctional345_precalc_t *TFunctional5_prepare(int rows,
+                                               int) {
     TFunctional345_precalc_t *precalc =
         (TFunctional345_precalc_t *)malloc(sizeof(TFunctional345_precalc_t));
 
     precalc->real = (float *)malloc(rows * sizeof(float));
     precalc->imag = (float *)malloc(rows * sizeof(float));
 
-    for (unsigned int r = 1; r < rows; r++) {
+    for (int r = 1; r < rows; r++) {
 #if defined(__clang__)
         sincosf(4.0 * log(r), &precalc->imag[r], &precalc->real[r]);
         precalc->real[r] *= sqrt(r);
@@ -234,14 +200,14 @@ TFunctional345_precalc_t *TFunctional5_prepare(size_t rows,
     return precalc;
 }
 
-float TFunctional345(const float *data, const size_t length,
+float TFunctional345(const Eigen::VectorXf& data,
                      TFunctional345_precalc_t *precalc) {
     // Transform the domain from t to r1
-    size_t squaredmedian = findWeightedMedianSqrt(data, length);
+    int squaredmedian = findWeightedMedian(data.cwiseSqrt());
 
     // Integrate
     float integral_real = 0, integral_imag = 0;
-    for (size_t r1 = 1; r1 < length - squaredmedian; r1++) {
+    for (int r1 = 1; r1 < data.size() - squaredmedian; r1++) {
         // From 1, since exp(i*log(0)) == 0
         integral_real += precalc->real[r1] * data[r1 + squaredmedian];
         integral_imag += precalc->imag[r1] * data[r1 + squaredmedian];
@@ -260,16 +226,16 @@ void TFunctional345_destroy(TFunctional345_precalc_t *precalc) {
 // T6
 //
 
-float TFunctional6(const float *data, const size_t length) {
+float TFunctional6(const Eigen::VectorXf& data) {
     // Transform the domain from t to r1
-    size_t squaredmedian = findWeightedMedianSqrt(data, length);
-    size_t length_r1 = length - squaredmedian;
+    int squaredmedian = findWeightedMedian(data.cwiseSqrt());
+    int length_r1 = data.size() - squaredmedian;
 
-    // Extract and weight data from the positive domain of r1 and prepare the
-    // indexing array
-    size_t data_weighted_index[length_r1];
-    float data_weighted[length_r1];
-    for (size_t r1 = 0; r1 < length_r1; r1++) {
+    // Extract and weight data from the positive domain of r1
+    // and prepare the indexing array
+    Eigen::VectorXi data_weighted_index(length_r1);
+    Eigen::VectorXf data_weighted(length_r1);
+    for (int r1 = 0; r1 < length_r1; r1++) {
         data_weighted[r1] = (float)r1 * data[r1 + squaredmedian];
         data_weighted_index[r1] = r1;
     }
@@ -277,17 +243,17 @@ float TFunctional6(const float *data, const size_t length) {
     // Sort the weighted data
     // NOTE: since we need the indexes later on, we don't actually sort the
     //       array but save the indexes of the sorted elements
-    qsort_r(data_weighted_index, length_r1, sizeof(size_t), compareIndexedFloat,
-            &data_weighted);
+    qsort_r(data_weighted_index.data(), length_r1, sizeof(int),
+            compareIndexedFloat, data_weighted.data());
 
     // Permuting the input data
-    float data_sort[length_r1];
-    for (size_t r1 = 0; r1 < length_r1; r1++) {
+    Eigen::VectorXf data_sort(length_r1);
+    for (int r1 = 0; r1 < length_r1; r1++) {
         data_sort[r1] = data[squaredmedian + data_weighted_index[r1]];
     }
 
     // Weighted median
-    size_t index = findWeightedMedianSqrt(data_sort, length_r1);
+    int index = findWeightedMedian(data_sort.cwiseSqrt());
     return data_weighted[data_weighted_index[index]];
 }
 
@@ -296,20 +262,19 @@ float TFunctional6(const float *data, const size_t length) {
 // T7
 //
 
-float TFunctional7(const float *data, const size_t length) {
+float TFunctional7(const Eigen::VectorXf& data) {
     // Transform the domain from t to r
-    size_t median = findWeightedMedian(data, length);
-    size_t length_r = length - median;
+    int median = findWeightedMedian(data);
+    int length_r = data.size() - median;
 
     // Extract data from the positive domain of r
-    float data_r[length_r];
-    memcpy(data_r, data + median, length_r * sizeof(float));
+    Eigen::VectorXf data_r(data.tail(length_r));
 
     // Sorting the transformed data
-    qsort(data_r, length_r, sizeof(float), compareFloat);
+    qsort(data_r.data(), length_r, sizeof(float), compareFloat);
 
     // Weighted median
-    size_t index = findWeightedMedianSqrt(data_r, length_r);
+    int index = findWeightedMedian(data_r.cwiseSqrt());
     return data_r[index];
 }
 
@@ -322,10 +287,10 @@ float TFunctional7(const float *data, const size_t length) {
 // P1
 //
 
-float PFunctional1(const float *data, const size_t length) {
+float PFunctional1(const Eigen::VectorXf& data) {
     float sum = 0;
     float previous = data[0];
-    for (size_t p = 1; p < length; p++) {
+    for (int p = 1; p < data.size(); p++) {
         float current = data[p];
         sum += fabs(previous - current);
         previous = current;
@@ -338,14 +303,13 @@ float PFunctional1(const float *data, const size_t length) {
 // P2
 //
 
-float PFunctional2(const float *data, const size_t length) {
+float PFunctional2(const Eigen::VectorXf& data) {
     // Sorting the data
-    float sorted[length];
-    memcpy(sorted, data, length * sizeof(float));
-    qsort(sorted, length, sizeof(float), compareFloat);
+    Eigen::VectorXf sorted(data);
+    qsort(sorted.data(), sorted.size(), sizeof(float), compareFloat);
 
     // Find the weighted median
-    size_t median = findWeightedMedian(sorted, length);
+    int median = findWeightedMedian(sorted);
     return sorted[median];
 }
 
@@ -354,7 +318,7 @@ float PFunctional2(const float *data, const size_t length) {
 // P3
 //
 
-PFunctional3_precalc_t *PFunctional3_prepare(size_t rows) {
+PFunctional3_precalc_t *PFunctional3_prepare(int rows) {
     // Enable FFTW multithreading
     fftw_init_threads();
     fftw_plan_with_nthreads(omp_get_max_threads());
@@ -375,56 +339,54 @@ PFunctional3_precalc_t *PFunctional3_prepare(size_t rows) {
     return NULL;
 }
 
-float PFunctional3(const float *data, const size_t length) {
+float PFunctional3(const Eigen::VectorXf& data) {
     // Calculate the discrete Fourier transform
     // TODO: we should only plan this once, given that we use the same array
-    fftwf_complex *fourier = (fftwf_complex*) fftwf_malloc(sizeof(fftw_complex) * length);
+    fftwf_complex *fourier = (fftwf_complex*) fftwf_malloc(sizeof(fftw_complex) * data.size());
     // NOTE: we can safely cast the const away, because in FFTW_ESTIMATE regime
     //       the input data will be preserved
     fftwf_plan p;
 #pragma omp critical (make_plan)
-    p = fftwf_plan_dft_r2c_1d(length, (float*)data, fourier, FFTW_ESTIMATE);
+    p = fftwf_plan_dft_r2c_1d(data.size(), (float*)data.data(), fourier, FFTW_ESTIMATE);
     assert(p != NULL);
     fftwf_execute(p);
 
     // Integrate
-    float *linspace = (float*) malloc(sizeof(float) * length);
-    float *modifier = (float*) malloc(sizeof(float) * length);
-    for (size_t p = 0; p < length/2+1; p++) {
+    Eigen::VectorXf linspace(data.size());
+    Eigen::VectorXf modifier(data.size());
+    for (int p = 0; p < data.size()/2+1; p++) {
         modifier[p] =
-            pow(hypot(fourier[p][0] / length, fourier[p][1] / length), 4);
-        linspace[p] = -1 + p * 2.0 / (length - 1);
+            pow(hypot(fourier[p][0] / data.size(), fourier[p][1] / data.size()), 4);
+        linspace[p] = -1 + p * 2.0 / (data.size() - 1);
     }
-    for (size_t p = length/2+1; p < length; p++) {
+    for (int p = data.size()/2+1; p < data.size(); p++) {
         modifier[p] =
-            pow(hypot(fourier[length-p][0] / length, fourier[length-p][1] / length), 4);
-        linspace[p] = -1 + p * 2.0 / (length - 1);
+            pow(hypot(fourier[data.size()-p][0] / data.size(), fourier[data.size()-p][1] / data.size()), 4);
+        linspace[p] = -1 + p * 2.0 / (data.size() - 1);
     }
-    float sum = trapz(linspace, modifier, length);
+    float sum = trapz(linspace, modifier);
     fftwf_destroy_plan(p);
     fftwf_free(fourier);
-    free(linspace);
-    free(modifier);
     return sum;
 }
 
-void PFunctional3_destroy(PFunctional3_precalc_t *UNUSED(precalc)) { return; }
+void PFunctional3_destroy(PFunctional3_precalc_t *) { return; }
 
 
 //
 // Hermite P-functionals
 //
 
-float PFunctionalHermite(const float *data, const size_t length,
-                         unsigned int order, size_t center) {
+float PFunctionalHermite(const Eigen::VectorXf& data,
+                         unsigned int order, int center) {
     // Discretize the [-10, 10] domain to fit the column iterator
     float stepsize_lower = 10.0 / center;
-    float stepsize_upper = 10.0 / (length - 1 - center);
+    float stepsize_upper = 10.0 / (data.size() - 1 - center);
 
     // Calculate the integral
     float integral = 0;
     float z;
-    for (size_t p = 0; p < length; p++) {
+    for (int p = 0; p < data.size(); p++) {
         if (p < center)
             z = p * stepsize_lower - 10;
         else

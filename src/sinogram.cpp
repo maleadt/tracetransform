@@ -19,9 +19,7 @@
 // Local
 #include "global.hpp"
 #include "auxiliary.hpp"
-extern "C" {
-#include "functionals.h"
-}
+#include "functionals.hpp"
 
 
 //
@@ -117,7 +115,7 @@ getSinograms(const Eigen::MatrixXf &input, unsigned int angle_stepsize,
 
         // Process all projection bands
         for (int column = 0; column < input.cols(); column++) {
-            float *data = input_rotated.data() + column * input.rows();
+            Eigen::VectorXf data = input_rotated.col(column);
 
             // Process all T-functionals
             for (size_t t = 0; t < tfunctionals.size(); t++) {
@@ -125,26 +123,25 @@ getSinograms(const Eigen::MatrixXf &input, unsigned int angle_stepsize,
                 float result;
                 switch (tfunctional) {
                 case TFunctional::Radon:
-                    result = TFunctionalRadon(data, input.rows());
+                    result = TFunctionalRadon(data);
                     break;
                 case TFunctional::T1:
-                    result = TFunctional1(data, input.rows());
+                    result = TFunctional1(data);
                     break;
                 case TFunctional::T2:
-                    result = TFunctional2(data, input.rows());
+                    result = TFunctional2(data);
                     break;
                 case TFunctional::T3:
                 case TFunctional::T4:
                 case TFunctional::T5:
-                    result = TFunctional345(
-                        data, input.rows(),
+                    result = TFunctional345(data,
                         (TFunctional345_precalc_t *)precalculations[t]);
                     break;
                 case TFunctional::T6:
-                    result = TFunctional6(data, input.rows());
+                    result = TFunctional6(data);
                     break;
                 case TFunctional::T7:
-                    result = TFunctional7(data, input.rows());
+                    result = TFunctional7(data);
                     break;
                 }
                 outputs[t](column, // row (in the sinogram)
