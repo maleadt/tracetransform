@@ -166,8 +166,6 @@ TFunctional345_precalc_t *TFunctional4_prepare(int rows,
     for (int r = 1; r < rows; r++) {
 #if defined(__clang__)
         sincosf(3.0 * log(r), &precalc->imag[r], &precalc->real[r]);
-        precalc->real[r] *= r;
-        precalc->imag[r] *= r;
 #else
         precalc->real[r] = cos(3.0 * log(r));
         precalc->imag[r] = sin(3.0 * log(r));
