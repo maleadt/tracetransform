@@ -22,8 +22,8 @@ void functional(double *pin, double c, int M, double *kernReal, double *kernIm,
     p1Real += *(kernReal + k) * (*(pin + cint - k - 1));
     p1Im += *(kernIm + k) * (*(pin + cint - k - 1));
   }
-  pout[0] = sqrt(p0Real * p0Real + p0Im * p0Im);
-  pout[1] = sqrt(p1Real * p1Real + p1Im * p1Im);
+  pout[0] = hypot(p0Real, p0Im);
+  pout[1] = hypot(p1Real, p1Im);
 }
 
 void mexFunction(int nlhs, mxArray *plhs[],       /* Output variables */

@@ -37,6 +37,7 @@ void mexFunction(int nlhs, mxArray *plhs[],       /* Output variables */
   plhs[0] = mxCreateDoubleMatrix(N, 2, mxREAL);
   pSign = mxGetPr(plhs[0]);
   ptrI = mxGetPr(prhs[0]);
+  
   for (k = 0; k < N; k++) {
 
     functional((ptrI + k * M), *(ptr_c + 2 * k), M, ptr_out);

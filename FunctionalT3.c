@@ -22,8 +22,8 @@ void functional(double *pin, double c, int M, double *kernReal, double *kernIm,
     p1Real += *(kernReal + k) * (*(pin + cint - k - 1));
     p1Im += *(kernIm + k) * (*(pin + cint - k - 1));
   }
-  pout[0] = sqrt(p0Real * p0Real + p0Im * p0Im);
-  pout[1] = sqrt(p1Real * p1Real + p1Im * p1Im);
+  pout[0] = hypot(p0Real, p0Im);
+  pout[1] = hypot(p1Real, p1Im);
 }
 
 void mexFunction(int nlhs, mxArray *plhs[],       /* Output variables */
@@ -42,11 +42,8 @@ void mexFunction(int nlhs, mxArray *plhs[],       /* Output variables */
   M = (mwSize)mxGetM(prhs[0]);
   N = (mwSize)mxGetN(prhs[0]);
   ptr_c = mxGetPr(prhs[1]);
-
-  plhs[0] = mxCreateDoubleMatrix(N, 2, mxREAL);
+  
   kernel[0] = mxCreateDoubleMatrix(M, 1, mxCOMPLEX);
-  pSign = mxGetPr(plhs[0]);
-  ptrI = mxGetPr(prhs[0]);
   ptrKreal = mxGetPr(kernel[0]);
   ptrKim = mxGetPi(kernel[0]);
 
@@ -55,6 +52,10 @@ void mexFunction(int nlhs, mxArray *plhs[],       /* Output variables */
     *(ptrKreal + k - 1) = r * cos(5.0 * log(r));
     *(ptrKim + k - 1) = r * sin(5.0 * log(r));
   }
+
+  plhs[0] = mxCreateDoubleMatrix(N, 2, mxREAL);
+  pSign = mxGetPr(plhs[0]);
+  ptrI = mxGetPr(prhs[0]);
 
   for (k = 0; k < N; k++) {
 
