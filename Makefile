@@ -1,5 +1,5 @@
 CC=gcc-4.4
-
+CFLAGS=-std=c99 -fPIC -D_GNU_SOURCE
 SRCS=$(wildcard *.c)
 OBJS=$(SRCS:.c=.mexa64)
 
@@ -11,4 +11,4 @@ clean:
 	rm $(OBJS)
 
 %.mexa64: %.c
-	matlab-mex CC="${CC}" $<
+	matlab-mex CC="${CC}" CFLAGS="${CFLAGS}" $<
