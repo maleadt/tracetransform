@@ -75,19 +75,28 @@ void mexFunction(int nlhs, mxArray *plhs[],       /* Output variables */
          n++) { /*Loop to compute the vector shifts of the rotated and its
                    transponsed*/
 
-      mexCallMATLAB(
-          1, &Input_Tfunct[1], 1, &Rotated_image[n],
-          "vecWM"); /*Finding the the vector shift with weighted median*/
+      /* special case: only 1 t-functional, T0: no weighted median needed */
+      if (Numb_Tfunct != 1 || (int)T_codes[0] != 0) {
+          mexCallMATLAB(
+              1, &Input_Tfunct[1], 1, &Rotated_image[n],
+              "vecWM"); /*Finding the the vector shift with weighted median*/
+      } else {
+        Input_Tfunct[1] = 0;
+      }
       memcpy(mxGetPr(Input_Tfunct[0]), mxGetPr(Rotated_image[n]),
              sizeof(double) * N *
                  M); /*Storing the rotated image and the shift vector to
                         apply T functional*/
 
       for (c = 0; c < Numb_Tfunct; c++) { /*Loop to apply the T-functional*/
-
-        Tfunct[11] = (char)((int)base + (int)*(T_codes + c));
-        mexCallMATLAB(1, &Input_Stacking[0], 2, Input_Tfunct,
-                      Tfunct); /*Compute the T-functional*/
+        int tfunctional = (int)*(T_codes + c);
+        Tfunct[11] = (char)((int)base + tfunctional);
+        if (tfunctional == 0)
+            mexCallMATLAB(1, &Input_Stacking[0], 1, Input_Tfunct,
+                          Tfunct); /*Compute the T-functional*/
+        else
+            mexCallMATLAB(1, &Input_Stacking[0], 2, Input_Tfunct,
+                          Tfunct); /*Compute the T-functional*/
         *stack_idx = (double)k;
         *(stack_idx + 1) = (double)n;
         *(stack_idx + 2) = (double)c;
