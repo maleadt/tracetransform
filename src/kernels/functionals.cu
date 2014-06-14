@@ -332,7 +332,7 @@ TFunctional345_precalc_t *TFunctional3_prepare(size_t rows, size_t cols) {
     precalc->prescan =
         new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
     precalc->medians =
-        new CUDAHelper::GlobalMemory<int>(CUDAHelper::size_1d(cols));
+        new CUDAHelper::GlobalMemory<int>(CUDAHelper::size_1d(cols), 0);
 
     return precalc;
 }
@@ -363,7 +363,7 @@ TFunctional345_precalc_t *TFunctional4_prepare(size_t rows, size_t cols) {
     precalc->prescan =
         new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
     precalc->medians =
-        new CUDAHelper::GlobalMemory<int>(CUDAHelper::size_1d(cols));
+        new CUDAHelper::GlobalMemory<int>(CUDAHelper::size_1d(cols), 0);
 
     return precalc;
 }
@@ -394,7 +394,7 @@ TFunctional345_precalc_t *TFunctional5_prepare(size_t rows, size_t cols) {
     precalc->prescan =
         new CUDAHelper::GlobalMemory<float>(CUDAHelper::size_2d(rows, cols));
     precalc->medians =
-        new CUDAHelper::GlobalMemory<int>(CUDAHelper::size_1d(cols));
+        new CUDAHelper::GlobalMemory<int>(CUDAHelper::size_1d(cols), 0);
 
     return precalc;
 }
