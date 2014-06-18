@@ -228,7 +228,7 @@ Eigen::MatrixXf rotate(const Eigen::MatrixXf &input,
     Eigen::Matrix2f transform;
 #if defined(__clang__)
     float tempSin, tempCos;
-    sincosf(-angle, &tempSin, &tempCos)
+    sincosf(-angle, &tempSin, &tempCos);
     transform << tempCos, -tempSin,
                  tempSin,  tempCos;
 #else
