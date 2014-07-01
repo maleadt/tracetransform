@@ -7,9 +7,9 @@ function x=interpolate(im0, p)
 
     // Bilinear interpolation
     x = (im0(i_int,   j_int)   * (1-j_fract) * (1-i_fract) + ...
-         im0(i_int,   j_int+1) * j_fract     * (1-i_fract) + ...
-         im0(i_int+1, j_int)   * (1-j_fract) * i_fract + ...
-         im0(i_int+1, j_int+1) * j_fract     * i_fract)
+    im0(i_int,   j_int+1) * j_fract     * (1-i_fract) + ...
+    im0(i_int+1, j_int)   * (1-j_fract) * i_fract + ...
+    im0(i_int+1, j_int+1) * j_fract     * i_fract)
 endfunction
 
 function im=imrotate(im0, origin, angle)
@@ -27,7 +27,7 @@ function im=imrotate(im0, origin, angle)
             // Get the source pixel
             t = [i-origin(1), j-origin(2)]
             r = [-t(2)*angle_sin + t(1)*angle_cos + origin(1) ...
-                  t(2)*angle_cos + t(1)*angle_sin + origin(2)]
+            t(2)*angle_cos + t(1)*angle_sin + origin(2)]
 
             // Copy if within bounds
             if 1 <= r(1) & r(1) < s(1) & 1 <= r(2) & r(2) < s(2)

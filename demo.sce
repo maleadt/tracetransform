@@ -110,10 +110,10 @@ elseif program_mode == "benchmark"
     end
 
     for i=1:iterations
-       tstart = tic;
-       get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
-       telapsed = toc(tstart);
-       fprintf(1, 't_%g=%g\n', i, telapsed)
+        tstart = tic;
+        get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
+        telapsed = toc(tstart);
+        fprintf(1, 't_%g=%g\n', i, telapsed)
     end
 
 elseif program_mode == "profile"

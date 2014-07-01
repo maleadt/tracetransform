@@ -4,7 +4,6 @@
 //   N = Number of samples
 //   range = Range in the continuous domain
 function [psi, xc] = hermite_wpol(n, cf, N, range)
-
     Nneg = cf ;
     Npos = N - cf + 1;
     xneg = linspace(-range, 0,Nneg);
