@@ -13,7 +13,7 @@ for i = 1:size(args, 2)
 end
 argc = size(argv, 2);
 
-// Parse arguments
+// Parse arguments (poor man's getopt)
 tfunctionals = [];
 pfunctionals = [];
 angle_interval = 1;
@@ -30,7 +30,7 @@ while i <= argc
         tfunctionals($+1) = int(strtod(argv(i+1)));
         i = i+1;
     elseif arg == '-P' | arg == '--p-functional'
-        tfunctionals($+1) = int(strtod(argv(i+1)));
+        pfunctionals($+1) = int(strtod(argv(i+1)));
         i = i+1;
     elseif arg == '-a' | arg == '--angle'
         angle_interval = int(strtod(argv(i+1)));
@@ -45,7 +45,7 @@ while i <= argc
     end
     i = i + 1;
 end
-if length(length(inputs)) <> 1
+if size(inputs, 2) <> 1
     error("Please provide a single input image");
 end
 imageFile = inputs(1);
