@@ -1,6 +1,8 @@
 exec("/usr/share/scilab/contrib/sivp/loader.sce");
 exec("transform.sci");
 
+errcatch(-1,"stop");
+
 // Read arguments
 args = sciargs();
 argv = [];

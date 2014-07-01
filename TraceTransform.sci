@@ -1,17 +1,5 @@
-exec('rotation.sci');
-errcatch(-1,"stop");
-
-function out=zscore(in)
-    _mean = mean(in)
-    _std = stdev(in)
-
-    out = zeros(in)
-    for i = 1:length(in)
-        out(i) = (in(i) - _mean) / _std
-    end
-
-    return output
-endfunction
+exec('auxiliary.sci');
+exec('geometry.sci');
 
 function [sinograms, circus_functions] = TraceTransform(padded, tfunctionals, pfunctionals, angle_stepsize, orthonormal)
 size_tfunct = length(tfunctionals);
@@ -76,20 +64,6 @@ circus_functions = zeros(size_angles,size_pfunct,size_tfunct);
 endfunction
 
 // Auxiliary functions
-function out=bsxfun_ge(A, B)
-    out = zeros(A)
-    s = size(A, 2)
-    for i = 1:size(A, 2) // col
-        for j = 1:size(A, 1) // row
-            if A(j, i) >= B(i)
-                out(j, i) = 1
-            else
-                out(j, i) = 0
-            end
-        end
-    end
-endfunction
-
 function [R, loc] = find_R(data)
     Accum = cumsum(data, 'r');
       loc = bsxfun_ge(2*Accum,Accum($, :));
