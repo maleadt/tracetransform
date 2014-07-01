@@ -1,3 +1,3 @@
 #!/bin/bash
-scilab-cli -nb -e 'exec("demo.sce"); exit' -args "$@" | tail -n +5
-
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+scilab-cli -nb -e "exec('$DIR/demo.sce'); exit" -args "$@"

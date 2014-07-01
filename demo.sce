@@ -1,5 +1,14 @@
+// Get directory environment
+[u,t,n]=file();
+i = grep(n',"/(?:.*\.sci|.*\.sce)$/","r");
+script = n(i(1));
+env = pwd();
+
+// Include everything from the source dir
+cd(dirname(script));
 exec("/usr/share/scilab/contrib/sivp/loader.sce");
 exec("transform.sci");
+cd(env);
 
 errcatch(-1,"stop");
 
@@ -38,7 +47,7 @@ while i <= argc
     elseif arg == '-n' | arg == '--iterations'
         iterations = int(strtod(argv(i+1)));
         i = i+1;
-    elseif arg(1) == '-'
+    elseif part(arg, 1) == '-'
         printf("Unknown argument %s\n", argv(i));
     else
         inputs($+1) = arg;
