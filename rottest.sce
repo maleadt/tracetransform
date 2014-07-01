@@ -7,7 +7,7 @@ function rottest(filename, angle)
     image_rotated = imrotate(image, str2num(angle), 'bilinear', 'crop');
 
     // Output image
-    fprintf(1, '\n');
+    printf('\n');
     output = round(255*mat2gray(image_rotated));
     printmat(output)
 endfunction
@@ -21,8 +21,8 @@ function printmat(input)
             else
                 decimals = floor(log10(pixel))+1;
             end
-            fprintf(1, '%d%s', pixel, repmat(' ',1,4-decimals));
+            printf('%d%s', pixel, repmat(' ',1,4-decimals));
         end
-        fprintf(1, '\n');
+        printf('\n');
     end
 endfunction

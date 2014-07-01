@@ -46,10 +46,12 @@ while i <= argc
     i = i + 1;
 end
 if length(length(inputs)) <> 1
-    printf("Please provide a single input image");
-    exit(1);
+    error("Please provide a single input image");
 end
 imageFile = inputs(1);
+if program_mode == "benchmark" & iterations == 0
+    error("Required argument iterations was not provided")
+end
 
 // Check orthonormal
 orthonormal_count = 0;
@@ -110,20 +112,23 @@ elseif program_mode == "benchmark"
     end
 
     for i=1:iterations
-        tstart = tic;
+        tic();
         get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
-        telapsed = toc(tstart);
-        fprintf(1, 't_%g=%g\n', i, telapsed)
+        telapsed = toc();
+        printf('t_%g=%g\n', i, telapsed);
     end
 
 elseif program_mode == "profile"
     // Warm-up
     get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
 
-    profile on
+    // Add profiling instructions
+    funcprot(0);
+    add_profiling("get_transform")
+
     get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
-    profile report
-    uiwait
+    profile(get_transform);
+    showprofile(get_transform);
 
 else
     error('invalid execution mode')
