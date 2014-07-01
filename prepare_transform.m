@@ -1,7 +1,3 @@
-function [sinogram circus_function] = get_transform(padded ,tfunctionals, pfunctionals, angle_stepsize, orthonormal)
-    [sinogram circus_function] = TraceTransform(padded, tfunctionals, pfunctionals, angle_stepsize, orthonormal);     
-end
-
 function [padded basename] = prepare_transform(input, filename, angle_stepsize, orthonormal)
     if orthonormal
         %% Resizing and padding the image with zeros

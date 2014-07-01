@@ -1,4 +1,6 @@
-source('transform.m')
+script = mfilename('fullpathext');
+srcdir = fileparts(script);
+addpath(srcdir)
 
 % Parse arguments (poor man's getopt)
 arg_list = argv();
