@@ -89,19 +89,19 @@ endfunction
 
 // Radon transform
 function output = t_radon(data)
-    output = sum(data);
+    output = sum(data, 'r');
 endfunction
 
 // T1 functional
 function integral = t_1(data)
     R = find_R(data);
-    integral = sum( R .* data );
+    integral = sum(R .* data, 'r');
 endfunction
 
 // T2 functional
 function integral = t_2(data)
     R = find_R(data);
-    integral = sum( (R.^2) .* data );
+    integral = sum((R.^2) .* data, 'r');
 endfunction
 
 // T3 functional
@@ -111,7 +111,7 @@ function integral = t_3(data)
     valid = R1 ~= 0;
     valid_weights = exp(5 * %i * log(R1(valid)));
     Weight(valid) = valid_weights;
-    integral = abs(sum(Weight .* R1 .* data));
+    integral = abs(sum(Weight .* R1 .* data, 'r'));
 endfunction
 
 // T4 functional
@@ -121,7 +121,7 @@ function integral = t_4(data)
     valid = R1 ~= 0;
     valid_weights = exp(3 * %i * log(R1(valid)));
     Weight(valid) = valid_weights;
-    integral = abs(sum(Weight .* data));
+    integral = abs(sum(Weight .* data, 'r'));
 endfunction
 
 // T5 functional
@@ -131,7 +131,7 @@ function integral = t_5(data)
     valid = R1 ~= 0;
     valid_weights = exp(4 * %i * log(R1(valid)));
     Weight(valid) = valid_weights;
-    integral = abs(sum(Weight .* (R1.^(1/2)) .* data));
+    integral = abs(sum(Weight .* (R1.^(1/2)) .* data, 'r'));
 endfunction
 
 
