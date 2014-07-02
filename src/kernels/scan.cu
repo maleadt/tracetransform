@@ -94,6 +94,12 @@ static __global__ void findWeightedMedian_kernel(const float *input,
     const int row = threadIdx.y;
     const int rows = blockDim.y;
 
+    // Set
+    // NOTE: this is necessary because if the threshold is 0 (every value equal)
+    //       the if condition below is not triggered
+    if (row == 0)
+        output[col] = 0;
+
     // Fetch
     temp[row] = prescan[row + col * rows];
     __syncthreads();
