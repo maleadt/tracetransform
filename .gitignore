@@ -1,3 +1,6 @@
-*.mex*
 *.asv
-trace_*
+*.pgm
+*.csv
+*.dat
+tags
+
