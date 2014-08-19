@@ -1,6 +1,6 @@
 // Get directory environment
 [u,t,n]=file();
-i = grep(n',"/(?:.*\.sci|.*\.sce)$/","r");
+i = grep(n','/(?:.*\.sci|.*\.sce)$/', 'r');
 script = n(i(1));
 env = pwd();
 
@@ -11,7 +11,7 @@ exec('/usr/share/scilab/contrib/sip/loader.sce');
 exec('transform.sci');
 cd(env);
 
-errcatch(-1,"stop");
+errcatch(-1,'stop');
 
 // Read arguments
 args = sciargs();
@@ -49,18 +49,18 @@ while i <= argc
         iterations = int(strtod(argv(i+1)));
         i = i+1;
     elseif part(arg, 1) == '-'
-        printf("Unknown argument %s\n", argv(i));
+        printf('Unknown argument %s\n', argv(i));
     else
         inputs($+1) = arg;
     end
     i = i + 1;
 end
 if size(inputs, 2) <> 1
-    error("Please provide a single input image");
+    error('Please provide a single input image');
 end
 imageFile = inputs(1);
-if program_mode == "benchmark" & iterations == 0
-    error("Required argument iterations was not provided")
+if program_mode == 'benchmark' & iterations == 0
+    error('Required argument iterations was not provided')
 end
 
 // Check orthonormal
@@ -82,7 +82,7 @@ end
 image = im2gray(imread(imageFile));
 [padded base_name] = prepare_transform(image, imageFile, angle_interval, orthonormal);
 
-if program_mode == "calculate"
+if program_mode == 'calculate'
     // Get output data
     [sinogram circus] = get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
 
@@ -90,10 +90,10 @@ if program_mode == "calculate"
     for t_i = 1:length(tfunctionals)
         t = tfunctionals(t_i);
 
-        _trace = sinogram(:, :, t_i);
-        csvWrite(_trace, sprintf('%s-T%d.csv', base_name, t));
+        the_trace = sinogram(:, :, t_i);
+        csvWrite(the_trace, sprintf('%s-T%d.csv', base_name, t));
         // TODO: debug flag
-        imwrite(mat2gray(_trace), sprintf('%s-T%d.pgm', base_name, t));
+        imwrite(mat2gray(the_trace), sprintf('%s-T%d.pgm', base_name, t));
     end
 
     // Save circus functions
@@ -109,17 +109,12 @@ if program_mode == "calculate"
                 type = 'P';
             end
 
-            _trace = circus(:, p_i + (t_i-1)*length(pfunctionals));
-            csvWrite(_trace, sprintf('%s-T%d_%s%d.csv', base_name, t, type, p_real));
+            the_trace = circus(:, p_i + (t_i-1)*length(pfunctionals));
+            csvWrite(the_trace, sprintf('%s-T%d_%s%d.csv', base_name, t, type, p_real));
         end
     end
 
-elseif program_mode == "benchmark"
-    // Warm-up
-    for i=1:3
-        get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
-    end
-
+elseif program_mode == 'benchmark'
     for i=1:iterations
         tic();
         get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
@@ -127,13 +122,10 @@ elseif program_mode == "benchmark"
         printf('t_%g=%g\n', i, telapsed);
     end
 
-elseif program_mode == "profile"
-    // Warm-up
-    get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
-
+elseif program_mode == 'profile'
     // Add profiling instructions
     funcprot(0);
-    add_profiling("get_transform")
+    add_profiling('get_transform')
 
     get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
     profile(get_transform);
