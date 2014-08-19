@@ -93,7 +93,7 @@ if program_mode == 'calculate'
         the_trace = sinogram(:, :, t_i);
         csvWrite(the_trace, sprintf('%s-T%d.csv', base_name, t));
         // TODO: debug flag
-        imwrite(mat2gray(the_trace), sprintf('%s-T%d.pgm', base_name, t));
+        imwrite(uint8(the_trace), sprintf('%s-T%d.pgm', base_name, t));
     end
 
     // Save circus functions
