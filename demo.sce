@@ -6,8 +6,9 @@ env = pwd();
 
 // Include everything from the source dir
 cd(dirname(script));
-exec("/usr/share/scilab/contrib/sivp/loader.sce");
-exec("transform.sci");
+exec('/usr/share/scilab/contrib/sivp/loader.sce');
+exec('/usr/share/scilab/contrib/sip/loader.sce');
+exec('transform.sci');
 cd(env);
 
 errcatch(-1,"stop");
@@ -78,8 +79,7 @@ else
 end
 
 // Gather input data
-image = imread(imageFile);
-image = mat2gray(image(:, :, 1));    // since scilab reads colour when there is none
+image = im2gray(imread(imageFile));
 [padded base_name] = prepare_transform(image, imageFile, angle_interval, orthonormal);
 
 if program_mode == "calculate"

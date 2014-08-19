@@ -1,5 +1,4 @@
 exec('auxiliary.sci');
-exec('geometry.sci');
 
 function [sinograms, circus_functions] = TraceTransform(padded, tfunctionals, pfunctionals, angle_stepsize, orthonormal)
     size_tfunct = length(tfunctionals);
@@ -13,8 +12,9 @@ function [sinograms, circus_functions] = TraceTransform(padded, tfunctionals, pf
     angle_index = 0;
     for angle = (0:angle_stepsize:359)
         angle_index = angle_index + 1;
-        origin = floor((size(padded)+1)/2)
-        data = imrotate(padded, origin, angle);
+        data = im2gray(mogrify(padded, ['-rotate', string(angle)]));
+        excess = size(data) - size(padded);
+        data = im2gray(mogrify(data, ['-shave', strcat(string(excess/2), 'x')]));
         tfunctional_index = 0;
         for tfunctional = tfunctionals
             tfunctional_index = tfunctional_index + 1;
