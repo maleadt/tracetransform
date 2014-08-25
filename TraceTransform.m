@@ -60,7 +60,6 @@ circus_functions = zeros(size_angles,size_pfunct,size_tfunct);
 end
 
 %% Auxiliary functions
-% TODO: shouldn't bsxfun work on Accum(end)?
 function [R loc] = find_R(data)
     Accum = cumsum(data);
       loc = bsxfun(@ge,2*Accum,Accum(end,:));
