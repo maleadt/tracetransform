@@ -4,6 +4,9 @@ i = grep(n','/(?:.*\.sci|.*\.sce)$/', 'r');
 script = n(i(1));
 env = pwd();
 
+// Increase stacksize to 100MB
+stacksize(100000000);
+
 // Include everything from the source dir
 cd(dirname(script));
 exec('/usr/share/scilab/contrib/sivp/loader.sce');
