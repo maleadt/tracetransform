@@ -1,0 +1,9 @@
+[submodule "c++/lib/backward"]
+	path = c++/lib/backward
+	url = git://github.com/bombela/backward-cpp.git
+[submodule "cuda/lib/backward"]
+	path = cuda/lib/backward
+	url = git://github.com/bombela/backward-cpp.git
+[submodule "openmp/lib/backward"]
+	path = openmp/lib/backward
+	url = git://github.com/bombela/backward-cpp.git
