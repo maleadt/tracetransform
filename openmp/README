@@ -1,0 +1,42 @@
+This is a C++ implementation of the Trace Transform algorithm, with support for
+orthonormal circus functionals. Relevant papers are:
+ * A. Kadyrov and M. Petrou, The trace transform and its applications
+ * M. Petrou and A. Kadyrov, Affine invariant features from the trace transform
+ * A. Frías-Velézquez et al., Object identification by using orthonormal circus
+   functions from the trace transform
+
+The implementation also features OpenMP pragma's to parallellize computations.
+
+How to build
+------------
+
+Requirements are:
+ * C/C++ compiler (tested: GCC >= 4.6, Clang trunk, ICC >= 14)
+ * Eigen 3
+ * Boost (tested: >= 1.52)
+ * CMake >= 2.8.7
+
+The basic procedure to build this port is as following:
+ $ mkdir build
+ $ cd build
+ $ cmake ../ -DCMAKE_BUILD_TYPE=Release
+ $ make
+
+If you use Clang, beware that the current version does not support OpenMP, so
+the build *will* fail unless you use the bleeding-edge version available at
+clang-omp.github.io.
+
+Some additional notes:
+ * In order to use a different compiler, specify -DCMAKE_C_COMPILER and
+   -DCMAKE_CXX_COMPILER
+ * If you want debugging symbols, use -DCMAKE_BUILD_TYPE=Debug
+ * If you want to make use of MKL, define MKLROOT and re-configure the project.
+   In order to get a functional binary, you might want to bake the MKL library
+   paths, reported by CMake as LD_LIBRARY_PATH, into your final binary using
+   -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath=${LIBRARY_PATH}"
+
+How to run
+----------
+
+In order to see the full help, use:
+ $ ./demo --help
