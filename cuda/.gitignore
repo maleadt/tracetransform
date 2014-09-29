@@ -1,0 +1,9 @@
+build*/
+*.sublime-workspace
+src/.tags*
+*~
+.cproject
+.settings
+.project
+trace_*
+.lvimrc

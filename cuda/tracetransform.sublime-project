@@ -1,0 +1,34 @@
+{
+	"folders":
+	[
+		{
+			"path": "src",
+            "name": "Source",
+            "file_exclude_patterns": [".tags*"]
+		}
+	],
+
+    "build_systems":
+    [
+        {
+            "name": "Build",
+            "cmd": [ "make", "-C", "build" ],
+            "file_regex": "^(..[^:\n]*):([0-9]+):?([0-9]+)?:? (.*)$"
+        }
+    ],
+
+    "settings":
+    {
+        "sublimegdb_commandline": "gdb --interpreter=mi myapp",
+        "sublimegdb_workingdir": "build",
+
+        "sublimeclang_options" :
+        [
+            "-Wno-reorder",
+            "--std=c++11",
+            "-I/usr/include/opencv",
+            "-I/usr/include/eigen3"
+        ]
+        //"sublimeclang_options_script": "/home/tim/bin/cmakeflags ${project_path:build}"
+    }
+}
