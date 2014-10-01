@@ -1,10 +1,3 @@
-This is a C++ implementation of the Trace Transform algorithm, with support for
-orthonormal circus functionals. Relevant papers are:
- * A. Kadyrov and M. Petrou, The trace transform and its applications
- * M. Petrou and A. Kadyrov, Affine invariant features from the trace transform
- * A. Frías-Velézquez et al., Object identification by using orthonormal circus
-   functions from the trace transform
-
 This implementation features CUDA kernels to alleviate most of the compute-heavy
 parts of the algorithm to the GPU. There are some restrictions though:
  * The implementation of scan() is pretty naive, and uses a separate thread for
