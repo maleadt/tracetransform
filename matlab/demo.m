@@ -23,13 +23,13 @@ image = mat2gray(imread(imageFile, 'pgm'));
 
 if strcmp(program_mode, 'calculate')
     % Get output data
-    [sinogram circus] = get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
+    [sinograms circus] = get_transform(padded, tfunctionals, pfunctionals, angle_interval, orthonormal);
 
     % Save sinograms
     for t_i = 1:length(tfunctionals)
         t = tfunctionals(t_i);
 
-        trace = sinogram(:, :, t_i);
+        trace = sinograms(:, :, t_i);
         csvwrite(sprintf('%s-T%d.csv', basename, t), trace);
         % TODO: debug flag
         imwrite(mat2gray(trace), sprintf('%s-T%d.pgm', basename, t));
